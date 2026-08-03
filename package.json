@@ -1,0 +1,15 @@
+{
+  "name": "blindpoke",
+  "version": "1.0.0",
+  "description": "가려진 포켓몬을 단서를 조회해 정체를 맞히는 추리 게임. 블라인드삼국의 \"가명 + 정체 추리\"를 포켓몬으로 옮긴 코어 루프.",
+  "scripts": {
+    "dev": "http-server -p 5175 -c-1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

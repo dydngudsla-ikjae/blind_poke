@@ -1,0 +1,3358 @@
+[ {
+  "abilityRowid" : 1,
+  "nameKr" : "악취",
+  "nameJp" : "あくしゅう",
+  "nameEn" : "Stench",
+  "descriptionKr" : "악취를 풍겨서\n공격했을 때 상대가\n풀죽을 때가 있다.",
+  "descriptionJp" : "くさい　においを　はなつことによって\nこうげきした　ときに　あいてを\nひるませることが　ある。",
+  "descriptionEn" : "By releasing a stench when attacking, the Pokémon may cause the target to flinch.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 2,
+  "nameKr" : "잔비",
+  "nameJp" : "あめふらし",
+  "nameEn" : "Drizzle",
+  "descriptionKr" : "등장했을 때\n날씨를 비로 만든다.",
+  "descriptionJp" : "とうじょう　したときに\nてんきを　あめに　する。",
+  "descriptionEn" : "The Pokémon makes it rain when it enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 4,
+  "nameKr" : "전투무장",
+  "nameJp" : "カブトアーマー",
+  "nameEn" : "Battle Armor",
+  "descriptionKr" : "단단한 껍질에 보호받아\n상대의 공격이\n급소에 맞지 않는다.",
+  "descriptionJp" : "かたい　こうらに　まもられて\nあいての　こうげきが\nきゅうしょに　あたらない。",
+  "descriptionEn" : "Hard armor protects the Pokémon from critical hits.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 3,
+  "nameKr" : "가속",
+  "nameJp" : "かそく",
+  "nameEn" : "Speed Boost",
+  "descriptionKr" : "매 턴 스피드가 올라간다.",
+  "descriptionJp" : "まいターン　すばやさが　あがる。",
+  "descriptionEn" : "The Pokémon's Speed stat is boosted every turn.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 5,
+  "nameKr" : "옹골참",
+  "nameJp" : "がんじょう",
+  "nameEn" : "Sturdy",
+  "descriptionKr" : "상대 기술을 받아도\n일격으로 쓰러지지 않는다.\n일격필살 기술도 효과 없다.",
+  "descriptionJp" : "あいての　わざを　うけても\nいちげきで　たおされることが　ない。\nいちげきひっさつわざも　きかない。",
+  "descriptionEn" : "The Pokémon cannot be knocked out by a single hit as long as its HP is full. One-hit KO moves will also fail to knock it out.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 9,
+  "nameKr" : "정전기",
+  "nameJp" : "せいでんき",
+  "nameEn" : "Static",
+  "descriptionKr" : "정전기를 몸에 둘러\n접촉한 상대를\n마비시킬 때가 있다.",
+  "descriptionJp" : "せいでんきを　からだに　まとい\nさわった　あいてを\nまひさせる　ことがある。",
+  "descriptionEn" : "The Pokémon is charged with static electricity and may paralyze attackers that make direct contact with it.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 7,
+  "nameKr" : "유연",
+  "nameJp" : "じゅうなん",
+  "nameEn" : "Limber",
+  "descriptionKr" : "유연한 몸으로 인해\n마비 상태가 되지 않는다.",
+  "descriptionJp" : "じゅうなんな　からだによって\nまひ　じょうたいに　ならない。",
+  "descriptionEn" : "The Pokémon's limber body prevents it from being paralyzed.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 10,
+  "nameKr" : "축전",
+  "nameJp" : "ちくでん",
+  "nameEn" : "Volt Absorb",
+  "descriptionKr" : "전기타입의 기술을 받으면\n데미지를 받지 않고 회복한다.",
+  "descriptionJp" : "でんきタイプの　わざを　うけると\nダメージを　うけずに　かいふくする。",
+  "descriptionEn" : "If hit by an Electric-type move, the Pokémon has its HP restored instead of taking damage.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 11,
+  "nameKr" : "저수",
+  "nameJp" : "ちょすい",
+  "nameEn" : "Water Absorb",
+  "descriptionKr" : "물타입의 기술을 받으면\n데미지를 받지 않고 회복한다.",
+  "descriptionJp" : "みずタイプの　わざを　うけると\nダメージを　うけずに　かいふくする。",
+  "descriptionEn" : "If hit by a Water-type move, the Pokémon has its HP restored instead of taking damage.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 12,
+  "nameKr" : "둔감",
+  "nameJp" : "どんかん",
+  "nameEn" : "Oblivious",
+  "descriptionKr" : "둔감해서\n헤롱헤롱이나 도발 상태가\n되지 않는다.",
+  "descriptionJp" : "どんかん　なので\nメロメロや　ちょうはつ　じょうたいに\nならない。",
+  "descriptionEn" : "The Pokémon is oblivious, keeping it from being infatuated, falling for taunts, or being affected by Intimidate.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 14,
+  "nameKr" : "복안",
+  "nameJp" : "ふくがん",
+  "nameEn" : "Compound Eyes",
+  "descriptionKr" : "복안을 가지고 있어\n기술의 명중률이 올라간다.",
+  "descriptionJp" : "ふくがんを　もっているため\nわざの　めいちゅうりつが　あがる。",
+  "descriptionEn" : "The Pokémon's compound eyes boost its accuracy.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 6,
+  "nameKr" : "습기",
+  "nameJp" : "しめりけ",
+  "nameEn" : "Damp",
+  "descriptionKr" : "주변을 습하게 함으로써\n자폭 등 폭발하는 기술을\n아무도 못 쓰게 한다.",
+  "descriptionJp" : "あたりを　しめらせることに　よって\nじばく　などの　ばくはつする　わざを\nだれも　つかえなくなる。",
+  "descriptionEn" : "The Pokémon dampens its surroundings, preventing all Pokémon from using explosive moves such as Self-Destruct.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 13,
+  "nameKr" : "날씨부정",
+  "nameJp" : "ノーてんき",
+  "nameEn" : "Cloud Nine",
+  "descriptionKr" : "모든 날씨의 영향이\n없어진다.",
+  "descriptionJp" : "あらゆる　てんきの　えいきょうが\nなくなって　しまう。",
+  "descriptionEn" : "Eliminates the effects of weather.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 8,
+  "nameKr" : "모래숨기",
+  "nameJp" : "すながくれ",
+  "nameEn" : "Sand Veil",
+  "descriptionKr" : "모래바람일 때\n회피율이 올라간다.",
+  "descriptionJp" : "すなあらしの　とき\nかいひりつが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's evasiveness in a sandstorm.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 17,
+  "nameKr" : "면역",
+  "nameJp" : "めんえき",
+  "nameEn" : "Immunity",
+  "descriptionKr" : "체내에 면역을 가지고 있어\n독 상태가 되지 않는다.",
+  "descriptionJp" : "たいないに　めんえきを　もっているため\nどく　じょうたいに　ならない。",
+  "descriptionEn" : "The Pokémon's immune system prevents it from being poisoned.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 18,
+  "nameKr" : "타오르는불꽃",
+  "nameJp" : "もらいび",
+  "nameEn" : "Flash Fire",
+  "descriptionKr" : "불꽃타입의 기술을 받으면\n불꽃을 받아서 자신이 사용하는\n불꽃타입의 기술이 강해진다.",
+  "descriptionJp" : "ほのおタイプの　わざを　うけると\nほのおを　もらい　じぶんが　だす\nほのおタイプの　わざが　つよくなる。",
+  "descriptionEn" : "If hit by a Fire-type move, the Pokémon absorbs the flames and uses them to power up its own Fire-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 20,
+  "nameKr" : "마이페이스",
+  "nameJp" : "マイペース",
+  "nameEn" : "Own Tempo",
+  "descriptionKr" : "마이페이스라서\n혼란 상태가 되지 않는다.",
+  "descriptionJp" : "マイペースなので\nこんらん　じょうたいに　ならない。",
+  "descriptionEn" : "The Pokémon sticks to its own tempo, preventing it from becoming confused or being affected by Intimidate.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 19,
+  "nameKr" : "인분",
+  "nameJp" : "りんぷん",
+  "nameEn" : "Shield Dust",
+  "descriptionKr" : "인분에 보호받아\n기술의 추가 효과를 받지 않게 된다.",
+  "descriptionJp" : "りんぷんに　まもられて\nわざの　ついかこうかを　うけなくなる。",
+  "descriptionEn" : "Protective dust shields the Pokémon from the additional effects of moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 15,
+  "nameKr" : "불면",
+  "nameJp" : "ふみん",
+  "nameEn" : "Insomnia",
+  "descriptionKr" : "잠들지 못하는 체질이라\n잠듦 상태가 되지 않는다.",
+  "descriptionJp" : "ねむれない　たいしつ　なので\nねむり　じょうたいに　ならない。",
+  "descriptionEn" : "The Pokémon's insomnia prevents it from falling asleep.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 24,
+  "nameKr" : "까칠한피부",
+  "nameJp" : "さめはだ",
+  "nameEn" : "Rough Skin",
+  "descriptionKr" : "공격을 받았을 때\n자신에게 접촉한 상대를\n까칠까칠한 피부로 상처를 입힌다.",
+  "descriptionJp" : "こうげきを　うけたとき\nじぶんに　ふれた　あいてを\nざらざらの　はだで　キズつける。",
+  "descriptionEn" : "The Pokémon's rough skin damages attackers that make direct contact with it.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 23,
+  "nameKr" : "그림자밟기",
+  "nameJp" : "かげふみ",
+  "nameEn" : "Shadow Tag",
+  "descriptionKr" : "상대의 그림자를 밟아\n도망치거나 교체할 수 없게 한다.",
+  "descriptionJp" : "あいての　かげを　ふみ\nにげたり　こうたい　できなくする。",
+  "descriptionEn" : "The Pokémon steps on the opposing Pokémon's shadows to prevent them from fleeing or switching out.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 27,
+  "nameKr" : "포자",
+  "nameJp" : "ほうし",
+  "nameEn" : "Effect Spore",
+  "descriptionKr" : "공격으로 자신에게 접촉한 상대를\n독이나 마비, 잠듦 상태로\n만들 때가 있다.",
+  "descriptionJp" : "こうげきで　じぶんに　ふれた　あいてを\nどくや　まひや　ねむり　じょうたいに\nする　ことがある。",
+  "descriptionEn" : "Contact with the Pokémon may inflict poison, sleep, or paralysis on the attacker.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 26,
+  "nameKr" : "부유",
+  "nameJp" : "ふゆう",
+  "nameEn" : "Levitate",
+  "descriptionKr" : "땅에서 뜨는 것으로\n땅타입의 기술을 받지 않는다.",
+  "descriptionJp" : "じめんから　うくことによって\nじめんタイプの　わざを　うけない。",
+  "descriptionEn" : "By floating in the air, the Pokémon receives full immunity to all Ground-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 22,
+  "nameKr" : "위협",
+  "nameJp" : "いかく",
+  "nameEn" : "Intimidate",
+  "descriptionKr" : "등장했을 때 위협해서\n상대를 위축시켜\n상대의 공격을 떨어뜨린다.",
+  "descriptionJp" : "とうじょう　したとき　いかくして\nあいてを　いしゅくさせ\nあいての　こうげきを　さげて　しまう。",
+  "descriptionEn" : "When the Pokémon enters a battle, it intimidates opposing Pokémon and makes them cower, lowering their Attack stats.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 30,
+  "nameKr" : "자연회복",
+  "nameJp" : "しぜんかいふく",
+  "nameEn" : "Natural Cure",
+  "descriptionKr" : "지닌 포켓몬으로 돌아오면\n상태 이상이 회복된다.",
+  "descriptionJp" : "てもちに　ひっこむと\nじょうたい　いじょうが　なおる。",
+  "descriptionEn" : "The Pokémon's status conditions are cured when it switches out.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 31,
+  "nameKr" : "피뢰침",
+  "nameJp" : "ひらいしん",
+  "nameEn" : "Lightning Rod",
+  "descriptionKr" : "전기타입의 기술을 자신에게\n끌어모아 데미지를 받지 않고\n특수공격을 올린다.",
+  "descriptionJp" : "でんきタイプの　わざを　じぶんに\nよせつけ　ダメージを　うけずに\nとくこうが　あがる。",
+  "descriptionEn" : "The Pokémon draws in all Electric-type moves. Instead of taking damage from them, its Sp. Atk stat is boosted.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 29,
+  "nameKr" : "클리어바디",
+  "nameJp" : "クリアボディ",
+  "nameEn" : "Clear Body",
+  "descriptionKr" : "상대 기술이나 특성으로\n능력을 떨어뜨릴 수 없다.",
+  "descriptionJp" : "あいての　わざや　とくせいで\nのうりょくを　さげられない。",
+  "descriptionEn" : "Prevents other Pokémon's moves or Abilities from lowering the Pokémon's stats.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 28,
+  "nameKr" : "싱크로",
+  "nameJp" : "シンクロ",
+  "nameEn" : "Synchronize",
+  "descriptionKr" : "자신이 걸린\n독이나 마비, 화상을\n상대에게 옮긴다.",
+  "descriptionJp" : "じぶんが　なってしまった\nどくや　まひや　やけどを\nあいてに　うつす。",
+  "descriptionEn" : "If the Pokémon is burned, paralyzed, or poisoned by another Pokémon, that Pokémon will be inflicted with the same status condition.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 32,
+  "nameKr" : "하늘의은총",
+  "nameJp" : "てんのめぐみ",
+  "nameEn" : "Serene Grace",
+  "descriptionKr" : "하늘의 은총 덕분에\n기술의 추가 효과가 나오기 쉽다.",
+  "descriptionJp" : "てんのめぐみの　おかげで\nわざの　ついかこうかが　でやすい。",
+  "descriptionEn" : "Raises the likelihood of additional effects occurring when the Pokémon uses its moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 33,
+  "nameKr" : "쓱쓱",
+  "nameJp" : "すいすい",
+  "nameEn" : "Swift Swim",
+  "descriptionKr" : "비가 오는 날씨일 때\n스피드가 올라간다.",
+  "descriptionJp" : "てんきが　あめのとき\nすばやさが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Speed stat in rain.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 34,
+  "nameKr" : "엽록소",
+  "nameJp" : "ようりょくそ",
+  "nameEn" : "Chlorophyll",
+  "descriptionKr" : "날씨가 맑을 때\n스피드가 올라간다.",
+  "descriptionJp" : "てんきが　はれのとき\nすばやさが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Speed stat in harsh sunlight.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 16,
+  "nameKr" : "변색",
+  "nameJp" : "へんしょく",
+  "nameEn" : "Color Change",
+  "descriptionKr" : "상대에게 받은 기술의 타입으로\n자신의 타입이 변화한다.",
+  "descriptionJp" : "あいてから　うけた　わざの　タイプに\nじぶんの　タイプが　へんか　する。",
+  "descriptionEn" : "The Pokémon’s type becomes the type of the move\nused on it.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 35,
+  "nameKr" : "발광",
+  "nameJp" : "はっこう",
+  "nameEn" : "Illuminate",
+  "descriptionKr" : "주변을 밝게 하는 것으로\n야생 포켓몬과\n만나기 쉬워진다.",
+  "descriptionJp" : "あたりを　あかるくする　ことで\nやせいの　ポケモンに\nそうぐう　しやすくなる。",
+  "descriptionEn" : "By illuminating its surroundings, the Pokémon prevents its accuracy from being lowered.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 36,
+  "nameKr" : "트레이스",
+  "nameJp" : "トレース",
+  "nameEn" : "Trace",
+  "descriptionKr" : "등장했을 때\n상대의 특성을 트레이스해서\n같은 특성이 된다.",
+  "descriptionJp" : "とうじょう　したとき\nあいての　とくせいを　トレースして\nおなじ　とくせいに　なる。",
+  "descriptionEn" : "When it enters a battle, the Pokémon copies an opposing Pokémon's Ability.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 37,
+  "nameKr" : "천하장사",
+  "nameJp" : "ちからもち",
+  "nameEn" : "Huge Power",
+  "descriptionKr" : "물리공격의\n위력이 2배가 된다.",
+  "descriptionJp" : "ぶつり　こうげきの\nいりょくが　２ばいに　なる。",
+  "descriptionEn" : "Doubles the Pokémon's Attack stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 38,
+  "nameKr" : "독가시",
+  "nameJp" : "どくのトゲ",
+  "nameEn" : "Poison Point",
+  "descriptionKr" : "자신과 접촉한 상대를\n독 상태로 만들 때가 있다.",
+  "descriptionJp" : "じぶんに　さわった　あいてを\nどく　じょうたいに　する　ことがある。",
+  "descriptionEn" : "Contact with the Pokémon may poison the attacker.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 40,
+  "nameKr" : "마그마의무장",
+  "nameJp" : "マグマのよろい",
+  "nameEn" : "Magma Armor",
+  "descriptionKr" : "뜨거운 마그마를 몸에 둘러서\n얼음 상태가 되지 않는다.",
+  "descriptionJp" : "あつい　マグマを　みにまとい\nこおり　じょうたいに　ならない。",
+  "descriptionEn" : "The Pokémon’s hot magma coating prevents it from being frozen.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 41,
+  "nameKr" : "수의베일",
+  "nameJp" : "みずのベール",
+  "nameEn" : "Water Veil",
+  "descriptionKr" : "물의 베일을 몸에 둘러서\n화상 상태가 되지 않는다.",
+  "descriptionJp" : "みずのベールを　みにまとい\nやけど　じょうたいに　ならない。",
+  "descriptionEn" : "The Pokémon's water veil prevents it from being burned.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 39,
+  "nameKr" : "정신력",
+  "nameJp" : "せいしんりょく",
+  "nameEn" : "Inner Focus",
+  "descriptionKr" : "단련한 정신으로 인하여\n상대의 공격에 풀죽지 않는다.",
+  "descriptionJp" : "きたえられた　せいしんに　よって\nあいての　こうげきに　ひるまない。",
+  "descriptionEn" : "The Pokémon's intense focus prevents it from flinching or being affected by Intimidate.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 21,
+  "nameKr" : "흡반",
+  "nameJp" : "きゅうばん",
+  "nameEn" : "Suction Cups",
+  "descriptionKr" : "흡반으로 지면에 달라붙어\n포켓몬을 교체시키는\n기술이나 도구의 효과를 발휘하지 못하게 한다.",
+  "descriptionJp" : "きゅうばんで　じめんに　はりつき\nポケモンを　いれかえさせる\nわざや　どうぐが　きかなくなる。",
+  "descriptionEn" : "The Pokémon uses suction cups to stay in one spot. This protects it from moves and items that would force it to switch out.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 43,
+  "nameKr" : "방음",
+  "nameJp" : "ぼうおん",
+  "nameEn" : "Soundproof",
+  "descriptionKr" : "소리를 차단하는 것으로\n소리 공격을 받지 않는다.",
+  "descriptionJp" : "おとを　しゃだん　することに　よって\nおとの　こうげきを　うけない。",
+  "descriptionEn" : "Soundproofing gives the Pokémon full immunity to all sound-based moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 44,
+  "nameKr" : "젖은접시",
+  "nameJp" : "あめうけざら",
+  "nameEn" : "Rain Dish",
+  "descriptionKr" : "비가 오는 날씨일 때\n조금씩 HP를 회복한다.",
+  "descriptionJp" : "てんきが　あめのとき\nすこしずつ　ＨＰを　かいふくする。",
+  "descriptionEn" : "The Pokémon gradually regains HP in rain.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 42,
+  "nameKr" : "자력",
+  "nameJp" : "じりょく",
+  "nameEn" : "Magnet Pull",
+  "descriptionKr" : "강철타입의 포켓몬을\n자력으로 끌어모아\n도망칠 수 없게 한다.",
+  "descriptionJp" : "はがねタイプの　ポケモンを\nじりょくで　ひきつけて\nにげられなくする。",
+  "descriptionEn" : "Prevents Steel-type Pokémon from fleeing by pulling them in with magnetism.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 45,
+  "nameKr" : "모래날림",
+  "nameJp" : "すなおこし",
+  "nameEn" : "Sand Stream",
+  "descriptionKr" : "등장했을 때\n날씨를 모래바람으로 만든다.",
+  "descriptionJp" : "とうじょう　したとき\nてんきを　すなあらしに　する。",
+  "descriptionEn" : "The Pokémon summons a sandstorm when it enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 47,
+  "nameKr" : "두꺼운지방",
+  "nameJp" : "あついしぼう",
+  "nameEn" : "Thick Fat",
+  "descriptionKr" : "두꺼운 지방으로 보호되고 있어\n불꽃타입과 얼음타입의\n기술의 데미지를 반감시킨다.",
+  "descriptionJp" : "あつい　しぼうで　まもられているので\nほのおタイプと　こおりタイプの\nわざの　ダメージを　はんげんさせる。",
+  "descriptionEn" : "The Pokémon is protected by a layer of thick fat, which halves the damage taken from Fire- and Ice-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 48,
+  "nameKr" : "일찍기상",
+  "nameJp" : "はやおき",
+  "nameEn" : "Early Bird",
+  "descriptionKr" : "잠듦 상태가 되어도\n2배 스피드로\n깨어날 수 있다.",
+  "descriptionJp" : "ねむり　じょうたいに　なっても\n２ばいの　はやさで\nめざめる　ことが　できる。",
+  "descriptionEn" : "The Pokémon awakens from sleep twice as fast as other Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 49,
+  "nameKr" : "불꽃몸",
+  "nameJp" : "ほのおのからだ",
+  "nameEn" : "Flame Body",
+  "descriptionKr" : "자신과 접촉한 상대를\n화상 상태로 만들 때가 있다.",
+  "descriptionJp" : "じぶんに　さわった　あいてを\nやけど　じょうたいに　する　ことがある。",
+  "descriptionEn" : "Contact with the Pokémon may burn the attacker.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 50,
+  "nameKr" : "도주",
+  "nameJp" : "にげあし",
+  "nameEn" : "Run Away",
+  "descriptionKr" : "야생 포켓몬으로부터\n반드시 도망칠 수 있다.",
+  "descriptionJp" : "やせいの　ポケモンから\nかならず　にげられる。",
+  "descriptionEn" : "Enables a sure getaway from wild Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 51,
+  "nameKr" : "날카로운눈",
+  "nameJp" : "するどいめ",
+  "nameEn" : "Keen Eye",
+  "descriptionKr" : "날카로운 눈 덕분에\n명중률이 떨어지지 않는다.",
+  "descriptionJp" : "するどい　めの　おかげで\nめいちゅうりつを　さげられない。",
+  "descriptionEn" : "The Pokémon's keen eyes prevent its accuracy from being lowered.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 52,
+  "nameKr" : "괴력집게",
+  "nameJp" : "かいりきバサミ",
+  "nameEn" : "Hyper Cutter",
+  "descriptionKr" : "힘이 자랑인 집게를 가지고 있어\n상대가 공격을 떨어뜨리지 못한다.",
+  "descriptionJp" : "ちからじまんの　ハサミを　もっているので\nあいてに　こうげきを　さげられない。",
+  "descriptionEn" : "The Pokémon's prized, mighty pincers prevent other Pokémon from lowering its Attack stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 53,
+  "nameKr" : "픽업",
+  "nameJp" : "ものひろい",
+  "nameEn" : "Pickup",
+  "descriptionKr" : "상대가 사용한 도구를\n주워올 때가 있다.\n모험 중에도 주워온다.",
+  "descriptionJp" : "あいての　つかった　どうぐを\nひろってくることが　ある。\nぼうけんちゅうも　ひろってくる。",
+  "descriptionEn" : "The Pokémon may pick up an item another Pokémon used during a battle. It may pick up items outside of battle, too.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 46,
+  "nameKr" : "프레셔",
+  "nameJp" : "プレッシャー",
+  "nameEn" : "Pressure",
+  "descriptionKr" : "프레셔를 줘서\n상대가 쓰는 기술의 PP를\n많이 줄인다.",
+  "descriptionJp" : "プレッシャーを　あたえて\nあいての　つかう　わざの　ＰＰを\nおおく　へらす。",
+  "descriptionEn" : "Puts other Pokémon under pressure, causing them to expend more PP to use their moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 56,
+  "nameKr" : "헤롱헤롱바디",
+  "nameJp" : "メロメロボディ",
+  "nameEn" : "Cute Charm",
+  "descriptionKr" : "자신과 접촉한 상대를\n헤롱헤롱 상태로 만들 때가 있다.",
+  "descriptionJp" : "じぶんに　さわった　あいてを\nメロメロに　することが　ある。",
+  "descriptionEn" : "The Pokémon may infatuate attackers that make direct contact with it.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 55,
+  "nameKr" : "의욕",
+  "nameJp" : "はりきり",
+  "nameEn" : "Hustle",
+  "descriptionKr" : "자신의 공격이 높아지지만\n명중률이 떨어진다.",
+  "descriptionJp" : "じぶんの　こうげきが　たかくなるが\nめいちゅうりつが　さがる。",
+  "descriptionEn" : "Boosts the Pokémon's Attack stat but lowers its accuracy.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 25,
+  "nameKr" : "불가사의부적",
+  "nameJp" : "ふしぎなまもり",
+  "nameEn" : "Wonder Guard",
+  "descriptionKr" : "효과가 굉장한 기술만\n맞는 불가사의한 힘.",
+  "descriptionJp" : "こうかばつぐんの　わざしか\nあたらない　ふしぎな　ちから。",
+  "descriptionEn" : "Its mysterious power only lets supereffective moves\nhit the Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 57,
+  "nameKr" : "플러스",
+  "nameJp" : "プラス",
+  "nameEn" : "Plus",
+  "descriptionKr" : "플러스나 마이너스의 특성을 가진\n포켓몬이 동료에 있으면\n자신의 특수공격이 올라간다.",
+  "descriptionJp" : "プラスか　マイナスの　とくせいを　もつ\nポケモンが　なかまに　いると\nじぶんの　とくこうが　あがる。",
+  "descriptionEn" : "Boosts the Sp. Atk stat of the Pokémon if an ally with the Plus or Minus Ability is also in battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 60,
+  "nameKr" : "점착",
+  "nameJp" : "ねんちゃく",
+  "nameEn" : "Sticky Hold",
+  "descriptionKr" : "점착질의 몸에\n도구가 달라붙어 있어\n상대에게 도구를 뺏기지 않는다.",
+  "descriptionJp" : "ねんちゃくしつの　からだに\nどうぐが　くっついているため\nあいてに　どうぐを　うばわれない。",
+  "descriptionEn" : "The Pokémon's held items cling to its sticky body and cannot be removed by other Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 61,
+  "nameKr" : "탈피",
+  "nameJp" : "だっぴ",
+  "nameEn" : "Shed Skin",
+  "descriptionKr" : "몸의 껍질을 벗어 던져\n상태 이상을\n회복할 때가 있다.",
+  "descriptionJp" : "からだの　かわを　ぬぎすてることで\nじょうたい　いじょうを\nなおすことが　ある。",
+  "descriptionEn" : "The Pokémon may cure its own status conditions by shedding its skin.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 63,
+  "nameKr" : "이상한비늘",
+  "nameJp" : "ふしぎなうろこ",
+  "nameEn" : "Marvel Scale",
+  "descriptionKr" : "상태 이상이 되면\n이상한 비늘이 반응해서\n방어가 올라간다.",
+  "descriptionJp" : "じょうたい　いじょうに　なると\nふしぎなうろこが　はんのうして\nぼうぎょが　あがる。",
+  "descriptionEn" : "The Pokémon's marvelous scales boost its Defense stat if it has a status condition.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 62,
+  "nameKr" : "근성",
+  "nameJp" : "こんじょう",
+  "nameEn" : "Guts",
+  "descriptionKr" : "상태 이상이 되면\n근성을 보여서\n공격이 올라간다.",
+  "descriptionJp" : "じょうたい　いじょうに　なると\nこんじょうを　だして\nこうげきが　あがる。",
+  "descriptionEn" : "It's so gutsy that having a status condition boosts the Pokémon's Attack stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 58,
+  "nameKr" : "마이너스",
+  "nameJp" : "マイナス",
+  "nameEn" : "Minus",
+  "descriptionKr" : "플러스나 마이너스의 특성을 가진\n포켓몬이 동료에 있으면\n자신의 특수공격이 올라간다.",
+  "descriptionJp" : "プラスか　マイナスの　とくせいを　もつ\nポケモンが　なかまに　いると\nじぶんの　とくこうが　あがる。",
+  "descriptionEn" : "Boosts the Sp. Atk stat of the Pokémon if an ally with the Plus or Minus Ability is also in battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 65,
+  "nameKr" : "심록",
+  "nameJp" : "しんりょく",
+  "nameEn" : "Overgrow",
+  "descriptionKr" : "HP가 줄었을 때\n풀타입 기술의\n위력이 올라간다.",
+  "descriptionJp" : "ＨＰが　へったとき\nくさタイプの　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up Grass-type moves when the Pokémon's HP is low.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 66,
+  "nameKr" : "맹화",
+  "nameJp" : "もうか",
+  "nameEn" : "Blaze",
+  "descriptionKr" : "HP가 줄었을 때\n불꽃타입 기술의\n위력이 올라간다.",
+  "descriptionJp" : "ＨＰが　へったとき\nほのおタイプの　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up Fire-type moves when the Pokémon's HP is low.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 67,
+  "nameKr" : "급류",
+  "nameJp" : "げきりゅう",
+  "nameEn" : "Torrent",
+  "descriptionKr" : "HP가 줄었을 때\n물타입 기술의\n위력이 올라간다.",
+  "descriptionJp" : "ＨＰが　へったとき\nみずタイプの　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up Water-type moves when the Pokémon's HP is low.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 68,
+  "nameKr" : "벌레의알림",
+  "nameJp" : "むしのしらせ",
+  "nameEn" : "Swarm",
+  "descriptionKr" : "HP가 줄었을 때\n벌레타입 기술의\n위력이 올라간다.",
+  "descriptionJp" : "ＨＰが　へったとき\nむしタイプの　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up Bug-type moves when the Pokémon's HP is low.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 69,
+  "nameKr" : "돌머리",
+  "nameJp" : "いしあたま",
+  "nameEn" : "Rock Head",
+  "descriptionKr" : "반동을 받는 기술을 사용해도\nHP가 줄지 않는다.",
+  "descriptionJp" : "はんどうを　うける　わざを　だしても\nＨＰが　へらない。",
+  "descriptionEn" : "Protects the Pokémon from recoil damage.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 70,
+  "nameKr" : "가뭄",
+  "nameJp" : "ひでり",
+  "nameEn" : "Drought",
+  "descriptionKr" : "등장했을 때\n날씨를 맑음으로 만든다.",
+  "descriptionJp" : "とうじょう　したときに\nてんきを　はれに　する。",
+  "descriptionEn" : "Turns the sunlight harsh when the Pokémon enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 71,
+  "nameKr" : "개미지옥",
+  "nameJp" : "ありじごく",
+  "nameEn" : "Arena Trap",
+  "descriptionKr" : "배틀에서 상대를\n도망칠 수 없게 한다.",
+  "descriptionJp" : "せんとうで　あいてを\nにげられなくする。",
+  "descriptionEn" : "Prevents opposing Pokémon from fleeing from battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 72,
+  "nameKr" : "의기양양",
+  "nameJp" : "やるき",
+  "nameEn" : "Vital Spirit",
+  "descriptionKr" : "의기양양해져서\n잠듦 상태가 되지 않는다.",
+  "descriptionJp" : "やるきを　だすことに　よって\nねむり　じょうたいに　ならない。",
+  "descriptionEn" : "The Pokémon is full of vitality, and that prevents it from falling asleep.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 75,
+  "nameKr" : "조가비갑옷",
+  "nameJp" : "シェルアーマー",
+  "nameEn" : "Shell Armor",
+  "descriptionKr" : "단단한 껍질의 보호를 받아\n상대의 공격이\n급소에 맞지 않는다.",
+  "descriptionJp" : "かたい　からに　まもられ\nあいての　こうげきが\nきゅうしょに　あたらない。",
+  "descriptionEn" : "A hard shell protects the Pokémon from critical hits.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 59,
+  "nameKr" : "기분파",
+  "nameJp" : "てんきや",
+  "nameEn" : "Forecast",
+  "descriptionKr" : "날씨의 영향을 받아\n물타입, 불꽃타입, 얼음타입 중\n하나로 변화한다.",
+  "descriptionJp" : "てんきの　えいきょうを　うけて\nみずタイプ　ほのおタイプ　こおりタイプの\nどれかに　へんかする。",
+  "descriptionEn" : "The Pokémon transforms with the weather to change\nits type to Water, Fire, or Ice.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 74,
+  "nameKr" : "순수한힘",
+  "nameJp" : "ヨガパワー",
+  "nameEn" : "Pure Power",
+  "descriptionKr" : "요가의 힘으로\n물리공격의 위력이\n2배가 된다.",
+  "descriptionJp" : "ヨガの　ちからで\nぶつり　こうげきの　いりょくが\n２ばいに　なる。",
+  "descriptionEn" : "Using its pure power, the Pokémon doubles its Attack stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 73,
+  "nameKr" : "하얀연기",
+  "nameJp" : "しろいけむり",
+  "nameEn" : "White Smoke",
+  "descriptionKr" : "하얀 연기의 보호를 받아\n상대가 능력을 떨어뜨릴 수 없다.",
+  "descriptionJp" : "しろいけむりに　まもられて\nあいてに　のうりょくを　さげられない。",
+  "descriptionEn" : "The Pokémon is protected by its white smoke, which prevents other Pokémon from lowering its stats.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 78,
+  "nameKr" : "전기엔진",
+  "nameJp" : "でんきエンジン",
+  "nameEn" : "Motor Drive",
+  "descriptionKr" : "전기타입의 기술을 받으면\n데미지를 받지 않고\n스피드가 올라간다.",
+  "descriptionJp" : "でんきタイプの　わざを　うけると\nダメージを　うけずに\nすばやさが　あがる。",
+  "descriptionEn" : "The Pokémon takes no damage when hit by Electric-type moves. Instead, its Speed stat is boosted.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 79,
+  "nameKr" : "투쟁심",
+  "nameJp" : "とうそうしん",
+  "nameEn" : "Rivalry",
+  "descriptionKr" : "성별이 같으면\n투쟁심을 불태워 강해진다.\n성별이 다르면 약해진다.",
+  "descriptionJp" : "せいべつが　おなじだと\nとうそうしんを　もやして　つよくなる\nせいべつが　ちがうと　よわくなる",
+  "descriptionEn" : "The Pokémon's competitive spirit makes it deal more damage to Pokémon of the same gender, but less damage to Pokémon of the opposite gender.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 64,
+  "nameKr" : "해감액",
+  "nameJp" : "ヘドロえき",
+  "nameEn" : "Liquid Ooze",
+  "descriptionKr" : "해감액을 흡수한 상대는\n강렬한 악취로\n데미지를 받아 HP가 줄어든다.",
+  "descriptionJp" : "ヘドロえきを　すいとった　あいては\nきょうれつな　あくしゅうで\nダメージを　うけて　ＨＰを　へらす。",
+  "descriptionEn" : "The strong stench of the Pokémon's oozed liquid damages attackers that use HP-draining moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 80,
+  "nameKr" : "불굴의마음",
+  "nameJp" : "ふくつのこころ",
+  "nameEn" : "Steadfast",
+  "descriptionKr" : "풀죽을 때마다\n불굴의 마음을 불태워\n스피드가 올라간다.",
+  "descriptionJp" : "ひるむ　たびに\nふくつのこころを　もやして\nすばやさが　あがる。",
+  "descriptionEn" : "The Pokémon's determination boosts its Speed stat every time it flinches.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 54,
+  "nameKr" : "게으름",
+  "nameJp" : "なまけ",
+  "nameEn" : "Truant",
+  "descriptionKr" : "기술을 사용하면\n다음 턴은 쉰다.",
+  "descriptionJp" : "わざを　だすと\nつぎの　ターンは　やすんでしまう。",
+  "descriptionEn" : "Each time the Pokémon uses a move, it spends the next turn loafing around.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 81,
+  "nameKr" : "눈숨기",
+  "nameJp" : "ゆきがくれ",
+  "nameEn" : "Snow Cloak",
+  "descriptionKr" : "날씨가 싸라기눈일 때\n회피율이 올라간다.",
+  "descriptionJp" : "てんきが　あられのとき\nかいひりつが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's evasiveness in snow.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 82,
+  "nameKr" : "먹보",
+  "nameJp" : "くいしんぼう",
+  "nameEn" : "Gluttony",
+  "descriptionKr" : "HP가 줄어들면 먹을\n나무열매를 HP가\n절반일 때 먹어버린다.",
+  "descriptionJp" : "ＨＰが　すくなくなったら　たべる\nきのみを　ＨＰ　はんぶんの\nときに　たべてしまう。",
+  "descriptionEn" : "If the Pokémon is holding a Berry to be eaten when its HP is low, it will instead eat the Berry when its HP drops to half or less.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 83,
+  "nameKr" : "분노의경혈",
+  "nameJp" : "いかりのつぼ",
+  "nameEn" : "Anger Point",
+  "descriptionKr" : "급소에 공격이 맞으면\n크게 분노해 공격력이\n최대가 된다.",
+  "descriptionJp" : "きゅうしょに　こうげきが　あたると\nいかりくるって　こうげきりょくが\nさいだいに　なる。",
+  "descriptionEn" : "The Pokémon is angered when it takes a critical hit, and that maxes its Attack stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 84,
+  "nameKr" : "곡예",
+  "nameJp" : "かるわざ",
+  "nameEn" : "Unburden",
+  "descriptionKr" : "지니던 도구가 없어지면\n스피드가 올라간다.",
+  "descriptionJp" : "もっていた　どうぐが　なくなると\nすばやさが　あがる。",
+  "descriptionEn" : "Boosts the Speed stat if the Pokémon's held item is used or lost.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 77,
+  "nameKr" : "갈지자걸음",
+  "nameJp" : "ちどりあし",
+  "nameEn" : "Tangled Feet",
+  "descriptionKr" : "혼란 상태일 때는\n회피율이 올라간다.",
+  "descriptionJp" : "こんらん　じょうたいの　ときは\nかいひりつが　アップする。",
+  "descriptionEn" : "Boosts the Pokémon's evasiveness if it is confused.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 87,
+  "nameKr" : "건조피부",
+  "nameJp" : "かんそうはだ",
+  "nameEn" : "Dry Skin",
+  "descriptionKr" : "비가 오는 날씨나 물타입의\n기술로 HP가 회복되고\n맑을 때나 불꽃타입의 기술로는 줄어든다.",
+  "descriptionJp" : "てんきが　あめのときや　みずタイプの\nわざで　ＨＰが　かいふくし　はれのときや\nほのおタイプの　わざで　へってしまう。",
+  "descriptionEn" : "Restores the Pokémon's HP in rain or when it is hit by Water-type moves. Reduces HP in harsh sunlight, and increases the damage received from Fire-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 88,
+  "nameKr" : "다운로드",
+  "nameJp" : "ダウンロード",
+  "nameEn" : "Download",
+  "descriptionKr" : "상대의 방어와 특수방어를 비교해서\n낮은 쪽 능력에 맞춰서\n자신의 공격이나 특수공격을 올린다.",
+  "descriptionJp" : "あいての　ぼうぎょと　とくぼうを　くらべて\nひくい　ほうの　のうりょくに　あわせて\nじぶんの　こうげきか　とくこうを　あげる。",
+  "descriptionEn" : "The Pokémon compares an opposing Pokémon's Defense and Sp. Def stats before raising its own Attack or Sp. Atk stat—whichever will be more effective.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 85,
+  "nameKr" : "내열",
+  "nameJp" : "たいねつ",
+  "nameEn" : "Heatproof",
+  "descriptionKr" : "내열인 몸으로 인해\n불꽃타입 공격의\n데미지를 반감한다.",
+  "descriptionJp" : "たいねつの　からだに　よって\nほのおタイプの　わざの\nダメージを　はんげんさせる",
+  "descriptionEn" : "The Pokémon's heatproof body halves the damage taken from Fire-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 89,
+  "nameKr" : "철주먹",
+  "nameJp" : "てつのこぶし",
+  "nameEn" : "Iron Fist",
+  "descriptionKr" : "펀치를 사용하는 기술의\n위력이 올라간다.",
+  "descriptionJp" : "パンチを　つかう　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up punching moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 92,
+  "nameKr" : "스킬링크",
+  "nameJp" : "スキルリンク",
+  "nameEn" : "Skill Link",
+  "descriptionKr" : "연속 기술을 사용하면 항상\n최고 횟수를 사용할 수 있다.",
+  "descriptionJp" : "れんぞくわざを　つかうと　いつも\nさいこう　かいすう　だすことが　できる。",
+  "descriptionEn" : "Maximizes the number of times multistrike moves hit.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 91,
+  "nameKr" : "적응력",
+  "nameJp" : "てきおうりょく",
+  "nameEn" : "Adaptability",
+  "descriptionKr" : "자신과 같은 타입의\n기술 위력이 올라간다.",
+  "descriptionJp" : "じぶんと　おなじ　タイプの\nわざの　いりょくが　あがる。",
+  "descriptionEn" : "Powers up moves of the same type as the Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 94,
+  "nameKr" : "선파워",
+  "nameJp" : "サンパワー",
+  "nameEn" : "Solar Power",
+  "descriptionKr" : "날씨가 맑으면\n특수공격이 올라가지만\n매 턴 HP가 줄어든다.",
+  "descriptionJp" : "てんきが　はれると\nとくこうが　あがるが\nまいターン　ＨＰが　へる。",
+  "descriptionEn" : "In harsh sunlight, the Pokémon's Sp. Atk stat is boosted, but its HP decreases every turn.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 76,
+  "nameKr" : "에어록",
+  "nameJp" : "エアロック",
+  "nameEn" : "Air Lock",
+  "descriptionKr" : "모든 날씨의 영향이\n없어진다.",
+  "descriptionJp" : "あらゆる　てんきの　えいきょうが\nきえて　しまう。",
+  "descriptionEn" : "Eliminates the effects of weather.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 93,
+  "nameKr" : "촉촉바디",
+  "nameJp" : "うるおいボディ",
+  "nameEn" : "Hydration",
+  "descriptionKr" : "비가 오는 날씨일 때\n상태 이상이 회복된다.",
+  "descriptionJp" : "てんきが　あめのとき\nじょうたい　いじょうが　なおる。",
+  "descriptionEn" : "Cures the Pokémon's status conditions in rain.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 97,
+  "nameKr" : "스나이퍼",
+  "nameJp" : "スナイパー",
+  "nameEn" : "Sniper",
+  "descriptionKr" : "공격을 급소에 맞혔을 때\n위력이 더욱 올라간다.",
+  "descriptionJp" : "こうげきを　きゅうしょに　あてると\nいりょくが　さらに　あがる。",
+  "descriptionEn" : "If the Pokémon's attack lands a critical hit, the attack is powered up even further.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 98,
+  "nameKr" : "매직가드",
+  "nameJp" : "マジックガード",
+  "nameEn" : "Magic Guard",
+  "descriptionKr" : "공격 이외에는\n데미지를 입지 않는다.",
+  "descriptionJp" : "こうげき　いがいでは\nダメージを　うけない。",
+  "descriptionEn" : "The Pokémon only takes damage from attacks.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 99,
+  "nameKr" : "노가드",
+  "nameJp" : "ノーガード",
+  "nameEn" : "No Guard",
+  "descriptionKr" : "노가드전법에 따라\n서로가 사용하는 기술이\n반드시 맞게 된다.",
+  "descriptionJp" : "ノーガード　せんぽうに　よって\nおたがいの　だす　わざが\nかならず　あたる　ようになる。",
+  "descriptionEn" : "The Pokémon employs no-guard tactics to ensure incoming and outgoing attacks always land. ",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 100,
+  "nameKr" : "시간벌기",
+  "nameJp" : "あとだし",
+  "nameEn" : "Stall",
+  "descriptionKr" : "기술을 사용하는 순서가\n반드시 마지막이 된다.",
+  "descriptionJp" : "わざを　だす　じゅんばんが\nかならず　さいごに　なる。",
+  "descriptionEn" : "The Pokémon is always the last to use its moves. ",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 101,
+  "nameKr" : "테크니션",
+  "nameJp" : "テクニシャン",
+  "nameEn" : "Technician",
+  "descriptionKr" : "위력이 약한 기술의\n위력을 올려서 공격할 수 있다.",
+  "descriptionJp" : "いりょくが　ひくい　わざの\nいりょくを　たかくして　こうげきできる。",
+  "descriptionEn" : "Powers up weak moves so the Pokémon can deal more damage with them.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 102,
+  "nameKr" : "리프가드",
+  "nameJp" : "リーフガード",
+  "nameEn" : "Leaf Guard",
+  "descriptionKr" : "날씨가 맑을 때는\n상태 이상이 되지 않는다.",
+  "descriptionJp" : "てんきが　はれのときは\nじょうたい　いじょうに　ならない。",
+  "descriptionEn" : "Prevents status conditions in harsh sunlight.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 104,
+  "nameKr" : "틀깨기",
+  "nameJp" : "かたやぶり",
+  "nameEn" : "Mold Breaker",
+  "descriptionKr" : "상대 특성에\n방해받지 않고 상대에게\n기술을 쓸 수 있다.",
+  "descriptionJp" : "あいての　とくせいに\nじゃまされる　ことなく　あいてに\nわざを　だすことが　できる。",
+  "descriptionEn" : "The Pokémon's moves are unimpeded by the Ability of the target.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 86,
+  "nameKr" : "단순",
+  "nameJp" : "たんじゅん",
+  "nameEn" : "Simple",
+  "descriptionKr" : "능력 변화가\n평소의 2배가 된다.",
+  "descriptionJp" : "のうりょく　へんかが\nいつもの　２ばいに　なる。",
+  "descriptionEn" : "Doubles the effects of the Pokémon's stat changes.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 103,
+  "nameKr" : "서투름",
+  "nameJp" : "ぶきよう",
+  "nameEn" : "Klutz",
+  "descriptionKr" : "지니고 있는 도구를\n쓸 수 없다.",
+  "descriptionJp" : "もっている　どうぐを\nつかうことが　できない。",
+  "descriptionEn" : "The Pokémon can't use any held items.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 105,
+  "nameKr" : "대운",
+  "nameJp" : "きょううん",
+  "nameEn" : "Super Luck",
+  "descriptionKr" : "대운을 가지고 있어\n상대의 급소에\n공격이 맞기 쉽다.",
+  "descriptionJp" : "きょううんを　もっているため\nあいての　きゅうしょに\nこうげきが　あたりやすい。",
+  "descriptionEn" : "The Pokémon is so lucky that the critical-hit ratios of its moves are boosted.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 106,
+  "nameKr" : "유폭",
+  "nameJp" : "ゆうばく",
+  "nameEn" : "Aftermath",
+  "descriptionKr" : "기절했을 때\n접촉한 상대에게\n데미지를 준다.",
+  "descriptionJp" : "ひんしに　なったとき\nさわった　あいてに\nダメージを　あたえる。",
+  "descriptionEn" : "Damages the attacker if it knocks out the Pokémon with a move that makes direct contact.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 95,
+  "nameKr" : "속보",
+  "nameJp" : "はやあし",
+  "nameEn" : "Quick Feet",
+  "descriptionKr" : "상태 이상이 되면\n스피드가 올라간다.",
+  "descriptionJp" : "じょうたい　いじょうに　なると\nすばやさが　あがる。",
+  "descriptionEn" : "Boosts the Speed stat if the Pokémon has a status condition.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 96,
+  "nameKr" : "노말스킨",
+  "nameJp" : "ノーマルスキン",
+  "nameEn" : "Normalize",
+  "descriptionKr" : "어떤 타입의 기술도\n모두 노말타입이 된다.\n위력이 조금 올라간다.",
+  "descriptionJp" : "どんな　タイプの　わざでも\nすべて　ノーマルタイプに　なる。\nいりょくが　すこし　あがる。",
+  "descriptionEn" : "All the Pokémon’s moves become Normal type.\nThe power of those moves is boosted a little.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 108,
+  "nameKr" : "예지몽",
+  "nameJp" : "よちむ",
+  "nameEn" : "Forewarn",
+  "descriptionKr" : "등장했을 때\n상대가 지닌 기술을\n하나만 꿰뚫어본다.",
+  "descriptionJp" : "とうじょう　したとき\nあいての　もつ　わざを\nひとつだけ　よみとる。",
+  "descriptionEn" : "When it enters a battle, the Pokémon can tell one of the moves an opposing Pokémon has.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 107,
+  "nameKr" : "위험예지",
+  "nameJp" : "きけんよち",
+  "nameEn" : "Anticipation",
+  "descriptionKr" : "상대가 지닌 위험한 기술을\n감지할 수 있다.",
+  "descriptionJp" : "あいての　もつ　きけんな　わざを\nさっちする　ことができる。",
+  "descriptionEn" : "The Pokémon can sense an opposing Pokémon's dangerous moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 109,
+  "nameKr" : "천진",
+  "nameJp" : "てんねん",
+  "nameEn" : "Unaware",
+  "descriptionKr" : "상대의 능력 변화를\n무시하고 공격할 수 있다.",
+  "descriptionJp" : "あいての　のうりょくの　へんかを\nむしして　こうげきが　できる。",
+  "descriptionEn" : "When attacking, the Pokémon ignores the target's stat changes.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 110,
+  "nameKr" : "색안경",
+  "nameJp" : "いろめがね",
+  "nameEn" : "Tinted Lens",
+  "descriptionKr" : "효과가 별로인 기술을\n통상의 위력으로\n쓸 수 있다.",
+  "descriptionJp" : "こうかが　いまひとつの　わざを\nつうじょうの　いりょくで\nだすことが　できる。",
+  "descriptionEn" : "The Pokémon can use “not very effective” moves to deal regular damage.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 111,
+  "nameKr" : "필터",
+  "nameJp" : "フィルター",
+  "nameEn" : "Filter",
+  "descriptionKr" : "효과가 굉장한\n공격의 위력을\n약하게 만든다.",
+  "descriptionJp" : "こうかばつぐんに　なってしまう\nこうげきの　いりょくを\nよわめる　ことが　できる。",
+  "descriptionEn" : "Reduces the power of supereffective attacks that hit the Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 115,
+  "nameKr" : "아이스바디",
+  "nameJp" : "アイスボディ",
+  "nameEn" : "Ice Body",
+  "descriptionKr" : "날씨가 싸라기눈일 때 HP를\n조금씩 회복한다.",
+  "descriptionJp" : "てんきが　あられのとき　ＨＰを\nすこしずつ　かいふく　する。",
+  "descriptionEn" : "The Pokémon gradually regains HP in snow.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 90,
+  "nameKr" : "포이즌힐",
+  "nameJp" : "ポイズンヒール",
+  "nameEn" : "Poison Heal",
+  "descriptionKr" : "독 상태가 되면\nHP가 줄지 않고 증가한다.",
+  "descriptionJp" : "どくじょうたいに　なると\nＨＰが　へらずに　ふえていく。",
+  "descriptionEn" : "If poisoned, the Pokémon has its HP restored instead of taking damage.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 116,
+  "nameKr" : "하드록",
+  "nameJp" : "ハードロック",
+  "nameEn" : "Solid Rock",
+  "descriptionKr" : "효과가 굉장한\n공격의 위력을\n약하게 만든다.",
+  "descriptionJp" : "こうかばつぐんに　なってしまう\nこうげきの　いりょくを\nよわめる　ことが　できる。",
+  "descriptionEn" : "Reduces the power of supereffective attacks that hit the Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 117,
+  "nameKr" : "눈퍼뜨리기",
+  "nameJp" : "ゆきふらし",
+  "nameEn" : "Snow Warning",
+  "descriptionKr" : "등장했을 때\n날씨를 싸라기눈으로 만든다.",
+  "descriptionJp" : "とうじょう　したときに\nてんきを　あられに　する。",
+  "descriptionEn" : "The Pokémon makes it snow when it enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 112,
+  "nameKr" : "슬로스타트",
+  "nameJp" : "スロースタート",
+  "nameEn" : "Slow Start",
+  "descriptionKr" : "5턴 동안\n공격과 스피드가\n절반이 된다.",
+  "descriptionJp" : "５ターンの　あいだ\nこうげきと　すばやさが\nはんぶんに　なる。",
+  "descriptionEn" : "For five turns, the Pokémon's Attack and Speed stats are halved.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 114,
+  "nameKr" : "마중물",
+  "nameJp" : "よびみず",
+  "nameEn" : "Storm Drain",
+  "descriptionKr" : "물타입의 기술을 자신에게 끌어모아\n데미지는 받지 않고 특수공격이 올라간다.",
+  "descriptionJp" : "みずタイプの　わざを　じぶんに　よせつけ\nダメージは　うけずに　とくこうが　あがる。",
+  "descriptionEn" : "The Pokémon draws in all Water-type moves. Instead of taking damage from them, its Sp. Atk stat is boosted.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 113,
+  "nameKr" : "배짱",
+  "nameJp" : "きもったま",
+  "nameEn" : "Scrappy",
+  "descriptionKr" : "고스트타입 포켓몬에게\n노말타입과 격투타입의\n기술을 맞게 한다.",
+  "descriptionJp" : "ゴーストタイプの　ポケモンに\nノーマルタイプと　かくとうタイプの\nわざを　あてることが　できる。",
+  "descriptionEn" : "The Pokémon can hit Ghost-type Pokémon with Normal- and Fighting-type moves. It is also unaffected by Intimidate.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 118,
+  "nameKr" : "꿀모으기",
+  "nameJp" : "みつあつめ",
+  "nameEn" : "Honey Gather",
+  "descriptionKr" : "배틀이 끝났을 때\n달콤한꿀을 주울 때가 있다.",
+  "descriptionJp" : "せんとうが　おわったとき\nあまいミツを　ひろうことが　ある。",
+  "descriptionEn" : "The Pokémon may gather Honey after a battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 119,
+  "nameKr" : "통찰",
+  "nameJp" : "おみとおし",
+  "nameEn" : "Frisk",
+  "descriptionKr" : "등장했을 때\n상대의 지닌 물건을\n통찰할 수 있다.",
+  "descriptionJp" : "とうじょう　したとき\nあいての　もちものを\nみとおすことが　できる。",
+  "descriptionEn" : "When it enters a battle, the Pokémon can check an opposing Pokémon's held item.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 125,
+  "nameKr" : "우격다짐",
+  "nameJp" : "ちからずく",
+  "nameEn" : "Sheer Force",
+  "descriptionKr" : "기술의 추가 효과가 없어지지만\n그만큼 높은 위력으로\n기술을 사용할 수 있다.",
+  "descriptionJp" : "わざの　ついか　こうかは　なくなるが\nそのぶん　たかい　いりょくで\nわざを　だすことが　できる。",
+  "descriptionEn" : "Removes any additional effects from the Pokémon's moves, but increases the moves' power.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 120,
+  "nameKr" : "이판사판",
+  "nameJp" : "すてみ",
+  "nameEn" : "Reckless",
+  "descriptionKr" : "반동 데미지를\n받는 기술의 위력이 올라간다.",
+  "descriptionJp" : "はんどうで　ダメージを\nうける　わざの　いりょくが　あがる。",
+  "descriptionEn" : "Powers up moves that have recoil damage.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 124,
+  "nameKr" : "나쁜손버릇",
+  "nameJp" : "わるいてぐせ",
+  "nameEn" : "Pickpocket",
+  "descriptionKr" : "접촉한 상대의 도구를\n훔친다.",
+  "descriptionJp" : "さわられた　あいての　どうぐを\nぬすんで　しまう。",
+  "descriptionEn" : "The Pokémon steals the held item from attackers that made direct contact with it.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 127,
+  "nameKr" : "긴장감",
+  "nameJp" : "きんちょうかん",
+  "nameEn" : "Unnerve",
+  "descriptionKr" : "상대를 긴장시켜 나무열매를\n먹지 못하게 한다.",
+  "descriptionJp" : "あいてを　きんちょうさせて\nきのみを　たべられなく　させる。",
+  "descriptionEn" : "Unnerves opposing Pokémon and makes them unable to eat Berries.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 128,
+  "nameKr" : "오기",
+  "nameJp" : "まけんき",
+  "nameEn" : "Defiant",
+  "descriptionKr" : "능력이 떨어지면\n공격이 크게 올라간다.",
+  "descriptionJp" : "のうりょくを　さげられると\nこうげきが　ぐーんと　あがる。",
+  "descriptionEn" : "If the Pokémon has any stat lowered by an opposing Pokémon, its Attack stat will be boosted sharply.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 129,
+  "nameKr" : "무기력",
+  "nameJp" : "よわき",
+  "nameEn" : "Defeatist",
+  "descriptionKr" : "HP가 절반이 되면\n무기력해져서 공격과\n특수공격이 반감된다.",
+  "descriptionJp" : "ＨＰが　はんぶんに　なると\nよわきに　なって　こうげきと\nとくこうが　はんげんする。",
+  "descriptionEn" : "Halves the Pokémon’s Attack and Sp. Atk stats\nwhen its HP becomes half or less.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 130,
+  "nameKr" : "저주받은바디",
+  "nameJp" : "のろわれボディ",
+  "nameEn" : "Cursed Body",
+  "descriptionKr" : "공격을 받으면 상대의 기술을\n사슬묶기 상태로\n만들 때가 있다.",
+  "descriptionJp" : "こうげきを　うけると　あいての　わざを\nかなしばり　じょうたいに\nすることが　ある。",
+  "descriptionEn" : "May disable a move that has dealt damage to the Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 126,
+  "nameKr" : "심술꾸러기",
+  "nameJp" : "あまのじゃく",
+  "nameEn" : "Contrary",
+  "descriptionKr" : "능력의 변화가 역전해서\n올라갈 때 떨어지고\n떨어질 때 올라간다.",
+  "descriptionJp" : "のうりょくの　へんかが　ぎゃくてんして\nあがるときに　さがり\nさがるときに　あがる。",
+  "descriptionEn" : "Reverses any stat changes affecting the Pokémon so that attempts to boost its stats instead lower them—and attempts to lower its stats will boost them.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 131,
+  "nameKr" : "치유의마음",
+  "nameJp" : "いやしのこころ",
+  "nameEn" : "Healer",
+  "descriptionKr" : "같은 편의 상태 이상을\n가끔 회복시킨다.",
+  "descriptionJp" : "じょうたい　いじょうの　みかたを\nたまに　なおしてあげる。",
+  "descriptionEn" : "Sometimes cures the status conditions of the Pokémon's allies.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 132,
+  "nameKr" : "프렌드가드",
+  "nameJp" : "フレンドガード",
+  "nameEn" : "Friend Guard",
+  "descriptionKr" : "같은 편의 데미지를\n줄일 수 있다.",
+  "descriptionJp" : "みかたの　ダメージを\nへらすことが　できる。",
+  "descriptionEn" : "Reduces damage dealt to allies.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 133,
+  "nameKr" : "깨어진갑옷",
+  "nameJp" : "くだけるよろい",
+  "nameEn" : "Weak Armor",
+  "descriptionKr" : "물리 기술로 데미지를 받으면\n방어가 떨어지고\n스피드가 크게 올라간다.",
+  "descriptionJp" : "ぶつりわざで　ダメージを　うけると\nぼうぎょが　さがり\nすばやさが　ぐーんと　あがる。",
+  "descriptionEn" : "The Pokémon's Defense stat is lowered when it takes damage from physical moves, but its Speed stat is sharply boosted.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 135,
+  "nameKr" : "라이트메탈",
+  "nameJp" : "ライトメタル",
+  "nameEn" : "Light Metal",
+  "descriptionKr" : "자신의 무게가\n절반이 된다.",
+  "descriptionJp" : "じぶんの　おもさが\nはんぶんに　なる。",
+  "descriptionEn" : "Halves the Pokémon's weight.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 121,
+  "nameKr" : "멀티타입",
+  "nameJp" : "マルチタイプ",
+  "nameEn" : "Multitype",
+  "descriptionKr" : "지니고 있는 플레이트나\nZ크리스탈 타입에 따라\n자신의 타입이 바뀐다.",
+  "descriptionJp" : "もっている　プレートや\nＺクリスタルの　タイプによって\nじぶんの　タイプが　かわる。",
+  "descriptionEn" : "Changes the Pokémon's type to match the plate it holds. ",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 136,
+  "nameKr" : "멀티스케일",
+  "nameJp" : "マルチスケイル",
+  "nameEn" : "Multiscale",
+  "descriptionKr" : "HP가 꽉 찼을 때\n받는 데미지가 줄어든다.",
+  "descriptionJp" : "ＨＰが　まんたんの　ときに\nうける　ダメージが　すくなくなる。",
+  "descriptionEn" : "Reduces the amount of damage the Pokémon takes while its HP is full.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 122,
+  "nameKr" : "플라워기프트",
+  "nameJp" : "フラワーギフト",
+  "nameEn" : "Flower Gift",
+  "descriptionKr" : "날씨가 맑을 때\n자신과 같은 편의 공격과\n특수방어의 능력이 올라간다.",
+  "descriptionJp" : "てんきが　はれのとき\nじぶんと　みかたの　こうげきと\nとくぼうの　のうりょくが　あがる。",
+  "descriptionEn" : "Boosts the Attack and Sp. Def stats of itself\nand allies in harsh sunlight.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 139,
+  "nameKr" : "수확",
+  "nameJp" : "しゅうかく",
+  "nameEn" : "Harvest",
+  "descriptionKr" : "사용한 나무열매를\n몇 번이고 만들어 낸다.",
+  "descriptionJp" : "つかった　きのみを\nなんかいも　つくりだす。",
+  "descriptionEn" : "May create another Berry after one is used.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 134,
+  "nameKr" : "헤비메탈",
+  "nameJp" : "ヘヴィメタル",
+  "nameEn" : "Heavy Metal",
+  "descriptionKr" : "자신의 무게가\n2배가 된다.",
+  "descriptionJp" : "じぶんの　おもさが\n２ばいに　なる。",
+  "descriptionEn" : "Doubles the Pokémon's weight.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 142,
+  "nameKr" : "방진",
+  "nameJp" : "ぼうじん",
+  "nameEn" : "Overcoat",
+  "descriptionKr" : "모래바람이나 싸라기눈 등의\n데미지를 입지 않는다.\n가루의 기술을 받지 않는다.",
+  "descriptionJp" : "すなあらしや　あられなどの\nダメージを　うけない。\nこなの　わざを　うけない。",
+  "descriptionEn" : "The Pokémon takes no damage from sandstorms. It is also protected from the effects of powders and spores.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 141,
+  "nameKr" : "변덕쟁이",
+  "nameJp" : "ムラっけ",
+  "nameEn" : "Moody",
+  "descriptionKr" : "매 턴 능력 중 하나가\n크게 오르고 하나가 떨어진다.",
+  "descriptionJp" : "まいターン　のうりょくの　どれかが\nぐーんと　あがって　どれかが　さがる。",
+  "descriptionEn" : "Every turn, one of the Pokémon's stats will be boosted sharply but another stat will be lowered.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 123,
+  "nameKr" : "나이트메어",
+  "nameJp" : "ナイトメア",
+  "nameEn" : "Bad Dreams",
+  "descriptionKr" : "잠듦 상태의 상대에게\n데미지를 준다.",
+  "descriptionJp" : "ねむり　じょうたいの　あいてに\nダメージを　あたえる。",
+  "descriptionEn" : "Damages opposing Pokémon that are asleep.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 138,
+  "nameKr" : "열폭주",
+  "nameJp" : "ねつぼうそう",
+  "nameEn" : "Flare Boost",
+  "descriptionKr" : "화상 상태가 되었을 때\n특수 기술의 위력이 올라간다.",
+  "descriptionJp" : "やけど　じょうたいに　なったとき\nとくしゅわざの　いりょくが　あがる。",
+  "descriptionEn" : "Powers up special moves when the Pokémon is burned.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 143,
+  "nameKr" : "독수",
+  "nameJp" : "どくしゅ",
+  "nameEn" : "Poison Touch",
+  "descriptionKr" : "접촉하기만 해도 상대를\n독 상태로 만들 때가 있다.",
+  "descriptionJp" : "さわる　だけで　あいてを\nどく　じょうたいに　することがある。",
+  "descriptionEn" : "May poison a target when the Pokémon makes contact.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 144,
+  "nameKr" : "재생력",
+  "nameJp" : "さいせいりょく",
+  "nameEn" : "Regenerator",
+  "descriptionKr" : "지닌 포켓몬으로 돌아오면\nHP를 조금 회복한다.",
+  "descriptionJp" : "てもちに　ひっこむと\nＨＰが　すこし　かいふくする。",
+  "descriptionEn" : "The Pokémon has a little of its HP restored when withdrawn from battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 140,
+  "nameKr" : "텔레파시",
+  "nameJp" : "テレパシー",
+  "nameEn" : "Telepathy",
+  "descriptionKr" : "같은 편의 공격의 낌새를 읽고\n기술을 회피한다.",
+  "descriptionJp" : "みかたの　こうげきを　よみとって\nわざを　かいひする。",
+  "descriptionEn" : "The Pokémon anticipates and dodges the attacks of its allies.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 145,
+  "nameKr" : "부풀린가슴",
+  "nameJp" : "はとむね",
+  "nameEn" : "Big Pecks",
+  "descriptionKr" : "방어를 떨어뜨리는\n효과를 받지 않는다.",
+  "descriptionJp" : "ぼうぎょを　さげる\nこうかを　うけない。",
+  "descriptionEn" : "Prevents the Pokémon from having its Defense stat lowered.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 146,
+  "nameKr" : "모래헤치기",
+  "nameJp" : "すなかき",
+  "nameEn" : "Sand Rush",
+  "descriptionKr" : "날씨가 모래바람일 때\n스피드가 올라간다.",
+  "descriptionJp" : "てんきが　すなあらし　のとき\nすばやさが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Speed stat in a sandstorm.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 147,
+  "nameKr" : "미라클스킨",
+  "nameJp" : "ミラクルスキン",
+  "nameEn" : "Wonder Skin",
+  "descriptionKr" : "변화 기술을 받기 어려운\n몸으로 되어 있다.",
+  "descriptionJp" : "へんかわざを　うけにくい\nからだに　なっている。",
+  "descriptionEn" : "Makes status moves more likely to miss the Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 148,
+  "nameKr" : "애널라이즈",
+  "nameJp" : "アナライズ",
+  "nameEn" : "Analytic",
+  "descriptionKr" : "제일 마지막에 기술을 쓰면\n기술의 위력이 올라간다.",
+  "descriptionJp" : "いちばん　さいごに　わざを　だすと\nわざの　いりょくが　あがる。",
+  "descriptionEn" : "Boosts the power of the Pokémon's move if it is the last to act that turn.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 151,
+  "nameKr" : "틈새포착",
+  "nameJp" : "すりぬけ",
+  "nameEn" : "Infiltrator",
+  "descriptionKr" : "상대의 벽이나 대타출동을\n뚫고 공격할 수 있다.",
+  "descriptionJp" : "あいての　かべや　みがわりを\nすりぬけて　こうげき　できる",
+  "descriptionEn" : "The Pokémon's moves are unaffected by the target's barriers, substitutes, and the like.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 153,
+  "nameKr" : "자기과신",
+  "nameJp" : "じしんかじょう",
+  "nameEn" : "Moxie",
+  "descriptionKr" : "상대를 쓰러뜨리면\n자신감이 붙어서\n공격이 올라간다.",
+  "descriptionJp" : "あいてを　たおすと\nじしんが　ついて\nこうげきが　あがる。",
+  "descriptionEn" : "When the Pokémon knocks out a target, it shows moxie, which boosts its Attack stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 154,
+  "nameKr" : "정의의마음",
+  "nameJp" : "せいぎのこころ",
+  "nameEn" : "Justified",
+  "descriptionKr" : "악타입 공격을 받으면\n정의감으로 공격이 올라간다.",
+  "descriptionJp" : "あくタイプの　こうげきを　うけると\nせいぎかんで　こうげきが　あがる。",
+  "descriptionEn" : "When the Pokémon is hit by a Dark-type attack, its Attack stat is boosted by its sense of justice.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 150,
+  "nameKr" : "괴짜",
+  "nameJp" : "かわりもの",
+  "nameEn" : "Imposter",
+  "descriptionKr" : "눈앞의 포켓몬으로\n변신해버린다.",
+  "descriptionJp" : "めのまえの　ポケモンに\nへんしん　してしまう。",
+  "descriptionEn" : "The Pokémon transforms itself into the Pokémon it's facing.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 155,
+  "nameKr" : "주눅",
+  "nameJp" : "びびり",
+  "nameEn" : "Rattled",
+  "descriptionKr" : "악타입과 고스트타입과\n벌레타입의 기술을 받으면\n주눅이 들어 스피드가 올라간다.",
+  "descriptionJp" : "あくタイプと　ゴーストタイプと\nむしタイプの　わざを　うけると\nびびって　すばやさが　あがる。",
+  "descriptionEn" : "The Pokémon gets scared when hit by a Dark-, Ghost-, or Bug-type attack or if intimidated, which boosts its Speed stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 156,
+  "nameKr" : "매직미러",
+  "nameJp" : "マジックミラー",
+  "nameEn" : "Magic Bounce",
+  "descriptionKr" : "상대가 쓴 변화 기술을 받지 않고\n그대로 되받아칠 수 있다.",
+  "descriptionJp" : "あいてに　だされた　へんかわざを　うけずに\nそのまま　かえす　ことが　できる。",
+  "descriptionEn" : "The Pokémon reflects status moves instead of getting hit by them.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 159,
+  "nameKr" : "모래의힘",
+  "nameJp" : "すなのちから",
+  "nameEn" : "Sand Force",
+  "descriptionKr" : "날씨가 모래바람일 때\n바위타입과 땅타입과\n강철타입의 위력이 올라간다.",
+  "descriptionJp" : "てんきが　すなあらしの　とき\nいわタイプと　じめんタイプと\nはがねタイプの　いりょくが　あがる。",
+  "descriptionEn" : "Boosts the power of Rock-, Ground-, and Steel-type moves in a sandstorm. ",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 157,
+  "nameKr" : "초식",
+  "nameJp" : "そうしょく",
+  "nameEn" : "Sap Sipper",
+  "descriptionKr" : "풀타입 기술을 받으면\n데미지를 입지 않고\n공격이 올라간다.",
+  "descriptionJp" : "くさタイプの　わざを　うけると\nダメージを　うけずに\nこうげきが　あがる。",
+  "descriptionEn" : "The Pokémon takes no damage when hit by Grass-type moves. Instead, its Attack stat is boosted.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 137,
+  "nameKr" : "독폭주",
+  "nameJp" : "どくぼうそう",
+  "nameEn" : "Toxic Boost",
+  "descriptionKr" : "독 상태가 되었을 때\n물리 기술의 위력이 올라간다.",
+  "descriptionJp" : "どく　じょうたいに　なったとき\nぶつりわざの　いりょくが　あがる。",
+  "descriptionEn" : "Powers up physical moves when the Pokémon is poisoned.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 149,
+  "nameKr" : "일루전",
+  "nameJp" : "イリュージョン",
+  "nameEn" : "Illusion",
+  "descriptionKr" : "지닌 포켓몬 중 제일 뒤에 있는\n포켓몬으로 둔갑하여 나와서\n상대를 속인다.",
+  "descriptionJp" : "てもちの　いちばん　うしろに　いる\nポケモンに　なりきって　とうじょうして\nあいてを　ばかす。",
+  "descriptionEn" : "The Pokémon fools opponents by entering battle disguised as the last Pokémon in its Trainer's party.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 158,
+  "nameKr" : "짓궂은마음",
+  "nameJp" : "いたずらごころ",
+  "nameEn" : "Prankster",
+  "descriptionKr" : "변화 기술을 먼저\n쓸 수 있다.",
+  "descriptionJp" : "へんかわざを　せんせいで\nだすことが　できる。",
+  "descriptionEn" : "Gives priority to the Pokémon's status moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 152,
+  "nameKr" : "미라",
+  "nameJp" : "ミイラ",
+  "nameEn" : "Mummy",
+  "descriptionKr" : "상대가 접촉하면\n상대를 미라로 만들어버린다.",
+  "descriptionJp" : "あいてに　さわられると\nあいてを　ミイラに　してしまう。",
+  "descriptionEn" : "Contact with the Pokémon changes the attacker’s\nAbility to Mummy.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 164,
+  "nameKr" : "테라볼티지",
+  "nameJp" : "テラボルテージ",
+  "nameEn" : "Teravolt",
+  "descriptionKr" : "상대 특성에 방해받지 않고\n상대에게 기술을 쓸 수 있다.",
+  "descriptionJp" : "あいての　とくせいに　じゃまされず\nあいてに　わざを　だすことが　できる。",
+  "descriptionEn" : "The Pokémon's moves are unimpeded by the Ability of the target.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 165,
+  "nameKr" : "아로마베일",
+  "nameJp" : "アロマベール",
+  "nameEn" : "Aroma Veil",
+  "descriptionKr" : "자신과 같은 편으로 향하는\n멘탈 공격을 막을 수 있다.",
+  "descriptionJp" : "じぶんと　みかたへの　メンタル\nこうげきを　ふせぐことが　できる。",
+  "descriptionEn" : "Protects the Pokémon and its allies from effects that prevent the use of moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 166,
+  "nameKr" : "플라워베일",
+  "nameJp" : "フラワーベール",
+  "nameEn" : "Flower Veil",
+  "descriptionKr" : "같은 편의 풀타입 포켓몬은\n능력이 떨어지지 않고\n상태 이상도 되지 않는다.",
+  "descriptionJp" : "みかたの　くさポケモンは\nのうりょくが　さがらず\nじょうたい　いじょうにも　ならない。",
+  "descriptionEn" : "Ally Grass-type Pokémon are protected from status conditions and the lowering of their stats.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 160,
+  "nameKr" : "철가시",
+  "nameJp" : "てつのトゲ",
+  "nameEn" : "Iron Barbs",
+  "descriptionKr" : "자신과 접촉한 상대에게\n철가시로 데미지를 준다.",
+  "descriptionJp" : "じぶんに　さわった　あいてに\nてつのトゲで　ダメージを　あたえる。",
+  "descriptionEn" : "Inflicts damage on the attacker upon contact with\niron barbs.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 168,
+  "nameKr" : "변환자재",
+  "nameJp" : "へんげんじざい",
+  "nameEn" : "Protean",
+  "descriptionKr" : "자신이 사용한 기술과\n같은 타입으로 변화한다.",
+  "descriptionJp" : "じぶんが　だす　わざと\nおなじ　タイプに　へんかする。",
+  "descriptionEn" : "Changes the Pokémon's type to the type of the move it's about to use. This works only once each time the Pokémon enters battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 169,
+  "nameKr" : "퍼코트",
+  "nameJp" : "ファーコート",
+  "nameEn" : "Fur Coat",
+  "descriptionKr" : "상대로부터 받는 물리 기술의\n데미지가 절반이 된다.",
+  "descriptionJp" : "あいてから　うける　ぶつりわざの\nダメージが　はんぶんに　なる。",
+  "descriptionEn" : "Halves the damage from physical moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 162,
+  "nameKr" : "승리의별",
+  "nameJp" : "しょうりのほし",
+  "nameEn" : "Victory Star",
+  "descriptionKr" : "자신과 같은 편의\n명중률이 올라간다.",
+  "descriptionJp" : "じぶんや　みかたの\nめいちゅうりつが　あがる。",
+  "descriptionEn" : "Boosts the accuracy of its allies and itself.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 161,
+  "nameKr" : "달마모드",
+  "nameJp" : "ダルマモード",
+  "nameEn" : "Zen Mode",
+  "descriptionKr" : "HP가 절반 이하가 되면\n모습이 변화한다.",
+  "descriptionJp" : "ＨＰが　はんぶん　いかに　なると\nすがたが　へんかする。",
+  "descriptionEn" : "Changes the Pokémon’s shape when HP is half\nor less.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 171,
+  "nameKr" : "방탄",
+  "nameJp" : "ぼうだん",
+  "nameEn" : "Bulletproof",
+  "descriptionKr" : "상대 구슬이나 폭탄 등\n기술을 막을 수 있다.",
+  "descriptionJp" : "あいての　たまや　ばくだんなどの\nわざを　ふせぐことが　できる。",
+  "descriptionEn" : "Protects the Pokémon from ball and bomb moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 170,
+  "nameKr" : "매지션",
+  "nameJp" : "マジシャン",
+  "nameEn" : "Magician",
+  "descriptionKr" : "기술을 맞은 상대의\n도구를 빼앗아 버린다.",
+  "descriptionJp" : "わざを　あてた　あいての\nどうぐを　うばってしまう。",
+  "descriptionEn" : "The Pokémon steals the held item from any target it hits with a move.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 172,
+  "nameKr" : "승기",
+  "nameJp" : "かちき",
+  "nameEn" : "Competitive",
+  "descriptionKr" : "능력이 떨어지면\n특수공격이 크게 올라간다.",
+  "descriptionJp" : "のうりょくを　さげられると\nとくこうが　ぐーんと　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Sp. Atk stat sharply when its stats are lowered by an opposing Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 174,
+  "nameKr" : "프리즈스킨",
+  "nameJp" : "フリーズスキン",
+  "nameEn" : "Refrigerate",
+  "descriptionKr" : "노말타입의 기술이\n얼음타입이 된다.\n위력이 조금 올라간다.",
+  "descriptionJp" : "ノーマルタイプの　わざが\nこおりタイプになる。\nいりょくが　すこし　あがる。",
+  "descriptionEn" : "Normal-type moves become Ice-type moves.\nThe power of those moves is boosted a little.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 175,
+  "nameKr" : "스위트베일",
+  "nameJp" : "スイートベール",
+  "nameEn" : "Sweet Veil",
+  "descriptionKr" : "같은 편의 포켓몬이\n잠들지 않게 된다.",
+  "descriptionJp" : "みかたの　ポケモンは\nねむらなくなる。",
+  "descriptionEn" : "Prevents the Pokémon and its allies from falling asleep.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 163,
+  "nameKr" : "터보블레이즈",
+  "nameJp" : "ターボブレイズ",
+  "nameEn" : "Turboblaze",
+  "descriptionKr" : "상대 특성에 방해받지 않고\n상대에게 기술을 쓸 수 있다.",
+  "descriptionJp" : "あいての　とくせいに　じゃまされず\nあいてに　わざを　だすことが　できる。",
+  "descriptionEn" : "The Pokémon's moves are unimpeded by the Ability of the target.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 177,
+  "nameKr" : "질풍날개",
+  "nameJp" : "はやてのつばさ",
+  "nameEn" : "Gale Wings",
+  "descriptionKr" : "HP가 꽉 찼을 때\n비행타입의 기술을\n먼저 쓸 수 있다.",
+  "descriptionJp" : "ＨＰが　まんたん　だと\nひこうタイプの　わざを\nせんせいで　だすことが　できる。",
+  "descriptionEn" : "Gives priority to the Pokémon's Flying-type moves while its HP is full.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 173,
+  "nameKr" : "옹골찬턱",
+  "nameJp" : "がんじょうあご",
+  "nameEn" : "Strong Jaw",
+  "descriptionKr" : "턱이 튼튼하여\n무는 기술의 위력이\n올라간다.",
+  "descriptionJp" : "あごが　がんじょうで\nかむ　わざの　いりょくが\nたかくなる。",
+  "descriptionEn" : "The Pokémon's strong jaw boosts the power of its biting moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 167,
+  "nameKr" : "볼주머니",
+  "nameJp" : "ほおぶくろ",
+  "nameEn" : "Cheek Pouch",
+  "descriptionKr" : "어떤 나무열매라도\n먹으면 HP도 회복한다.",
+  "descriptionJp" : "どんな　きのみでも\nたべると　ＨＰも　かいふくする。",
+  "descriptionEn" : "The Pokémon's HP is restored when it eats any Berry, in addition to the Berry's usual effect.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 181,
+  "nameKr" : "단단한발톱",
+  "nameJp" : "かたいツメ",
+  "nameEn" : "Tough Claws",
+  "descriptionKr" : "상대에게 접촉하는 기술의\n위력이 올라간다.",
+  "descriptionJp" : "あいてに　せっしょくする　わざの\nいりょくが　たかくなる。",
+  "descriptionEn" : "Powers up moves that make direct contact.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 180,
+  "nameKr" : "공생",
+  "nameJp" : "きょうせい",
+  "nameEn" : "Symbiosis",
+  "descriptionKr" : "같은 편이 도구를 쓰면\n자신이 지니고 있는 도구를\n같은 편에게 건넨다.",
+  "descriptionJp" : "みかたが　どうぐを　つかうと\nじぶんの　もっている　どうぐを\nみかたに　わたす。",
+  "descriptionEn" : "The Pokémon passes its held item to an ally that has used up an item.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 182,
+  "nameKr" : "페어리스킨",
+  "nameJp" : "フェアリースキン",
+  "nameEn" : "Pixilate",
+  "descriptionKr" : "노말타입의 기술이\n페어리타입이 된다.\n위력이 조금 올라간다.",
+  "descriptionJp" : "ノーマルタイプの　わざが\nフェアリータイプになる。\nいりょくが　すこし　あがる。",
+  "descriptionEn" : "Normal-type moves become Fairy-type moves. The power of those moves is boosted a little.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 184,
+  "nameKr" : "스카이스킨",
+  "nameJp" : "スカイスキン",
+  "nameEn" : "Aerilate",
+  "descriptionKr" : "노말타입의 기술이\n비행타입이 된다.\n위력이 조금 올라간다.",
+  "descriptionJp" : "ノーマルタイプの　わざが\nひこうタイプになる。\nいりょくが　すこし　あがる。",
+  "descriptionEn" : "Normal-type moves become Flying-type moves.\nThe power of those moves is boosted a little.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 176,
+  "nameKr" : "배틀스위치",
+  "nameJp" : "バトルスイッチ",
+  "nameEn" : "Stance Change",
+  "descriptionKr" : "공격 기술을 쓰면 블레이드폼으로\n기술 킹실드를 쓰면\n실드폼으로 변한다.",
+  "descriptionJp" : "こうげきわざを　だすと　ブレードフォルムに\nわざ　キングシールドを　だすと\nシールドフォルムに　へんかする。",
+  "descriptionEn" : "The Pokémon changes its form to Blade Forme when\nit uses an attack move and changes to Shield Forme\nwhen it uses King’s Shield.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 183,
+  "nameKr" : "미끈미끈",
+  "nameJp" : "ぬめぬめ",
+  "nameEn" : "Gooey",
+  "descriptionKr" : "공격으로 자신과 접촉한 상대의\n스피드를 떨어뜨린다.",
+  "descriptionJp" : "こうげきで　じぶんに　ふれた　あいての\nすばやさを　さげる。",
+  "descriptionEn" : "Contact with the Pokémon lowers the attacker's Speed stat.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 185,
+  "nameKr" : "부자유친",
+  "nameJp" : "おやこあい",
+  "nameEn" : "Parental Bond",
+  "descriptionKr" : "부모와 자식 2마리로 2번\n공격할 수 있다.",
+  "descriptionJp" : "おやこ　２ひきで　２かい\nこうげきする　ことが　できる。",
+  "descriptionEn" : "Parent and child each attacks.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 179,
+  "nameKr" : "풀모피",
+  "nameJp" : "くさのけがわ",
+  "nameEn" : "Grass Pelt",
+  "descriptionKr" : "그래스필드일 때\n방어가 올라간다.",
+  "descriptionJp" : "グラスフィールドのとき\nぼうぎょが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Defense stat on Grassy Terrain.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 178,
+  "nameKr" : "메가런처",
+  "nameJp" : "メガランチャー",
+  "nameEn" : "Mega Launcher",
+  "descriptionKr" : "파동 기술의\n위력이 올라간다.",
+  "descriptionJp" : "はどうの　わざの\nいりょくが　たかくなる。",
+  "descriptionEn" : "Powers up pulse moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 187,
+  "nameKr" : "페어리오라",
+  "nameJp" : "フェアリーオーラ",
+  "nameEn" : "Fairy Aura",
+  "descriptionKr" : "전원의 페어리타입\n기술이 강해진다.",
+  "descriptionJp" : "ぜんいんの　フェアリータイプの\nわざが　つよくなる。",
+  "descriptionEn" : "Powers up each Pokémon’s Fairy-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 188,
+  "nameKr" : "오라브레이크",
+  "nameJp" : "オーラブレイク",
+  "nameEn" : "Aura Break",
+  "descriptionKr" : "오라의 효과를 역전시켜\n위력을 떨어뜨린다.",
+  "descriptionJp" : "オーラの　こうかを　ぎゃくてんさせて\nいりょくを　さげる。",
+  "descriptionEn" : "The effects of “Aura” Abilities are reversed\nto lower the power of affected moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 186,
+  "nameKr" : "다크오라",
+  "nameJp" : "ダークオーラ",
+  "nameEn" : "Dark Aura",
+  "descriptionKr" : "전원의 악타입\n기술이 강해진다.",
+  "descriptionJp" : "ぜんいんの　あくタイプの\nわざが　つよくなる。",
+  "descriptionEn" : "Powers up each Pokémon’s Dark-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 190,
+  "nameKr" : "끝의대지",
+  "nameJp" : "おわりのだいち",
+  "nameEn" : "Desolate Land",
+  "descriptionKr" : "물타입의 공격을\n받지 않는 날씨로 만든다.",
+  "descriptionJp" : "みずタイプの　こうげきを\nうけない　てんきにする。",
+  "descriptionEn" : "The Pokémon changes the weather to nullify\nWater-type attacks.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 191,
+  "nameKr" : "델타스트림",
+  "nameJp" : "デルタストリーム",
+  "nameEn" : "Delta Stream",
+  "descriptionKr" : "비행타입의 약점이\n없어지는 날씨로 만든다.",
+  "descriptionJp" : "ひこうタイプの　じゃくてんが\nなくなる　てんきにする。",
+  "descriptionEn" : "The Pokémon changes the weather to eliminate all\nof the Flying type’s weaknesses.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 196,
+  "nameKr" : "무도한행동",
+  "nameJp" : "ひとでなし",
+  "nameEn" : "Merciless",
+  "descriptionKr" : "독 상태의\n상대를 공격하면\n반드시 급소에 맞는다.",
+  "descriptionJp" : "どく　じょうたいの\nあいてを　こうげきすると\nかならず　きゅうしょに　あたる。",
+  "descriptionEn" : "The Pokémon's attacks become critical hits if the target is poisoned.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 192,
+  "nameKr" : "지구력",
+  "nameJp" : "じきゅうりょく",
+  "nameEn" : "Stamina",
+  "descriptionKr" : "공격을 받으면\n방어가 올라간다.",
+  "descriptionJp" : "こうげきを　うけると\nぼうぎょが　あがる。",
+  "descriptionEn" : "Boosts the Defense stat when the Pokémon is hit by an attack.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 197,
+  "nameKr" : "리밋실드",
+  "nameJp" : "リミットシールド",
+  "nameEn" : "Shields Down",
+  "descriptionKr" : "HP가 절반이 되면\n껍질이 깨져\n공격적으로 된다.",
+  "descriptionJp" : "ＨＰが　はんぶんに　なると\nからが　こわれて\nこうげきてきに　なる。",
+  "descriptionEn" : "When its HP drops to half or less, the Pokémon's shell breaks and it becomes aggressive.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 189,
+  "nameKr" : "시작의바다",
+  "nameJp" : "はじまりのうみ",
+  "nameEn" : "Primordial Sea",
+  "descriptionKr" : "불꽃타입의 공격을\n받지 않는 날씨로 만든다.",
+  "descriptionJp" : "ほのおタイプの　こうげきを\nうけない　てんきにする。",
+  "descriptionEn" : "The Pokémon changes the weather to nullify\nFire-type attacks.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 194,
+  "nameKr" : "위기회피",
+  "nameJp" : "ききかいひ",
+  "nameEn" : "Emergency Exit",
+  "descriptionKr" : "HP가 절반이 되면\n위험을 회피하기 위해\n지닌 포켓몬으로 돌아간다.",
+  "descriptionJp" : "ＨＰが　はんぶんに　なると\nきけんを　かいひするため\nてもちに　ひっこんで　しまう。",
+  "descriptionEn" : "The Pokémon, sensing danger, switches out when its\nHP becomes half or less.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 195,
+  "nameKr" : "꾸덕꾸덕굳기",
+  "nameJp" : "みずがため",
+  "nameEn" : "Water Compaction",
+  "descriptionKr" : "물타입의 기술을 받으면\n방어가 크게 올라간다.",
+  "descriptionJp" : "みずタイプの　わざを　うけると\nぼうぎょが　ぐーんと　あがる。",
+  "descriptionEn" : "Boosts the Defense stat sharply when the Pokémon is hit by a Water-type move.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 200,
+  "nameKr" : "강철술사",
+  "nameJp" : "はがねつかい",
+  "nameEn" : "Steelworker",
+  "descriptionKr" : "강철타입 기술의\n위력이 올라간다.",
+  "descriptionJp" : "はがねタイプの　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up Steel-type moves.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 198,
+  "nameKr" : "잠복",
+  "nameJp" : "はりこみ",
+  "nameEn" : "Stakeout",
+  "descriptionKr" : "교체로 나온 상대에게\n2배 데미지로 공격할 수 있다.",
+  "descriptionJp" : "こうたいで　でてきた　あいてに\n２ばいの　ダメージで　こうげき　できる。",
+  "descriptionEn" : "Doubles the damage dealt to a target that has just switched into battle.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 201,
+  "nameKr" : "발끈",
+  "nameJp" : "ぎゃくじょう",
+  "nameEn" : "Berserk",
+  "descriptionKr" : "상대의 공격으로\nHP가 절반이 되면\n특수공격이 올라간다.",
+  "descriptionJp" : "あいての　こうげきで\nＨＰが　はんぶんに　なると\nとくこうが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Sp. Atk stat when it takes a hit that causes its HP to drop to half or less.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 202,
+  "nameKr" : "눈치우기",
+  "nameJp" : "ゆきかき",
+  "nameEn" : "Slush Rush",
+  "descriptionKr" : "날씨가 싸라기눈일 때\n스피드가 올라간다.",
+  "descriptionJp" : "てんきが　あられ　のとき\nすばやさが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Speed stat in snow.",
+  "regDate" : "2026-07-10T22:28:21.9584736"
+}, {
+  "abilityRowid" : 206,
+  "nameKr" : "일렉트릭스킨",
+  "nameJp" : "エレキスキン",
+  "nameEn" : "Galvanize",
+  "descriptionKr" : "노말타입 기술이\n전기타입이 된다.\n위력이 조금 올라간다.",
+  "descriptionJp" : "ノーマルタイプの　わざが\nでんきタイプになる。\nいりょくが　すこし　あがる。",
+  "descriptionEn" : "Normal-type moves become Electric-type moves. The power of those moves is boosted a little.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 207,
+  "nameKr" : "서핑테일",
+  "nameJp" : "サーフテール",
+  "nameEn" : "Surge Surfer",
+  "descriptionKr" : "일렉트릭필드일 때\n스피드가 2배가 된다.",
+  "descriptionJp" : "エレキフィールド　のとき\nすばやさが　２ばいに　なる。",
+  "descriptionEn" : "Doubles the Pokémon's Speed stat on Electric Terrain.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 193,
+  "nameKr" : "도망태세",
+  "nameJp" : "にげごし",
+  "nameEn" : "Wimp Out",
+  "descriptionKr" : "HP가 절반이 되면\n황급히 도망쳐서\n지닌 포켓몬으로 돌아간다.",
+  "descriptionJp" : "ＨＰが　はんぶんに　なると\nあわてて　にげだして\nてもちに　ひっこんで　しまう。",
+  "descriptionEn" : "The Pokémon cowardly switches out when its HP\nbecomes half or less.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 203,
+  "nameKr" : "원격",
+  "nameJp" : "えんかく",
+  "nameEn" : "Long Reach",
+  "descriptionKr" : "모든 기술을\n상대에게 접촉하지 않고\n사용할 수 있다.",
+  "descriptionJp" : "すべての　わざを\nあいてに　せっしょく　しないで\nだすことが　できる。",
+  "descriptionEn" : "The Pokémon uses its moves without making contact with the target.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 210,
+  "nameKr" : "유대변화",
+  "nameJp" : "きずなへんげ",
+  "nameEn" : "Battle Bond",
+  "descriptionKr" : "상대를 쓰러뜨리면 트레이너와의\n유대감이 깊어져서 지우개굴닌자로\n변한다. 물수리검이 강해진다.",
+  "descriptionJp" : "あいてを　たおすと　トレーナーとの\nきずなが　ふかまり　サトシゲッコウガに\nへんげする。みずしゅりけんが　つよくなる。",
+  "descriptionEn" : "When the Pokémon knocks out a target, its bond with its Trainer is strengthened, and its Attack, Sp. Atk, and Speed stats are boosted.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 209,
+  "nameKr" : "탈",
+  "nameJp" : "ばけのかわ",
+  "nameEn" : "Disguise",
+  "descriptionKr" : "몸을 덮는 탈로\n1번 공격을 막을 수 있다.",
+  "descriptionJp" : "からだを　おおう　ばけのかわで\n１かい　こうげきを　ふせぐことが　できる。",
+  "descriptionEn" : "Once per battle, the shroud that covers the Pokémon can protect it from an attack.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 205,
+  "nameKr" : "힐링시프트",
+  "nameJp" : "ヒーリングシフト",
+  "nameEn" : "Triage",
+  "descriptionKr" : "회복 기술을 먼저\n사용할 수 있다.",
+  "descriptionJp" : "かいふくわざを　せんせいで\nだすことが　できる。",
+  "descriptionEn" : "Gives priority to the Pokémon's healing moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 199,
+  "nameKr" : "수포",
+  "nameJp" : "すいほう",
+  "nameEn" : "Water Bubble",
+  "descriptionKr" : "자신을 향하는 불꽃타입\n기술의 위력을 떨어뜨린다.\n화상을 입지 않는다.",
+  "descriptionJp" : "じぶんに　たいする　ほのおタイプの\nわざの　いりょくを　さげる。\nやけど　しない。",
+  "descriptionEn" : "Lowers the power of Fire-type moves that hit the Pokémon and prevents it from being burned.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 208,
+  "nameKr" : "어군",
+  "nameJp" : "ぎょぐん",
+  "nameEn" : "Schooling",
+  "descriptionKr" : "HP가 많을 때 무리지어 강해진다.\nHP가 얼마 남지 않으면\n무리는 뿔뿔이 흩어진다.",
+  "descriptionJp" : "ＨＰが　おおいときは　むれて　つよくなる。\nＨＰの　のこりが　すくなくなると\nむれは　ちりぢりに　なってしまう。",
+  "descriptionEn" : "When it has a lot of HP, the Pokémon forms a\npowerful school. It stops schooling when its HP\nis low.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 204,
+  "nameKr" : "촉촉보이스",
+  "nameJp" : "うるおいボイス",
+  "nameEn" : "Liquid Voice",
+  "descriptionKr" : "모든 소리 기술이\n물타입이 된다.",
+  "descriptionJp" : "すべての　おとわざが\nみずタイプに　なる。",
+  "descriptionEn" : "Sound-based moves become Water-type moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 215,
+  "nameKr" : "내용물분출",
+  "nameJp" : "とびだすなかみ",
+  "nameEn" : "Innards Out",
+  "descriptionKr" : "상대가 쓰러뜨렸을 때\nHP의 남은 양만큼\n상대에게 데미지를 준다.",
+  "descriptionJp" : "あいてに　たおされたとき\nＨＰの　のこりの　ぶんだけ\nあいてに　ダメージを　あたえる。",
+  "descriptionEn" : "Damages the attacker landing the finishing hit\nby the amount equal to its last HP.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 211,
+  "nameKr" : "스웜체인지",
+  "nameJp" : "スワームチェンジ",
+  "nameEn" : "Power Construct",
+  "descriptionKr" : "HP가 절반이 되면\n셀들이 응원하러 달려와\n퍼펙트폼으로 모습이 변한다.",
+  "descriptionJp" : "ＨＰが　はんぶんに　なると\nセルたちが　おうえんに　かけつけ\nパーフェクトフォルムに　すがたを　かえる。",
+  "descriptionEn" : "Other Cells gather to aid when its HP becomes\nhalf or less. Then the Pokémon changes\nits form to Complete Forme.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 212,
+  "nameKr" : "부식",
+  "nameJp" : "ふしょく",
+  "nameEn" : "Corrosion",
+  "descriptionKr" : "강철타입이나 독타입도\n독 상태로 만들 수 있다.",
+  "descriptionJp" : "はがねタイプや　どくタイプも\nどく　じょうたいに　することが　できる。",
+  "descriptionEn" : "The Pokémon can poison the target even if it's a Steel or Poison type.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 216,
+  "nameKr" : "무희",
+  "nameJp" : "おどりこ",
+  "nameEn" : "Dancer",
+  "descriptionKr" : "누군가 춤 기술을 쓰면\n자신도 이어서\n춤 기술을 쓸 수 있다.",
+  "descriptionJp" : "だれかが　おどりわざを　つかうと\nじぶんも　それに　つづいて\nおどりわざを　だすことが　できる。",
+  "descriptionEn" : "Whenever a dance move is used in battle, the Pokémon will copy the user to immediately perform that dance move itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 218,
+  "nameKr" : "복슬복슬",
+  "nameJp" : "もふもふ",
+  "nameEn" : "Fluffy",
+  "descriptionKr" : "상대로부터 받은 접촉하는 기술의\n데미지를 반감시키지만 불꽃타입\n기술의 데미지는 2배가 된다.",
+  "descriptionJp" : "あいてから　うけた　せっしょくする　わざの\nダメージを　はんげんするが　ほのおタイプの\nわざの　ダメージは　２ばいになる。",
+  "descriptionEn" : "Halves the damage taken from moves that make direct contact, but doubles that of Fire-type moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 221,
+  "nameKr" : "컬리헤어",
+  "nameJp" : "カーリーヘアー",
+  "nameEn" : "Tangling Hair",
+  "descriptionKr" : "공격으로 자신과 접촉한 상대의\n스피드를 떨어뜨린다.",
+  "descriptionJp" : "こうげきで　じぶんに　ふれた　あいての\nすばやさを　さげる。",
+  "descriptionEn" : "Contact with the Pokémon lowers the attacker's Speed stat.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 213,
+  "nameKr" : "절대안깸",
+  "nameJp" : "ぜったいねむり",
+  "nameEn" : "Comatose",
+  "descriptionKr" : "항상 비몽사몽 상태로\n절대 깨지 않는다.\n잠든 상태로 공격할 수 있다.",
+  "descriptionJp" : "つねに　ゆめうつつの　じょうたいで\nぜったいに　めざめない。\nねむったまま　こうげきが　できる。",
+  "descriptionEn" : "The Pokémon is always drowsing and will never wake up. It can attack while in its sleeping state.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 217,
+  "nameKr" : "배터리",
+  "nameJp" : "バッテリー",
+  "nameEn" : "Battery",
+  "descriptionKr" : "같은 편 특수 기술의\n위력을 올린다.",
+  "descriptionJp" : "みかたの　とくしゅわざの\nいりょくを　あげる。",
+  "descriptionEn" : "Powers up ally Pokémon's special moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 223,
+  "nameKr" : "과학의힘",
+  "nameJp" : "かがくのちから",
+  "nameEn" : "Power of Alchemy",
+  "descriptionKr" : "쓰러진 같은 편의 특성을\n이어받아 같은 특성으로 바뀐다.",
+  "descriptionJp" : "たおされた　みかたの　とくせいを　うけつぎ\nおなじ　とくせいに　かわる。",
+  "descriptionEn" : "The Pokémon copies the Ability of a defeated ally.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 214,
+  "nameKr" : "여왕의위엄",
+  "nameJp" : "じょおうのいげん",
+  "nameEn" : "Queenly Majesty",
+  "descriptionKr" : "상대에게 위압감을 줘서\n이쪽을 향한 선제 기술을\n사용할 수 없게 한다.",
+  "descriptionJp" : "あいてに　いあつかんを　あたえ\nこちらに　むかって　せんせいわざを\nだせない　ようにする。",
+  "descriptionEn" : "When the Pokémon uses Surf or Dive, it will come back with prey. When it takes damage, it will spit out the prey to attack.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 226,
+  "nameKr" : "일렉트릭메이커",
+  "nameJp" : "エレキメイカー",
+  "nameEn" : "Electric Surge",
+  "descriptionKr" : "등장했을 때\n일렉트릭필드를 사용한다.",
+  "descriptionJp" : "とうじょう　したときに\nエレキフィールドを　はりめぐらせる。",
+  "descriptionEn" : "Turns the ground into Electric Terrain when the Pokémon enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 219,
+  "nameKr" : "비비드바디",
+  "nameJp" : "ビビッドボディ",
+  "nameEn" : "Dazzling",
+  "descriptionKr" : "상대를 놀라게 해서\n이쪽을 향한 선제 기술을\n사용할 수 없게 한다.",
+  "descriptionJp" : "あいてを　びっくり　させて\nこちらに　むかって　せんせいわざを\nだせない　ようにする。",
+  "descriptionEn" : "The Pokémon dazzles its opponents, making them unable to use priority moves against the Pokémon or its allies.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 228,
+  "nameKr" : "미스트메이커",
+  "nameJp" : "ミストメイカー",
+  "nameEn" : "Misty Surge",
+  "descriptionKr" : "등장했을 때\n미스트필드를 사용한다.",
+  "descriptionJp" : "とうじょう　したときに\nミストフィールドを　はりめぐらせる。",
+  "descriptionEn" : "Turns the ground into Misty Terrain when the Pokémon enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 224,
+  "nameKr" : "비스트부스트",
+  "nameJp" : "ビーストブースト",
+  "nameEn" : "Beast Boost",
+  "descriptionKr" : "상대를 기절시켰을 때\n자신의 가장 높은\n능력이 올라간다.",
+  "descriptionJp" : "あいてを　たおしたとき\nじぶんの　いちばん　たかい\nのうりょくが　あがる。",
+  "descriptionEn" : "The Pokémon boosts its most proficient stat each\ntime it knocks out a Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 220,
+  "nameKr" : "소울하트",
+  "nameJp" : "ソウルハート",
+  "nameEn" : "Soul-Heart",
+  "descriptionKr" : "포켓몬이 기절할 때마다\n특수공격이 올라간다.",
+  "descriptionJp" : "ポケモンが　ひんしに　なるたびに\nとくこうが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon's Sp. Atk stat every time another Pokémon faints.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 222,
+  "nameKr" : "리시버",
+  "nameJp" : "レシーバー",
+  "nameEn" : "Receiver",
+  "descriptionKr" : "쓰러진 같은 편의 특성을\n이어받아 같은 특성이 된다.",
+  "descriptionJp" : "たおされた　みかたの　とくせいを\nうけついで　おなじ　とくせいに　なる。",
+  "descriptionEn" : "The Pokémon copies the Ability of a defeated ally.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 225,
+  "nameKr" : "AR시스템",
+  "nameJp" : "ＡＲシステム",
+  "nameEn" : "RKS System",
+  "descriptionKr" : "지니고 있는 메모리로\n자신의 타입이 변한다.",
+  "descriptionJp" : "もっている　メモリで\nじぶんの　タイプが　かわる。",
+  "descriptionEn" : "Changes the Pokémon’s type to match the\nmemory disc it holds.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 227,
+  "nameKr" : "사이코메이커",
+  "nameJp" : "サイコメイカー",
+  "nameEn" : "Psychic Surge",
+  "descriptionKr" : "등장했을 때\n사이코필드를 사용한다.",
+  "descriptionJp" : "とうじょう　したときに\nサイコフィールドを　はりめぐらせる。",
+  "descriptionEn" : "Turns the ground into Psychic Terrain when the Pokémon enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 229,
+  "nameKr" : "그래스메이커",
+  "nameJp" : "グラスメイカー",
+  "nameEn" : "Grassy Surge",
+  "descriptionKr" : "등장했을 때\n그래스필드를 사용한다.",
+  "descriptionJp" : "とうじょう　したときに\nグラスフィールドを　はりめぐらせる。",
+  "descriptionEn" : "Turns the ground into Grassy Terrain when the Pokémon enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 231,
+  "nameKr" : "스펙터가드",
+  "nameJp" : "ファントムガード",
+  "nameEn" : "Shadow Shield",
+  "descriptionKr" : "HP가 꽉 찼을 때\n받는 데미지가 줄어든다.",
+  "descriptionJp" : "ＨＰが　まんたんの　ときに\nうける　ダメージが　すくなくなる。",
+  "descriptionEn" : "Reduces the amount of damage the Pokémon takes\nwhile its HP is full.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 230,
+  "nameKr" : "메탈프로텍트",
+  "nameJp" : "メタルプロテクト",
+  "nameEn" : "Full Metal Body",
+  "descriptionKr" : "상대 기술이나 특성으로\n능력을 떨어뜨릴 수 없다.",
+  "descriptionJp" : "あいての　わざや　とくせいで\nのうりょくを　さげられない。",
+  "descriptionEn" : "Prevents other Pokémon’s moves or Abilities from\nlowering the Pokémon’s stats.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 236,
+  "nameKr" : "리베로",
+  "nameJp" : "リベロ",
+  "nameEn" : "Libero",
+  "descriptionKr" : "자신이 사용한 기술과\n같은 타입으로 변화한다.",
+  "descriptionJp" : "じぶんが　だす　わざと\nおなじ　タイプに　へんかする。",
+  "descriptionEn" : "Changes the Pokémon's type to the type of the move it's about to use. This works only once each time the Pokémon enters battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 234,
+  "nameKr" : "불요의검",
+  "nameJp" : "ふとうのけん",
+  "nameEn" : "Intrepid Sword",
+  "descriptionKr" : "등장했을 때\n공격이 올라간다.",
+  "descriptionJp" : "とうじょう　したときに\nこうげきが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon’s Attack stat the first time the Pokémon enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 235,
+  "nameKr" : "불굴의방패",
+  "nameJp" : "ふくつのたて",
+  "nameEn" : "Dauntless Shield",
+  "descriptionKr" : "등장했을 때\n방어가 올라간다.",
+  "descriptionJp" : "とうじょう　したときに\nぼうぎょが　あがる。",
+  "descriptionEn" : "Boosts the Pokémon’s Defense stat the first time the Pokémon enters a battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 237,
+  "nameKr" : "볼줍기",
+  "nameJp" : "たまひろい",
+  "nameEn" : "Ball Fetch",
+  "descriptionKr" : "도구를 지니고 있지 않은 경우\n첫 번째로 던져서 실패한\n몬스터볼을 주워온다.",
+  "descriptionJp" : "どうぐを　もっていない　ばあい\n１かいめに　なげて　しっぱい　した\nモンスターボールを　ひろってくる。",
+  "descriptionEn" : "If the Pokémon is not holding an item, it will fetch\nthe Poké Ball from the first failed throw\nof the battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 233,
+  "nameKr" : "브레인포스",
+  "nameJp" : "ブレインフォース",
+  "nameEn" : "Neuroforce",
+  "descriptionKr" : "효과가 굉장한 공격의\n위력이 더욱 올라간다.",
+  "descriptionJp" : "こうかばつぐんの　こうげきで\nいりょくが　さらに　あがる。",
+  "descriptionEn" : "Powers up moves that are super effective.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 239,
+  "nameKr" : "스크루지느러미",
+  "nameJp" : "スクリューおびれ",
+  "nameEn" : "Propeller Tail",
+  "descriptionKr" : "상대의 기술을 끌어모으는\n특성이나 기술의\n영향을 받지 않는다.",
+  "descriptionJp" : "あいての　わざを　ひきうける\nとくせいや　わざの\nえいきょうを　むし　できる。",
+  "descriptionEn" : "Ignores the effects of opposing Pokémon's Abilities and moves that draw in moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 238,
+  "nameKr" : "솜털",
+  "nameJp" : "わたげ",
+  "nameEn" : "Cotton Down",
+  "descriptionKr" : "공격을 받으면 솜털을 흩뿌려서\n자신을 제외한 모든 포켓몬의\n스피드를 떨어뜨린다.",
+  "descriptionJp" : "こうげきを　うけると　わたげを　ばらまいて\nじぶんいがいの　ポケモン　すべての\nすばやさを　さげる。",
+  "descriptionEn" : "When the Pokémon is hit by an attack, it scatters\ncotton fluff around and lowers the Speed stat of\nall Pokémon except itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 242,
+  "nameKr" : "굳건한신념",
+  "nameJp" : "すじがねいり",
+  "nameEn" : "Stalwart",
+  "descriptionKr" : "상대의 기술을 끌어모으는\n특성이나 기술의\n영향을 받지 않는다.",
+  "descriptionJp" : "あいての　わざを　ひきうける\nとくせいや　わざの\nえいきょうを　むし　できる。",
+  "descriptionEn" : "Ignores the effects of opposing Pokémon's Abilities and moves that draw in moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 232,
+  "nameKr" : "프리즘아머",
+  "nameJp" : "プリズムアーマー",
+  "nameEn" : "Prism Armor",
+  "descriptionKr" : "효과가 굉장한\n공격의 위력을\n약하게 만든다.",
+  "descriptionJp" : "こうかばつぐんに　なってしまう\nこうげきの　いりょくを\nよわめる　ことが　できる。",
+  "descriptionEn" : "Reduces the power of supereffective attacks taken.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 246,
+  "nameKr" : "얼음인분",
+  "nameJp" : "こおりのりんぷん",
+  "nameEn" : "Ice Scales",
+  "descriptionKr" : "얼음인분의 보호를 받아\n특수공격으로 받는\n데미지가 절반이 된다.",
+  "descriptionJp" : "こおりのりんぷんに　まもられて\nとくしゅこうげきで　うける\nダメージが　はんげん　する。",
+  "descriptionEn" : "The Pokémon is protected by ice scales, which halve the damage taken from special moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 243,
+  "nameKr" : "증기기관",
+  "nameJp" : "じょうききかん",
+  "nameEn" : "Steam Engine",
+  "descriptionKr" : "물타입이나 불꽃타입\n기술을 받으면\n스피드가 매우 크게 올라간다.",
+  "descriptionJp" : "みずタイプ　ほのおタイプの\nわざを　うけると\nすばやさが　ぐぐーんと　あがる。",
+  "descriptionEn" : "Boosts the Speed stat drastically when the Pokémon is hit by a Fire- or Water-type move.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 248,
+  "nameKr" : "아이스페이스",
+  "nameJp" : "アイスフェイス",
+  "nameEn" : "Ice Face",
+  "descriptionKr" : "물리공격을 머리의 얼음이\n대신 맞아주지만 모습도 바뀐다.\n얼음은 싸라기눈이 내리면 원래대로 돌아온다.",
+  "descriptionJp" : "ぶつりこうげきは　あたまの　こおりが\nみがわりに　なるが　すがたも　かわる。\nこおりは　あられが　ふると　もとにもどる。",
+  "descriptionEn" : "The Pokémon's ice head can take a physical attack as a substitute, but the attack also changes the Pokémon's appearance. The ice will be restored when it snows.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 241,
+  "nameKr" : "그대로꿀꺽미사일",
+  "nameJp" : "うのミサイル",
+  "nameEn" : "Gulp Missile",
+  "descriptionKr" : "파도타기나 다이빙을 쓰면\n먹이를 물어온다. 데미지를\n받으면 먹이를 토해내서 공격한다.",
+  "descriptionJp" : "なみのりか　ダイビングを　すると\nえものを　くわえてくる。　ダメージを\nうけると　えものを　はきだして　こうげき。",
+  "descriptionEn" : "When the Pokémon uses Surf or Dive, it will come back\nwith prey. When it takes damage, it will spit out the prey\nto attack.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 244,
+  "nameKr" : "펑크록",
+  "nameJp" : "パンクロック",
+  "nameEn" : "Punk Rock",
+  "descriptionKr" : "소리 기술의 위력이 올라간다.\n상대로부터 받는 소리 기술의\n데미지는 절반이 된다.",
+  "descriptionJp" : "おとわざの　いりょくが　あがる。\nうけた　おとわざの\nダメージは　はんぶんに　なる。",
+  "descriptionEn" : "Boosts the power of sound-based moves. The Pokémon also takes half the damage from these kinds of moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 240,
+  "nameKr" : "미러아머",
+  "nameJp" : "ミラーアーマー",
+  "nameEn" : "Mirror Armor",
+  "descriptionKr" : "자신이 받는\n능력 다운 효과에 한해\n되받아친다.",
+  "descriptionJp" : "じぶんが　うけた\nのうりょく　ダウンの\nこうか　だけを　はねかえす。",
+  "descriptionEn" : "Bounces back only the stat-lowering effects that the Pokémon receives.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 245,
+  "nameKr" : "모래뿜기",
+  "nameJp" : "すなはき",
+  "nameEn" : "Sand Spit",
+  "descriptionKr" : "공격을 받으면\n모래바람을 일으킨다.",
+  "descriptionJp" : "こうげきを　うけると\nすなあらしを　おこす。",
+  "descriptionEn" : "The Pokémon creates a sandstorm when it's hit by an attack.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 247,
+  "nameKr" : "숙성",
+  "nameJp" : "じゅくせい",
+  "nameEn" : "Ripen",
+  "descriptionKr" : "나무열매를\n숙성시켜서\n효과가 2배가 된다.",
+  "descriptionJp" : "じゅくせい　させることで\nきのみの　こうかが\nばいに　なる。",
+  "descriptionEn" : "Ripens Berries and doubles their effect.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 249,
+  "nameKr" : "파워스폿",
+  "nameJp" : "パワースポット",
+  "nameEn" : "Power Spot",
+  "descriptionKr" : "옆에 있기만 해도\n기술의 위력이 올라간다.",
+  "descriptionJp" : "となりに　いるだけで\nわざの　いりょくが　あがる。",
+  "descriptionEn" : "Just being next to the Pokémon powers up moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 251,
+  "nameKr" : "배리어프리",
+  "nameJp" : "バリアフリー",
+  "nameEn" : "Screen Cleaner",
+  "descriptionKr" : "등장했을 때 상대와 같은 편의\n빛의장막, 리플렉터, 오로라베일의\n효과가 사라진다.",
+  "descriptionJp" : "とうじょう　したときに　てきと　みかたの\nひかりのかべ　リフレクター\nオーロラベールの　こうかが　きえる。",
+  "descriptionEn" : "When the Pokémon enters a battle, the effects of\nLight Screen, Reflect, and Aurora Veil are nullified for\nboth opposing and ally Pokémon.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 256,
+  "nameKr" : "화학변화가스",
+  "nameJp" : "かがくへんかガス",
+  "nameEn" : "Neutralizing Gas",
+  "descriptionKr" : "화학변화가스를 가진 포켓몬이 배틀에 나와 있으면\n모든 포켓몬이 가진 특성의 효과가\n사라지거나 발동하지 않게 된다.",
+  "descriptionJp" : "かがくへんかガスの　ポケモンが　ばにいると\nすべての　ポケモンの　とくせいの\nこうかが　きえたり　はつどう　しなくなる。",
+  "descriptionEn" : "While the Pokémon is in the battle, the effects of all other Pokémon's Abilities will be nullified or will not be triggered.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 257,
+  "nameKr" : "파스텔베일",
+  "nameJp" : "パステルベール",
+  "nameEn" : "Pastel Veil",
+  "descriptionKr" : "자신과 같은 편이\n독의 상태 이상 효과를\n받지 않게 된다.",
+  "descriptionJp" : "じぶんも　みかたも\nどくの　じょうたいいじょうを\nうけなくなる。",
+  "descriptionEn" : "Protects the Pokémon and its ally Pokémon from\nbeing poisoned.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 250,
+  "nameKr" : "의태",
+  "nameJp" : "ぎたい",
+  "nameEn" : "Mimicry",
+  "descriptionKr" : "필드의 상태에 따라\n포켓몬의 타입이 바뀐다.",
+  "descriptionJp" : "フィールドの　じょうたいに　あわせて\nポケモンの　タイプが　かわる。",
+  "descriptionEn" : "Changes the Pokémon’s type depending on the terrain.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 252,
+  "nameKr" : "강철정신",
+  "nameJp" : "はがねのせいしん",
+  "nameEn" : "Steely Spirit",
+  "descriptionKr" : "같은 편의 강철타입\n공격의 위력이 올라간다.",
+  "descriptionJp" : "みかたの　はがねタイプの\nこうげきの　いりょくが　あがる。",
+  "descriptionEn" : "Powers up the Steel-type moves of the Pokémon and its allies.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 259,
+  "nameKr" : "퀵드로",
+  "nameJp" : "クイックドロウ",
+  "nameEn" : "Quick Draw",
+  "descriptionKr" : "상대보다 먼저\n행동할 수도 있다.",
+  "descriptionJp" : "あいてより　さきに\nこうどう　できることが　ある。",
+  "descriptionEn" : "Enables the Pokémon to move first occasionally.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 255,
+  "nameKr" : "무아지경",
+  "nameJp" : "ごりむちゅう",
+  "nameEn" : "Gorilla Tactics",
+  "descriptionKr" : "공격이 올라가지만\n처음에 선택한\n기술 외에는 쓸 수 없게 된다.",
+  "descriptionJp" : "こうげきは　あがるが\nさいしょに　えらんだ\nわざしか　だせなくなる。",
+  "descriptionEn" : "Boosts the Pokémon’s Attack stat but only allows\nthe use of the first selected move.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 261,
+  "nameKr" : "기묘한약",
+  "nameJp" : "きみょうなくすり",
+  "nameEn" : "Curious Medicine",
+  "descriptionKr" : "등장했을 때\n조개껍질에서 약을 흩뿌려서\n능력 변화를 원래대로 되돌린다.",
+  "descriptionJp" : "とうじょう　したときに\nかいがらから　くすりを　ふりまいて\nみかたの　のうりょくへんかを　もとにもどす。",
+  "descriptionEn" : "When the Pokémon enters a battle, it scatters medicine from its shell, which removes all stat changes from allies.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 253,
+  "nameKr" : "멸망의바디",
+  "nameJp" : "ほろびのボディ",
+  "nameEn" : "Perish Body",
+  "descriptionKr" : "접촉하는 기술을 받으면\n3턴 후에 양쪽 모두 기절한다.\n교체되면 효과가 없어진다.",
+  "descriptionJp" : "せっしょくする　わざを　うけると\nおたがい　３ターン　たつと　ひんしになる。\nこうたいすると　こうかは　なくなる。",
+  "descriptionEn" : "When hit by a move that makes direct contact,\nthe Pokémon and the attacker will faint after three turns\nunless they switch out of battle.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 260,
+  "nameKr" : "보이지않는주먹",
+  "nameJp" : "ふかしのこぶし",
+  "nameEn" : "Unseen Fist",
+  "descriptionKr" : "상대에게 접촉하는 기술을 사용하면\n방어의 효과를 무시하고 공격할 수 있다.",
+  "descriptionJp" : "あいてに　せっしょくする　わざなら\nまもりの　こうかを\nむしして　こうげき　することが　できる。",
+  "descriptionEn" : "If the Pokémon uses moves that make direct contact, it can attack the target even if the target protects itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 254,
+  "nameKr" : "떠도는영혼",
+  "nameJp" : "さまようたましい",
+  "nameEn" : "Wandering Spirit",
+  "descriptionKr" : "접촉하는 기술로\n공격해온 포켓몬과\n특성을 바꾼다.",
+  "descriptionJp" : "せっしょくする　わざで\nこうげき　してきた　ポケモンと\nとくせいを　いれかえる。",
+  "descriptionEn" : "The Pokémon exchanges Abilities with a Pokémon\nthat hits it with a move that makes direct contact.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 264,
+  "nameKr" : "백의울음",
+  "nameJp" : "しろのいななき",
+  "nameEn" : "Chilling Neigh",
+  "descriptionKr" : "상대를 쓰러뜨리면\n차가운 울음소리를 내면서\n공격이 올라간다.",
+  "descriptionJp" : "あいてを　たおすと\nつめたい　こえで　いなないて\nこうげきが　あがる。",
+  "descriptionEn" : "When the Pokémon knocks out a target, it utters a chilling neigh, which boosts its Attack stat.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 266,
+  "nameKr" : "혼연일체",
+  "nameJp" : "じんばいったい",
+  "nameEn" : "As One",
+  "descriptionKr" : "버드렉스의 긴장감과\n블리자포스의 백의울음\n두 가지 특성을 겸비한다.",
+  "descriptionJp" : "バドレックスの　きんちょうかんと\nブリザポスの　しろのいななきの\nふたつの　とくせいを　あわせもつ。",
+  "descriptionEn" : "This Ability combines the effects of both Calyrex's Unnerve Ability and Glastrier's Chilling Neigh Ability.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 262,
+  "nameKr" : "트랜지스터",
+  "nameJp" : "トランジスタ",
+  "nameEn" : "Transistor",
+  "descriptionKr" : "전기타입 기술의\n위력이 올라간다.",
+  "descriptionJp" : "でんきタイプの　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up Electric-type moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 263,
+  "nameKr" : "용의턱",
+  "nameJp" : "りゅうのあぎと",
+  "nameEn" : "Dragon’s Maw",
+  "descriptionKr" : "드래곤타입 기술의\n위력이 올라간다.",
+  "descriptionJp" : "ドラゴンタイプの　わざの\nいりょくが　あがる。",
+  "descriptionEn" : "Powers up Dragon-type moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 267,
+  "nameKr" : "혼연일체",
+  "nameJp" : "じんばいったい",
+  "nameEn" : "As One",
+  "descriptionKr" : "버드렉스의 긴장감과\n레이스포스의 흑의울음\n두 가지 특성을 겸비한다.",
+  "descriptionJp" : "バドレックスの　きんちょうかんと\nレイスポスの　くろのいななきの\nふたつの　とくせいを　あわせもつ。",
+  "descriptionEn" : "This Ability combines the effects of both Calyrex's Unnerve Ability and Spectrier's Grim Neigh Ability.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 265,
+  "nameKr" : "흑의울음",
+  "nameJp" : "くろのいななき",
+  "nameEn" : "Grim Neigh",
+  "descriptionKr" : "상대를 쓰러뜨리면\n무서운 울음소리를 내면서\n특수공격이 올라간다.",
+  "descriptionJp" : "あいてを　たおすと\nおそろしい　こえで　いなないて\nとくこうが　あがる。",
+  "descriptionEn" : "When the Pokémon knocks out a target, it utters a terrifying neigh, which boosts its Sp. Atk stat.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 268,
+  "nameKr" : "가시지않는향기",
+  "nameJp" : "とれないにおい",
+  "nameEn" : "Lingering Aroma",
+  "descriptionKr" : "",
+  "descriptionJp" : "相手に　触られると\nとれないにおいが\n相手に　うつってしまう。",
+  "descriptionEn" : "Contact with the Pokémon changes the attacker's Ability to Lingering Aroma.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 269,
+  "nameKr" : "넘치는씨",
+  "nameJp" : "こぼれダネ",
+  "nameEn" : "Seed Sower",
+  "descriptionKr" : "",
+  "descriptionJp" : "攻撃を　受けると\nグラスフィールドに　する。",
+  "descriptionEn" : "Turns the ground into Grassy Terrain when the Pokémon is hit by an attack.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 258,
+  "nameKr" : "꼬르륵스위치",
+  "nameJp" : "はらぺこスイッチ",
+  "nameEn" : "Hunger Switch",
+  "descriptionKr" : "턴이 끝날 때마다 배부른 모양,\n배고픈 모양, 배부른 모양...으로\n번갈아서 모습을 바꾼다.",
+  "descriptionJp" : "ターンの　おわりに　まんぷくもよう\nはらぺこもよう　まんぷくもよう……と\nこうごに　すがたを　かえる。",
+  "descriptionEn" : "The Pokémon changes its form, alternating between its Full Belly Mode and Hangry Mode after the end of every turn.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 270,
+  "nameKr" : "열교환",
+  "nameJp" : "ねつこうかん",
+  "nameEn" : "Thermal Exchange",
+  "descriptionKr" : "",
+  "descriptionJp" : "ほのおタイプの　技を　受けると\n攻撃が　上がる。\nやけど状態に　ならない。",
+  "descriptionEn" : "Boosts the Attack stat when the Pokémon is hit by a Fire-type move. The Pokémon also cannot be burned.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 271,
+  "nameKr" : "분노의껍질",
+  "nameJp" : "いかりのこうら",
+  "nameEn" : "Anger Shell",
+  "descriptionKr" : "",
+  "descriptionJp" : "相手の攻撃で　HPが　半分に　なると\n怒りで　防御と　特防が　下がるが\n攻撃　特攻　素早さが　上がる。",
+  "descriptionEn" : "When an attack causes its HP to drop to half or less, the Pokémon gets angry. This lowers its Defense and Sp. Def stats but boosts its Attack, Sp. Atk, and Speed stats.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 272,
+  "nameKr" : "정화의소금",
+  "nameJp" : "きよめのしお",
+  "nameEn" : "Purifying Salt",
+  "descriptionKr" : "",
+  "descriptionJp" : "清らかな塩で　状態異常に　ならない。\nゴーストタイプの　技の\nダメージを　半減させる。",
+  "descriptionEn" : "The Pokémon's pure salt protects it from status conditions and halves the damage taken from Ghost-type moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 273,
+  "nameKr" : "노릇노릇바디",
+  "nameJp" : "こんがりボディ",
+  "nameEn" : "Well-Baked Body",
+  "descriptionKr" : "",
+  "descriptionJp" : "ほのおタイプの　技を　受けると\nダメージを　受けずに\n防御が　ぐーんと　上がる。",
+  "descriptionEn" : "The Pokémon takes no damage when hit by Fire-type moves. Instead, its Defense stat is sharply boosted.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10001,
+  "nameKr" : "mountaineer",
+  "nameJp" : "mountaineer",
+  "nameEn" : "Mountaineer",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 274,
+  "nameKr" : "바람타기",
+  "nameJp" : "かぜのり",
+  "nameEn" : "Wind Rider",
+  "descriptionKr" : "",
+  "descriptionJp" : "おいかぜが　吹いたり　風技を　受けると\nダメージを　受けずに\n攻撃が　上がる。",
+  "descriptionEn" : "Boosts the Pokémon's Attack stat if Tailwind takes effect or if the Pokémon is hit by a wind move. The Pokémon also takes no damage from wind moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10002,
+  "nameKr" : "wave-rider",
+  "nameJp" : "wave-rider",
+  "nameEn" : "Wave Rider",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 275,
+  "nameKr" : "파수견",
+  "nameJp" : "ばんけん",
+  "nameEn" : "Guard Dog",
+  "descriptionKr" : "",
+  "descriptionJp" : "いかく　されると　攻撃が　上がる。\nポケモンを　入れ替えさせる\n技や　道具が　効かない。",
+  "descriptionEn" : "Boosts the Pokémon’s Attack stat if intimidated. Moves and items that would force the Pokémon to switch out also fail to work.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 276,
+  "nameKr" : "바위나르기",
+  "nameJp" : "いわはこび",
+  "nameEn" : "Rocky Payload",
+  "descriptionKr" : "",
+  "descriptionJp" : "いわタイプの　技の\n威力が　上がる。",
+  "descriptionEn" : "Powers up Rock-type moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10003,
+  "nameKr" : "skater",
+  "nameJp" : "skater",
+  "nameEn" : "Skater",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10004,
+  "nameKr" : "thrust",
+  "nameJp" : "thrust",
+  "nameEn" : "Thrust",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 277,
+  "nameKr" : "풍력발전",
+  "nameJp" : "ふうりょくでんき",
+  "nameEn" : "Wind Power",
+  "descriptionKr" : "",
+  "descriptionJp" : "風技を　受けると\nじゅうでん　状態に　なる。",
+  "descriptionEn" : "The Pokémon becomes charged when it is hit by a wind move, boosting the power of the next Electric-type move the Pokémon uses.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 280,
+  "nameKr" : "전기로바꾸기",
+  "nameJp" : "でんきにかえる",
+  "nameEn" : "Electromorphosis",
+  "descriptionKr" : "",
+  "descriptionJp" : "ダメージを　受けると\nじゅうでん　状態に　なる。",
+  "descriptionEn" : "The Pokémon becomes charged when it takes damage, boosting the power of the next Electric-type move the Pokémon uses.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10005,
+  "nameKr" : "perception",
+  "nameJp" : "perception",
+  "nameEn" : "Perception",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10006,
+  "nameKr" : "parry",
+  "nameJp" : "parry",
+  "nameEn" : "Parry",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10007,
+  "nameKr" : "instinct",
+  "nameJp" : "instinct",
+  "nameEn" : "Instinct",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 282,
+  "nameKr" : "쿼크차지",
+  "nameJp" : "クォークチャージ",
+  "nameEn" : "Quark Drive",
+  "descriptionKr" : "",
+  "descriptionJp" : "ブーストエナジーを　持たせるか\nエレキフィールドのとき\nいちばん　高い能力が　上がる。",
+  "descriptionEn" : "Boosts the Pokémon's most proficient stat on Electric Terrain or if the Pokémon is holding Booster Energy.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 281,
+  "nameKr" : "고대활성",
+  "nameJp" : "こだいかっせい",
+  "nameEn" : "Protosynthesis",
+  "descriptionKr" : "",
+  "descriptionJp" : "ブーストエナジーを　持たせるか\n天気が　晴れのとき\nいちばん　高い能力が　上がる。",
+  "descriptionEn" : "Boosts the Pokémon's most proficient stat in harsh sunlight or if the Pokémon is holding Booster Energy.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 279,
+  "nameKr" : "사령탑",
+  "nameJp" : "しれいとう",
+  "nameEn" : "Commander",
+  "descriptionKr" : "",
+  "descriptionJp" : "登場したとき　味方に\nヘイラッシャが　いると　口の中に\n入って　そこから　指令を　だす。",
+  "descriptionEn" : "When the Pokémon enters a battle, it goes inside the mouth of an ally Dondozo if one is on the field. The Pokémon then issues commands from there.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10008,
+  "nameKr" : "dodge",
+  "nameJp" : "dodge",
+  "nameEn" : "Dodge",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 278,
+  "nameKr" : "마이티체인지",
+  "nameJp" : "マイティチェンジ",
+  "nameEn" : "Zero to Hero",
+  "descriptionKr" : "",
+  "descriptionJp" : "手持ちに　ひっこむと\nマイティフォルムに　変化する。",
+  "descriptionEn" : "The Pokémon transforms into its Hero Form when it switches out.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10010,
+  "nameKr" : "frostbite",
+  "nameJp" : "frostbite",
+  "nameEn" : "Frostbite",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10009,
+  "nameKr" : "jagged-edge",
+  "nameJp" : "jagged-edge",
+  "nameEn" : "Jagged Edge",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10011,
+  "nameKr" : "tenacity",
+  "nameJp" : "tenacity",
+  "nameEn" : "Tenacity",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 283,
+  "nameKr" : "황금몸",
+  "nameJp" : "おうごんのからだ",
+  "nameEn" : "Good as Gold",
+  "descriptionKr" : "",
+  "descriptionJp" : "酸化せず　丈夫な　黄金の体は\n相手からの　変化技を　受けない。",
+  "descriptionEn" : "A body of pure, solid gold gives the Pokémon full immunity to other Pokémon's status moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 284,
+  "nameKr" : "재앙의그릇",
+  "nameJp" : "わざわいのうつわ",
+  "nameEn" : "Vessel of Ruin",
+  "descriptionKr" : "",
+  "descriptionJp" : "災厄を　呼ぶ　器の力で\n自分以外の　特攻が　弱くなる。",
+  "descriptionEn" : "The power of the Pokémon's ruinous vessel lowers the Sp. Atk stats of all Pokémon except itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10012,
+  "nameKr" : "pride",
+  "nameJp" : "pride",
+  "nameEn" : "Pride",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 285,
+  "nameKr" : "재앙의검",
+  "nameJp" : "わざわいのつるぎ",
+  "nameEn" : "Sword of Ruin",
+  "descriptionKr" : "",
+  "descriptionJp" : "災厄を　呼ぶ　剣の力で\n自分以外の　防御が　弱くなる。",
+  "descriptionEn" : "The power of the Pokémon's ruinous sword lowers the Defense stats of all Pokémon except itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10013,
+  "nameKr" : "deep-sleep",
+  "nameJp" : "deep-sleep",
+  "nameEn" : "Deep Sleep",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 288,
+  "nameKr" : "진홍빛고동",
+  "nameJp" : "ひひいろのこどう",
+  "nameEn" : "Orichalcum Pulse",
+  "descriptionKr" : "",
+  "descriptionJp" : "登場したとき　天気を　晴れにする。\n日差しが　強いと　古代の\n鼓動により　攻撃が　高まる。",
+  "descriptionEn" : "Turns the sunlight harsh when the Pokémon enters a battle. The ancient pulse thrumming through the Pokémon also boosts its Attack stat in harsh sunlight.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 286,
+  "nameKr" : "재앙의목간",
+  "nameJp" : "わざわいのおふだ",
+  "nameEn" : "Tablets of Ruin",
+  "descriptionKr" : "",
+  "descriptionJp" : "災厄を　呼ぶ　木札の力で\n自分以外の　攻撃が　弱くなる。",
+  "descriptionEn" : "The power of the Pokémon's ruinous wooden tablets lowers the Attack stats of all Pokémon except itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10014,
+  "nameKr" : "power-nap",
+  "nameJp" : "power-nap",
+  "nameEn" : "Power Nap",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 289,
+  "nameKr" : "하드론엔진",
+  "nameJp" : "ハドロンエンジン",
+  "nameEn" : "Hadron Engine",
+  "descriptionKr" : "",
+  "descriptionJp" : "登場したとき　エレキフィールドを　はる。\nエレキフィールドだと　未来の\n機関により　特攻が　高まる。",
+  "descriptionEn" : "Turns the ground into Electric Terrain when the Pokémon enters a battle. The futuristic engine within the Pokémon also boosts its Sp. Atk stat on Electric Terrain.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10015,
+  "nameKr" : "spirit",
+  "nameJp" : "spirit",
+  "nameEn" : "Spirit",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 291,
+  "nameKr" : "되새김질",
+  "nameJp" : "はんすう",
+  "nameEn" : "Cud Chew",
+  "descriptionKr" : "",
+  "descriptionJp" : "きのみを　食べると\n次のターンの　終わりに　胃から\n出して　もう1回だけ　食べる。",
+  "descriptionEn" : "When the Pokémon eats a Berry, it will regurgitate that Berry at the end of the next turn and eat it one more time.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10016,
+  "nameKr" : "warm-blanket",
+  "nameJp" : "warm-blanket",
+  "nameEn" : "Warm Blanket",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 287,
+  "nameKr" : "재앙의구슬",
+  "nameJp" : "わざわいのたま",
+  "nameEn" : "Beads of Ruin",
+  "descriptionKr" : "",
+  "descriptionJp" : "災厄を　呼ぶ　勾玉の力で\n自分以外の　特防が　弱くなる。",
+  "descriptionEn" : "The power of the Pokémon's ruinous beads lowers the Sp. Def stats of all Pokémon except itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 292,
+  "nameKr" : "예리함",
+  "nameJp" : "きれあじ",
+  "nameEn" : "Sharpness",
+  "descriptionKr" : "",
+  "descriptionJp" : "相手を　切る技の\n威力が　上がる。",
+  "descriptionEn" : "Powers up slicing moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10017,
+  "nameKr" : "gulp",
+  "nameJp" : "gulp",
+  "nameEn" : "Gulp",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 290,
+  "nameKr" : "편승",
+  "nameJp" : "びんじょう",
+  "nameEn" : "Opportunist",
+  "descriptionKr" : "",
+  "descriptionJp" : "相手の　能力が　上がったとき\n自分も　便乗して\n同じように　能力を　上げる。",
+  "descriptionEn" : "If an opponent's stat is boosted, the Pokémon seizes the opportunity to boost the same stat for itself.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10018,
+  "nameKr" : "herbivore",
+  "nameJp" : "herbivore",
+  "nameEn" : "Herbivore",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10019,
+  "nameKr" : "sandpit",
+  "nameJp" : "sandpit",
+  "nameEn" : "Sandpit",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 293,
+  "nameKr" : "총대장",
+  "nameJp" : "そうだいしょう",
+  "nameEn" : "Supreme Overlord",
+  "descriptionKr" : "",
+  "descriptionJp" : "登場したとき　今まで　倒された\n味方の　数が　多いほど\n少しずつ　攻撃と　特攻が　上がる。",
+  "descriptionEn" : "When the Pokémon enters a battle, its Attack and Sp. Atk stats are slightly boosted for each of the allies in its party that have already been defeated.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10020,
+  "nameKr" : "hot-blooded",
+  "nameJp" : "hot-blooded",
+  "nameEn" : "Hot Blooded",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 294,
+  "nameKr" : "협연",
+  "nameJp" : "きょうえん",
+  "nameEn" : "Costar",
+  "descriptionKr" : "",
+  "descriptionJp" : "登場　したときに\n味方の　能力変化を　コピーする。",
+  "descriptionEn" : "When the Pokémon enters a battle, it copies an ally's stat changes.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10021,
+  "nameKr" : "medic",
+  "nameJp" : "medic",
+  "nameEn" : "Medic",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10022,
+  "nameKr" : "life-force",
+  "nameJp" : "life-force",
+  "nameEn" : "Life Force",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 295,
+  "nameKr" : "독치장",
+  "nameJp" : "どくげしょう",
+  "nameEn" : "Toxic Debris",
+  "descriptionKr" : "",
+  "descriptionJp" : "物理技で　ダメージを　受けると\n相手の　足下に\nどくびしが　ちらばる。",
+  "descriptionEn" : "Scatters poison spikes at the feet of the opposing team when the Pokémon takes damage from physical moves.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10023,
+  "nameKr" : "lunchbox",
+  "nameJp" : "lunchbox",
+  "nameEn" : "Lunchbox",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 296,
+  "nameKr" : "테일아머",
+  "nameJp" : "テイルアーマー",
+  "nameEn" : "Armor Tail",
+  "descriptionKr" : "",
+  "descriptionJp" : "頭を包む　謎のしっぽが\nこちらに　むかって　先制技を\n出せない　ようにする。",
+  "descriptionEn" : "The mysterious tail covering the Pokémon's head makes opponents unable to use priority moves against the Pokémon or its allies.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 298,
+  "nameKr" : "균사의힘",
+  "nameJp" : "きんしのちから",
+  "nameEn" : "Mycelium Might",
+  "descriptionKr" : "",
+  "descriptionJp" : "変化技を　出すとき\n必ず　行動が　遅くなるが\n相手の　特性に　ジャマされない。",
+  "descriptionEn" : "The Pokémon will always act more slowly when using status moves, but these moves will be unimpeded by the Ability of the target.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10024,
+  "nameKr" : "nurse",
+  "nameJp" : "nurse",
+  "nameEn" : "Nurse",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 297,
+  "nameKr" : "흙먹기",
+  "nameJp" : "どしょく",
+  "nameEn" : "Earth Eater",
+  "descriptionKr" : "",
+  "descriptionJp" : "じめんタイプの　技を　受けると\nダメージを　受けずに　回復する。",
+  "descriptionEn" : "If hit by a Ground-type move, the Pokémon has its HP restored instead of taking damage.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10025,
+  "nameKr" : "melee",
+  "nameJp" : "melee",
+  "nameEn" : "Melee",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10027,
+  "nameKr" : "bodyguard",
+  "nameJp" : "bodyguard",
+  "nameEn" : "Bodyguard",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 301,
+  "nameKr" : "대접",
+  "nameJp" : "おもてなし",
+  "nameEn" : "Hospitality",
+  "descriptionKr" : "",
+  "descriptionJp" : "登場したとき　味方を　もてなして\nHPを　少しだけ　回復してあげる。",
+  "descriptionEn" : "When the Pokémon enters a battle, it showers its ally with hospitality, restoring a small amount of the ally's HP",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10026,
+  "nameKr" : "sponge",
+  "nameJp" : "sponge",
+  "nameEn" : "Sponge",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10028,
+  "nameKr" : "hero",
+  "nameJp" : "hero",
+  "nameEn" : "Hero",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 299,
+  "nameKr" : "심안",
+  "nameJp" : "しんがん",
+  "nameEn" : "Mind’s Eye",
+  "descriptionKr" : "",
+  "descriptionJp" : "ノーマル　かくとうタイプの技を　ゴーストタイプに\n当てることが　できる。　相手の　回避率の\n変化を　無視し　命中率も　下げられない。",
+  "descriptionEn" : "The Pokémon ignores changes to opponents' evasiveness, its accuracy can't be lowered, and it can hit Ghost types with Normal-type and Fighting-type moves",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 300,
+  "nameKr" : "감미로운꿀",
+  "nameJp" : "かんろなミツ",
+  "nameEn" : "Supersweet Syrup",
+  "descriptionKr" : "",
+  "descriptionJp" : "最初に　登場　したとき\n甘ったるい　蜜の香りを　ふりまいて\n相手の　回避率を　下げる。",
+  "descriptionEn" : "Lowers the evasion of opposing Pokémon by 1 stage when first sent into battle",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10029,
+  "nameKr" : "last-bastion",
+  "nameJp" : "last-bastion",
+  "nameEn" : "Last Bastion",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 302,
+  "nameKr" : "독사슬",
+  "nameJp" : "どくのくさり",
+  "nameEn" : "Toxic Chain",
+  "descriptionKr" : "",
+  "descriptionJp" : "毒素を　ふくんだ　鎖の力で\n技を　当てた　相手を\n猛毒の状態に　することが　ある。",
+  "descriptionEn" : "The power of the Pokémon's toxic chain may badly poison any target the Pokémon hits with a move",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 303,
+  "nameKr" : "초상투영",
+  "nameJp" : "おもかげやどし",
+  "nameEn" : "Embody Aspect",
+  "descriptionKr" : "",
+  "descriptionJp" : "思い出を 心に 宿すことで\nおめんを かがやかせ\n自分の 能力を 上げる。",
+  "descriptionEn" : "The Pokémon's heart fills with memories, causing the Mask to shine and one of the Pokémon's stats to be boosted.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10030,
+  "nameKr" : "stealth",
+  "nameJp" : "stealth",
+  "nameEn" : "Stealth",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 304,
+  "nameKr" : "테라체인지",
+  "nameJp" : "テラスチェンジ",
+  "nameEn" : "Tera Shift",
+  "descriptionKr" : "",
+  "descriptionJp" : "登場したとき　周囲の\nエネルギーを　吸収し\nテラスタルフォルムに　変化する。",
+  "descriptionEn" : "When the Pokémon enters a battle, it absorbs the energy around itself and transforms into its Terastal Form.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10031,
+  "nameKr" : "vanguard",
+  "nameJp" : "vanguard",
+  "nameEn" : "Vanguard",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10032,
+  "nameKr" : "nomad",
+  "nameJp" : "nomad",
+  "nameEn" : "Nomad",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 305,
+  "nameKr" : "테라셸",
+  "nameJp" : "テラスシェル",
+  "nameEn" : "Tera Shell",
+  "descriptionKr" : "",
+  "descriptionJp" : "全タイプの力を　秘めた甲羅は\nHPが　満タンの　ときに　受ける\nダメージを　すべて　今ひとつに　する。",
+  "descriptionEn" : "The Pokémon's shell contains the powers of each type. All damage-dealing moves that hit the Pokémon when its HP is full will not be very effective.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10034,
+  "nameKr" : "grass-cloak",
+  "nameJp" : "grass-cloak",
+  "nameEn" : "Grass Cloak",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 306,
+  "nameKr" : "제로포밍",
+  "nameJp" : "ゼロフォーミング",
+  "nameEn" : "Teraform Zero",
+  "descriptionKr" : "",
+  "descriptionJp" : "テラパゴスが　ステラフォルムに　なったとき\n秘められた力で　天気と　フィールドの\n影響を　すべて　ゼロにする。",
+  "descriptionEn" : "When Terapagos changes into its Stellar Form, it uses its hidden powers to eliminate all effects of weather and terrain, reducing them to zero.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 307,
+  "nameKr" : "독조종",
+  "nameJp" : "どくくぐつ",
+  "nameEn" : "Poison Puppeteer",
+  "descriptionKr" : "",
+  "descriptionJp" : "モモワロウの　技によって\nどく状態に　なった　相手は\nこんらん状態にも　なってしまう。",
+  "descriptionEn" : "Pokémon poisoned by Pecharunt's moves will also become confused.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10033,
+  "nameKr" : "sequence",
+  "nameJp" : "sequence",
+  "nameEn" : "Sequence",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 309,
+  "nameKr" : "드래곤스킨",
+  "nameJp" : "ドラゴンスキン",
+  "nameEn" : "Dragonize",
+  "descriptionKr" : "",
+  "descriptionJp" : "ノーマルタイプの技がドラゴンタイプになり\n威力が1.2倍になる。",
+  "descriptionEn" : "The Pokémon's Normal-type moves become Dragon-type moves and their power is boosted by 20%.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 308,
+  "nameKr" : "관통드릴",
+  "nameJp" : "かんつうドリル",
+  "nameEn" : "Piercing Drill",
+  "descriptionKr" : "",
+  "descriptionJp" : "接触技を使う時\n相手の守りの効果を無視して\n本来の1/4のダメージを与える。\n相手の守りの効果以外は発動される。",
+  "descriptionEn" : "When the Pokémon uses contact moves, it can hit even targets that are protecting themselves, dealing 1/4 of the damage that the move would otherwise deal. Everything aside from the target's protective effects is still triggered.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10036,
+  "nameKr" : "lullaby",
+  "nameJp" : "lullaby",
+  "nameEn" : "Lullaby",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 310,
+  "nameKr" : "메가솔라",
+  "nameJp" : "メガソーラー",
+  "nameEn" : "Mega Sol",
+  "descriptionKr" : "",
+  "descriptionJp" : "天気が　にほんばれ状態でなくても\nにほんばれ状態として\n技を使うことができる。",
+  "descriptionEn" : "Even when the sunlight has not turned harsh, the Pokémon can use its moves as if the weather were harsh sunlight.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10035,
+  "nameKr" : "celebrate",
+  "nameJp" : "celebrate",
+  "nameEn" : "Celebrate",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10037,
+  "nameKr" : "calming",
+  "nameJp" : "calming",
+  "nameEn" : "Calming",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10039,
+  "nameKr" : "frighten",
+  "nameJp" : "frighten",
+  "nameEn" : "Frighten",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 311,
+  "nameKr" : "하바네로분출",
+  "nameJp" : "とびだすハバネロ",
+  "nameEn" : "Spicy Spray",
+  "descriptionKr" : "",
+  "descriptionJp" : "技のダメージを受けると\n相手をやけど状態にする。",
+  "descriptionEn" : "When the Pokémon takes damage from a move, it burns the attacker.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10038,
+  "nameKr" : "daze",
+  "nameJp" : "daze",
+  "nameEn" : "Daze",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10040,
+  "nameKr" : "interference",
+  "nameJp" : "interference",
+  "nameEn" : "Interference",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 312,
+  "nameKr" : "eelevate",
+  "nameJp" : "eelevate",
+  "nameEn" : "Eelevate",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "The Pokémon floats off the ground, making it immune to Ground-type moves, as well as the Spikes, Toxic Spikes, and Sticky Web statuses. When the Pokémon knocks out a target with an attack, its highest stat is boosted by 1 stage.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10045,
+  "nameKr" : "explode",
+  "nameJp" : "explode",
+  "nameEn" : "Explode",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 313,
+  "nameKr" : "fire-mane",
+  "nameJp" : "fire-mane",
+  "nameEn" : "Fire Mane",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "Boosts the power of the Pokémon's Fire-type moves by 50%.",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10041,
+  "nameKr" : "mood-maker",
+  "nameJp" : "mood-maker",
+  "nameEn" : "Mood Maker",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10042,
+  "nameKr" : "confidence",
+  "nameJp" : "confidence",
+  "nameEn" : "Confidence",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10043,
+  "nameKr" : "fortune",
+  "nameJp" : "fortune",
+  "nameEn" : "Fortune",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10044,
+  "nameKr" : "bonanza",
+  "nameJp" : "bonanza",
+  "nameEn" : "Bonanza",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10046,
+  "nameKr" : "omnipotent",
+  "nameJp" : "omnipotent",
+  "nameEn" : "Omnipotent",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10047,
+  "nameKr" : "share",
+  "nameJp" : "share",
+  "nameEn" : "Share",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10053,
+  "nameKr" : "climber",
+  "nameJp" : "climber",
+  "nameEn" : "Climber",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10048,
+  "nameKr" : "black-hole",
+  "nameJp" : "black-hole",
+  "nameEn" : "Black Hole",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10049,
+  "nameKr" : "shadow-dash",
+  "nameJp" : "shadow-dash",
+  "nameEn" : "Shadow Dash",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10050,
+  "nameKr" : "sprint",
+  "nameJp" : "sprint",
+  "nameEn" : "Sprint",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10052,
+  "nameKr" : "high-rise",
+  "nameJp" : "high-rise",
+  "nameEn" : "High-rise",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10054,
+  "nameKr" : "flame-boost",
+  "nameJp" : "flame-boost",
+  "nameEn" : "Flame Boost",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10057,
+  "nameKr" : "conqueror",
+  "nameJp" : "conqueror",
+  "nameEn" : "Conqueror",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10051,
+  "nameKr" : "disgust",
+  "nameJp" : "disgust",
+  "nameEn" : "Disgust",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10056,
+  "nameKr" : "run-up",
+  "nameJp" : "run-up",
+  "nameEn" : "Run Up",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10059,
+  "nameKr" : "decoy",
+  "nameJp" : "decoy",
+  "nameEn" : "Decoy",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10055,
+  "nameKr" : "aqua-boost",
+  "nameJp" : "aqua-boost",
+  "nameEn" : "Aqua Boost",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10060,
+  "nameKr" : "shield",
+  "nameJp" : "shield",
+  "nameEn" : "Shield",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+}, {
+  "abilityRowid" : 10058,
+  "nameKr" : "shackle",
+  "nameJp" : "shackle",
+  "nameEn" : "Shackle",
+  "descriptionKr" : "",
+  "descriptionJp" : "",
+  "descriptionEn" : "",
+  "regDate" : "2026-07-10T22:28:21.968353"
+} ]

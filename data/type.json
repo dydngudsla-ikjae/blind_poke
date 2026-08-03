@@ -1,0 +1,1477 @@
+[ {
+  "typeRowid" : 6,
+  "nameKr" : "바위",
+  "nameJp" : "いわ",
+  "nameEn" : "Rock",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "3" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "4" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "11" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 5,
+  "nameKr" : "땅",
+  "nameJp" : "じめん",
+  "nameEn" : "Ground",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.0
+      },
+      "4" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "11" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "13" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 2.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 3,
+  "nameKr" : "비행",
+  "nameJp" : "ひこう",
+  "nameEn" : "Flying",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "7" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "13" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 2,
+  "nameKr" : "격투",
+  "nameJp" : "かくとう",
+  "nameEn" : "Fighting",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "2" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "7" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "18" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 1,
+  "nameKr" : "노말",
+  "nameJp" : "ノーマル",
+  "nameEn" : "Normal",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 0.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 4,
+  "nameKr" : "독",
+  "nameJp" : "どく",
+  "nameEn" : "Poison",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "5" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "7" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.0
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 7,
+  "nameKr" : "벌레",
+  "nameJp" : "むし",
+  "nameEn" : "Bug",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "3" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "5" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 10,
+  "nameKr" : "불꽃",
+  "nameJp" : "ほのお",
+  "nameEn" : "Fire",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "7" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "10" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "11" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "12" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 8,
+  "nameKr" : "고스트",
+  "nameJp" : "ゴースト",
+  "nameEn" : "Ghost",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 0.0
+      },
+      "2" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 2.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 9,
+  "nameKr" : "강철",
+  "nameJp" : "はがね",
+  "nameEn" : "Steel",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "7" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "12" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "14" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "16" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 12,
+  "nameKr" : "풀",
+  "nameJp" : "くさ",
+  "nameEn" : "Grass",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "4" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "5" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "7" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "11" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "12" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "13" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 11,
+  "nameKr" : "물",
+  "nameJp" : "みず",
+  "nameEn" : "Water",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "10" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "11" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "12" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "13" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 14,
+  "nameKr" : "에스퍼",
+  "nameJp" : "エスパー",
+  "nameEn" : "Psychic",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 13,
+  "nameKr" : "전기",
+  "nameJp" : "でんき",
+  "nameEn" : "Electric",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "13" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 18,
+  "nameKr" : "페어리",
+  "nameJp" : "フェアリー",
+  "nameEn" : "Fairy",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 2.0
+      },
+      "17" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 15,
+  "nameKr" : "얼음",
+  "nameJp" : "こおり",
+  "nameEn" : "Ice",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "6" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 2.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 17,
+  "nameKr" : "악",
+  "nameJp" : "あく",
+  "nameEn" : "Dark",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 2.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "10" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 0.0,
+        "damageTo" : 2.0
+      },
+      "15" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "17" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 0.5
+      },
+      "18" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.5
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+}, {
+  "typeRowid" : 16,
+  "nameKr" : "드래곤",
+  "nameJp" : "ドラゴン",
+  "nameEn" : "Dragon",
+  "relation" : {
+    "relationMap" : {
+      "1" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "2" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "3" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "4" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "5" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "6" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "7" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "8" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "9" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 0.5
+      },
+      "10" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "11" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "12" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "13" : {
+        "damageFrom" : 0.5,
+        "damageTo" : 1.0
+      },
+      "14" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "15" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 1.0
+      },
+      "16" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 2.0
+      },
+      "17" : {
+        "damageFrom" : 1.0,
+        "damageTo" : 1.0
+      },
+      "18" : {
+        "damageFrom" : 2.0,
+        "damageTo" : 0.0
+      }
+    }
+  },
+  "regDate" : "2026-07-10T22:27:41.3296174"
+} ]
