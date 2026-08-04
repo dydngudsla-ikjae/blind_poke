@@ -1,26 +1,26 @@
 :root{
-  --bg:#0e1216; --bg2:#0a0d10; --panel:#161c22; --panel2:#1b232b;
-  --line:#26313a; --ink:#d7e0e6; --mut:#6b7a85; --dim:#48555e;
-  --scan:#38c7d0; --amber:#e0a54b; --ok:#6fd08c; --bad:#e0685a;
-  --redact:#2b353d;
-  --mono:"Space Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --bg:#eef2f8; --bg2:#f6f9fc; --panel:#ffffff; --panel2:#f2f6fd;
+  --line:#e1e8f0; --ink:#202a37; --mut:#6b7686; --dim:#8b95a6;
+  --scan:#2f6fed; --amber:#c17a1f; --ok:#2fa360; --bad:#e5484d;
+  --redact:#e3e9f2;
+  --mono:"Space Grotesk",system-ui,sans-serif;
   --disp:"Space Grotesk",system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{
   background:
-    radial-gradient(120% 80% at 50% -10%, #16202a 0%, var(--bg) 55%, var(--bg2) 100%);
+    radial-gradient(120% 80% at 50% -10%, #ffffff 0%, var(--bg) 55%, #e6ecf5 100%);
   color:var(--ink); font-family:var(--mono); font-size:14px; line-height:1.5;
   -webkit-font-smoothing:antialiased; min-height:100%;
 }
-/* faint scanline texture */
-body::after{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:99; opacity:.35;
-  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.14) 2px 3px);
-  mix-blend-mode:multiply;
-}
 .term{max-width:440px; margin:0 auto; padding:18px 16px 60px;}
+@media (min-width:680px){
+  .term{max-width:640px; padding:28px 22px 70px}
+}
+@media (min-width:960px){
+  .term{max-width:880px; padding:36px 28px 80px}
+}
 .boot{color:var(--scan); font-family:var(--mono); padding:80px 8px; text-align:center; letter-spacing:.5px}
 .dots::after{content:""; animation:dots 1.2s steps(4,end) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
@@ -28,14 +28,15 @@ body::after{
 /* ---- 조사/본거지 탭 ---- */
 .tabbar{display:flex; gap:8px; margin-bottom:12px}
 .tabbtn{flex:1; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.5px;
-  color:var(--mut); background:var(--panel); border:1px solid var(--line); border-radius:4px;
-  padding:9px 0; cursor:pointer}
+  color:var(--mut); background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:9px 0; cursor:pointer; transition:border-color .15s, background .15s, transform .15s}
 .tabbtn:hover{border-color:var(--scan)}
 .tabbtn.on{color:var(--scan); border-color:var(--scan); background:var(--panel2)}
 
 /* ---- header / case ---- */
-.case{border:1px solid var(--line); border-radius:4px; background:linear-gradient(180deg,var(--panel),var(--panel2));
-  padding:14px 14px 12px; position:relative; overflow:hidden}
+.case{border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,var(--panel),var(--panel2));
+  padding:14px 14px 12px; position:relative; overflow:hidden;
+  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 24px -18px rgba(30,41,59,.35)}
 .case::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--scan)}
 .eyebrow{font-size:10px; letter-spacing:2.5px; color:var(--scan); text-transform:uppercase}
 .coderow{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-top:6px}
@@ -43,24 +44,24 @@ body::after{
 .caseno{font-size:11px; color:var(--mut)}
 .stamp{position:absolute; right:10px; top:12px; transform:rotate(8deg);
   border:2px solid var(--bad); color:var(--bad); font-family:var(--disp); font-weight:700;
-  font-size:11px; letter-spacing:1.5px; padding:3px 8px; border-radius:3px; opacity:.85}
+  font-size:11px; letter-spacing:1.5px; padding:3px 8px; border-radius:6px; opacity:.85}
 .stamp.done{border-color:var(--ok); color:var(--ok)}
 
 /* ---- specimen viewport ---- */
-.viewport{margin:12px 0; border:1px solid var(--line); border-radius:4px; background:
-  repeating-linear-gradient(45deg,#0c1015 0 10px,#0e131a 10px 20px);
+.viewport{margin:12px 0; border:1px solid var(--line); border-radius:14px; background:
+  repeating-linear-gradient(45deg,#eef2f8 0 10px,#e6ebf3 10px 20px);
   height:190px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden}
-.viewport .crosshair{position:absolute; inset:0; opacity:.25;
+.viewport .crosshair{position:absolute; inset:0; opacity:.16;
   background:
     linear-gradient(90deg,transparent 49.6%,var(--scan) 49.6% 50.4%,transparent 50.4%),
     linear-gradient(0deg,transparent 49.6%,var(--scan) 49.6% 50.4%,transparent 50.4%)}
-.viewport .qmark{font-family:var(--disp); font-weight:700; font-size:72px; color:#2a3742}
+.viewport .qmark{font-family:var(--disp); font-weight:700; font-size:72px; color:#c7d0dc}
 .viewport img{max-height:170px; max-width:88%; image-rendering:auto}
-.viewport img.silhouette{filter:brightness(0) drop-shadow(0 0 10px rgba(56,199,208,.35))}
-.viewport canvas{image-rendering:pixelated; border:1px solid var(--line); border-radius:3px}
+.viewport img.silhouette{filter:brightness(0) drop-shadow(0 0 10px rgba(47,111,237,.35))}
+.viewport canvas{image-rendering:pixelated; border:1px solid var(--line); border-radius:8px}
 .vp-tag{position:absolute; left:8px; bottom:6px; font-size:9px; letter-spacing:1px; color:var(--dim)}
 .scanline{position:absolute; left:0; right:0; height:24px; top:-24px;
-  background:linear-gradient(180deg,transparent,rgba(56,199,208,.18),transparent);
+  background:linear-gradient(180deg,transparent,rgba(47,111,237,.16),transparent);
   animation:sweep 2.6s linear infinite}
 @keyframes sweep{0%{top:-24px}100%{top:190px}}
 
@@ -79,7 +80,7 @@ body::after{
 
 /* 공은 원형 마스크(overflow:hidden) 위에 위/아래 반쪽을 얹는 방식 — corner-radius 트릭 대신 확실하게 동그람 */
 .captfx .ball{position:relative; width:100%; height:100%; border-radius:50%; overflow:hidden;
-  border:3px solid #1c1c1c; box-sizing:border-box; background:#f2f2f2; box-shadow:0 6px 10px rgba(0,0,0,.35)}
+  border:3px solid #1c1c1c; box-sizing:border-box; background:#f2f2f2; box-shadow:0 6px 10px rgba(0,0,0,.25)}
 .captfx .ball-top{position:absolute; left:-3px; right:-3px; top:-3px; height:54%; background:linear-gradient(180deg,#ff7469,#e0342f)}
 .captfx .ball-bot{position:absolute; left:-3px; right:-3px; bottom:-3px; height:54%; background:#f2f2f2}
 .captfx .ball-band{position:absolute; left:-3px; right:-3px; top:50%; height:7px; margin-top:-3.5px; background:#1c1c1c; z-index:2}
@@ -113,30 +114,38 @@ body::after{
   box-shadow:0 0 0 0 var(--bad); animation:fxspark .45s ease-out forwards}
 
 /* ---- data rows ---- */
-.block{border:1px solid var(--line); border-radius:4px; background:var(--panel); margin-bottom:12px}
+.block{border:1px solid var(--line); border-radius:12px; background:var(--panel); margin-bottom:12px;
+  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 24px -20px rgba(30,41,59,.3)}
 .block>.bh{font-size:10px; letter-spacing:2px; color:var(--mut); padding:9px 12px; border-bottom:1px solid var(--line); text-transform:uppercase}
 .rows{padding:6px 12px 10px}
-.row{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 0; border-bottom:1px dashed #1e2830}
+.row{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 0; border-bottom:1px dashed #e3e9f1}
 .row:last-child{border-bottom:0}
 .row .k{color:var(--mut); font-size:12px; letter-spacing:.5px; flex:0 0 auto}
 .row .v{text-align:right; color:var(--ink)}
 .chip{display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#0e1216; margin-left:4px}
+.chip.redact-chip{background:linear-gradient(90deg,var(--redact),#f7f9fc,var(--redact)); background-size:200% 100%;
+  color:var(--mut); animation:shim 2.4s linear infinite}
 .v.amber{color:var(--amber)}
 
 /* redaction bar */
 .redact{display:inline-block; min-width:78px; height:15px; vertical-align:middle;
-  background:linear-gradient(90deg,var(--redact),#333f48,var(--redact)); background-size:200% 100%;
-  border-radius:2px; animation:shim 2.4s linear infinite}
+  background:linear-gradient(90deg,var(--redact),#f7f9fc,var(--redact)); background-size:200% 100%;
+  border-radius:6px; animation:shim 2.4s linear infinite}
 @keyframes shim{0%{background-position:0 0}100%{background-position:200% 0}}
 .revealed{animation:pop .35s ease}
 @keyframes pop{0%{opacity:0; transform:translateY(-3px)}100%{opacity:1; transform:none}}
 
 /* ---- candidate selection ---- */
 .candlist{display:flex; flex-direction:column; gap:10px; margin:14px 0}
+@media (min-width:680px){
+  .candlist{flex-direction:row; flex-wrap:wrap}
+  .candcard{flex:1 1 240px}
+}
 .candcard{width:100%; font-family:var(--mono); color:var(--ink); text-align:left; cursor:pointer;
-  border:1px solid var(--line); border-radius:4px; background:linear-gradient(180deg,var(--panel),var(--panel2));
-  padding:12px 14px; transition:border-color .15s, background .15s}
-.candcard:hover{border-color:var(--scan); background:#1b232b}
+  border:1px solid var(--line); border-radius:12px; background:linear-gradient(180deg,var(--panel),var(--panel2));
+  padding:12px 14px; transition:border-color .15s, background .15s, transform .15s;
+  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 22px -18px rgba(30,41,59,.3)}
+.candcard:hover{border-color:var(--scan); background:#eef4ff; transform:translateY(-2px)}
 .candname{font-family:var(--disp); font-weight:700; font-size:20px; margin-bottom:6px}
 .candrow{display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:12px}
 .candrow .k{color:var(--mut)}
@@ -145,35 +154,36 @@ body::after{
 /* ---- action buttons ---- */
 .actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px}
 .btn{font-family:var(--mono); font-size:12px; letter-spacing:.5px; color:var(--ink);
-  background:var(--panel2); border:1px solid var(--line); border-radius:4px; padding:11px 10px;
-  cursor:pointer; text-align:left; transition:border-color .15s, background .15s; position:relative}
-.btn:hover{border-color:var(--scan); background:#1f2831}
-.btn:disabled{opacity:.4; cursor:default; border-color:var(--line); background:var(--panel2)}
+  background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:11px 10px;
+  cursor:pointer; text-align:left; transition:border-color .15s, background .15s, transform .15s, box-shadow .15s; position:relative}
+.btn:hover{border-color:var(--scan); background:#eef4ff; transform:translateY(-1px);
+  box-shadow:0 6px 14px -8px rgba(47,111,237,.35)}
+.btn:disabled{opacity:.45; cursor:default; border-color:var(--line); background:var(--panel2); transform:none; box-shadow:none}
 .btn .lab{display:block; font-weight:700}
 .btn .sub{display:block; font-size:10px; color:var(--mut); margin-top:2px}
 .btn.wide{grid-column:1/-1}
 .grouplab{grid-column:1/-1; font-size:10px; letter-spacing:1.5px; color:var(--mut); text-transform:uppercase; margin:2px 0 -2px; padding-left:2px}
-.btn.confirm{border-color:#3a2f1a; background:linear-gradient(180deg,#241d10,#1c1710)}
-.btn.confirm:hover{border-color:var(--amber)}
+.btn.confirm{border-color:#eccb8e; background:linear-gradient(180deg,#fff6e6,#fbead0)}
+.btn.confirm:hover{border-color:var(--amber); box-shadow:0 6px 14px -8px rgba(193,122,31,.35)}
 .btn.confirm .lab{color:var(--amber)}
 
 /* ---- log ---- */
 .log .rows{min-height:20px}
-.logline{padding:7px 0; border-bottom:1px dashed #1e2830; font-size:12.5px; color:var(--ink); animation:pop .3s ease}
+.logline{padding:7px 0; border-bottom:1px dashed #e3e9f1; font-size:12.5px; color:var(--ink); animation:pop .3s ease}
 .logline:last-child{border-bottom:0}
 .logline .tag{color:var(--scan); font-weight:700; margin-right:7px}
 .logline em{color:var(--amber); font-style:normal; font-weight:700}
 .logempty{color:var(--dim); font-size:12px; padding:4px 0}
-.swatch{display:inline-block; width:16px; height:16px; border-radius:3px; margin-left:5px;
-  vertical-align:middle; border:1px solid rgba(255,255,255,.25)}
+.swatch{display:inline-block; width:16px; height:16px; border-radius:5px; margin-left:5px;
+  vertical-align:middle; border:1px solid rgba(0,0,0,.12)}
 
 /* ---- guess ---- */
 .guess{display:flex; gap:8px; margin-top:2px}
 .guess input{flex:1; font-family:var(--mono); font-size:14px; color:var(--ink);
-  background:var(--bg2); border:1px solid var(--line); border-radius:4px; padding:12px 12px}
+  background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px 12px}
 .guess input:focus{outline:none; border-color:var(--scan)}
-.guess .id{flex:0 0 auto; font-weight:700; color:#0e1216; background:var(--scan); border:none;
-  border-radius:4px; padding:0 16px; cursor:pointer; font-family:var(--mono)}
+.guess .id{flex:0 0 auto; font-weight:700; color:#fff; background:var(--scan); border:none;
+  border-radius:10px; padding:0 16px; cursor:pointer; font-family:var(--mono)}
 .guess .id:active{transform:translateY(1px)}
 .verdict{margin-top:9px; font-size:12.5px; min-height:18px}
 .verdict.bad{color:var(--bad)}
@@ -184,32 +194,66 @@ body::after{
 /* ---- footer / result ---- */
 .foot{display:flex; justify-content:space-between; color:var(--mut); font-size:11px; letter-spacing:.5px; margin-top:14px; padding:0 2px}
 .foot b{color:var(--ink)}
-.result{border:1px solid var(--ok); background:linear-gradient(180deg,#14251b,#101a15); border-radius:4px;
-  padding:16px 14px; text-align:center; margin-bottom:12px; animation:pop .4s ease}
-.result.miss{border-color:var(--bad); background:linear-gradient(180deg,#251616,#1a1010)}
-.result.fled{border-color:var(--amber); background:linear-gradient(180deg,#241d10,#1c1710)}
-.result.fled .again{background:var(--amber); color:#0e1216}
+.result{border:1px solid var(--ok); background:linear-gradient(180deg,#eafbf1,#e2f6ea); border-radius:14px;
+  padding:16px 14px; text-align:center; margin-bottom:12px; animation:pop .4s ease;
+  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 24px -18px rgba(30,41,59,.3)}
+.result.miss{border-color:var(--bad); background:linear-gradient(180deg,#fdecec,#fbe1e1)}
+.result.fled{border-color:var(--amber); background:linear-gradient(180deg,#fff4e0,#fbe7c4)}
 .result .rname{font-family:var(--disp); font-weight:700; font-size:26px; margin:4px 0 2px}
 .result .rmsg{font-size:12px; color:var(--mut)}
-.result .again{margin-top:12px; font-family:var(--mono); font-weight:700; color:#0e1216;
-  background:var(--ok); border:none; border-radius:4px; padding:11px 20px; cursor:pointer; letter-spacing:.5px}
+.result .again{margin-top:12px; font-family:var(--mono); font-weight:700; color:#fff;
+  background:var(--ok); border:none; border-radius:10px; padding:11px 20px; cursor:pointer; letter-spacing:.5px}
 .result.miss .again{background:var(--bad)}
+.result.fled .again{background:var(--amber)}
 .textlink{background:none; border:none; color:var(--dim); font-family:var(--mono); font-size:11px;
   text-decoration:underline; cursor:pointer; margin-top:10px; display:inline-block}
 .textlink:hover{color:var(--mut)}
 @media (max-width:400px){ .codename{font-size:26px} }
 
+/* ---- 본거지: 부지(설치형) 씬 — 초원 배경 + 흙바닥 부지 (assets/*.svg, 절차적 생성 텍스처) ---- */
+.base-scene{position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:14px;
+  padding:14px;
+  background:
+    radial-gradient(70% 55% at 30% 10%, rgba(255,255,255,.10), transparent 60%),
+    linear-gradient(180deg, rgba(8,14,9,.12), rgba(5,10,7,.4)),
+    url("assets/grass-bg.svg");
+  background-size:cover; background-position:center;
+  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 12px 26px -18px rgba(30,41,59,.4)}
+.base-scene-label{font-size:10px; letter-spacing:2px; color:#dff0ff; text-transform:uppercase; margin-bottom:10px;
+  text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.plot-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px}
+@media (min-width:680px){ .plot-grid{grid-template-columns:repeat(5, 1fr)} }
+@media (min-width:960px){ .plot-grid{grid-template-columns:repeat(7, 1fr)} }
+.plot{position:relative; aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center; cursor:pointer; transition:transform .15s; padding:4px;
+  background:url("assets/dirt-bg.svg"); background-size:cover; background-position:center;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.35)}
+.plot:hover{transform:translateY(-2px)}
+.plot.empty{color:rgba(255,255,255,.75)}
+.plot.empty::before{content:""; position:absolute; inset:0; border-radius:9px; border:2px dashed rgba(255,255,255,.35)}
+.plot.empty .plus{font-size:22px; font-weight:700; line-height:1; text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.plot.empty .lot-label{font-size:9px; margin-top:3px; letter-spacing:.5px; text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.plot.filled img{width:58%; height:58%; object-fit:contain; image-rendering:pixelated;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
+.plot .plot-name{font-size:9.5px; margin-top:1px; color:#fff; font-weight:700; text-shadow:0 1px 3px rgba(0,0,0,.75);
+  max-width:92%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.plot .plot-job{font-size:8.5px; color:#ffd489; text-shadow:0 1px 3px rgba(0,0,0,.75)}
+
 /* ---- 본거지: 자원 그리드 ---- */
 .res-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:10px 12px}
-.res-item{display:flex; flex-direction:column; gap:2px; border:1px solid var(--line); border-radius:4px;
+@media (min-width:680px){ .res-grid{grid-template-columns:repeat(4,1fr)} }
+@media (min-width:960px){ .res-grid{grid-template-columns:repeat(5,1fr)} }
+.res-item{display:flex; flex-direction:column; gap:2px; border:1px solid var(--line); border-radius:10px;
   background:var(--bg2); padding:8px 10px}
 .res-label{font-size:10px; color:var(--mut); letter-spacing:.5px}
 .res-val{font-family:var(--disp); font-weight:700; font-size:17px; color:var(--ink)}
 
 /* ---- 본거지: 로스터 카드 ---- */
-.roster-card{border:1px solid var(--line); border-radius:4px; background:var(--bg2);
+.roster-card{border:1px solid var(--line); border-radius:12px; background:var(--bg2);
   padding:10px 12px; margin-bottom:8px}
 .roster-card:last-child{margin-bottom:0}
+.roster-card.flash{animation:cardflash .9s ease}
+@keyframes cardflash{0%{border-color:var(--scan); box-shadow:0 0 0 2px rgba(47,111,237,.25)}100%{border-color:var(--line); box-shadow:none}}
 .rc-head{display:flex; justify-content:space-between; align-items:baseline}
 .rc-name{font-family:var(--disp); font-weight:700; font-size:16px}
 .rc-lv{font-size:11px; color:var(--amber)}
@@ -217,14 +261,15 @@ body::after{
 .rc-fav{display:flex; align-items:center; gap:8px; margin-top:8px}
 .rc-favbar{flex:1; height:6px; border-radius:3px; background:var(--redact); overflow:hidden}
 .rc-favfill{height:100%; background:var(--ok)}
+.rc-favfill.apt{background:var(--amber)}
 .rc-favtxt{font-size:10px; color:var(--mut); white-space:nowrap}
 .rc-job{display:flex; align-items:center; gap:8px; margin-top:8px}
 .rc-job label{font-size:11px; color:var(--mut); flex:0 0 auto}
 .rc-job select{flex:1; font-family:var(--mono); font-size:11.5px; color:var(--ink);
-  background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:6px}
+  background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:6px}
 .rc-actions{display:flex; gap:8px; margin-top:8px}
 .rc-actions button{flex:1; font-family:var(--mono); font-size:10.5px; color:var(--ink);
-  background:var(--panel2); border:1px solid var(--line); border-radius:4px; padding:7px 4px; cursor:pointer}
+  background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:7px 4px; cursor:pointer}
 .rc-actions button:hover:not(:disabled){border-color:var(--scan)}
 .rc-actions button:disabled{opacity:.35; cursor:default}
 .basemsg{color:var(--bad); font-size:12px; margin-bottom:10px; padding:0 2px}

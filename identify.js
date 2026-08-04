@@ -5,6 +5,7 @@ import { addToRoster, renderBase } from "./base.js";
 let answer=null, alias="", solved=0, seen=0, cluesUsed=0, attempts=0, paletteCache=null;
 let candidates=[];
 let favor=0, favCeil=0, favFloor=0, iv={};
+let knownType=null, otherType=null, secondTypeExistsKnown=false, secondTypeValueKnown=false;
 const CAND_N = 3;
 const HINT_DECAY = 8;     // 단서 조회 1회당 우호도 하락폭
 const WRONG_DECAY = 20;   // 오답 1회당 우호도 하락폭
@@ -47,6 +48,8 @@ function rollIV(){
   keys.forEach(k=> out[k]=rnd(-15,15));
   return out;
 }
+/* ---- 특수능력: 0~100 랜덤 — 본거지 직무 산출량으로 환산되는 개체별 재능치 ---- */
+function rollAptitude(){ return rnd(0,100); }
 /* ---- 새 라운드: 후보 3종 제시 후 선택 (드래프트 중엔 이미 나온 종 제외) ---- */
 export function newCase(){
   const pool = drafting() ? POKE.filter(p=>!startSeenIds.has(p.pokemonRowid)) : [...POKE];
@@ -103,12 +106,25 @@ function enterCase(cand){
   alias = cand.alias;
   favCeil = cand.favCeil; favFloor = cand.favFloor; favor = favCeil;
   iv = cand.iv;
+  knownType = cand.shownType;
+  otherType = types(answer).find(x=>x!==knownType) || null;
+  secondTypeExistsKnown = false; secondTypeValueKnown = false;
   cluesUsed=0; attempts=0; spent.clear(); paletteCache=null; seen++;
   render();
 }
 
+/* 타입 표시: 후보 선정 때 이미 본 타입 1개만 상시 공개, 두 번째 타입은 상담으로 밝혀지기 전까지 비공개 */
+function typeRowHtml(){
+  const chips = [`<span class="chip" style="background:${TYPE_COLORS[knownType]||"#666"}">${knownType}</span>`];
+  if(secondTypeExistsKnown && otherType){
+    chips.push(secondTypeValueKnown
+      ? `<span class="chip" style="background:${TYPE_COLORS[otherType]||"#666"}">${otherType}</span>`
+      : `<span class="chip redact-chip">?</span>`);
+  }
+  return chips.join("");
+}
+
 function render(){
-  const t = types(answer);
   const app = $("#app"); app.removeAttribute("aria-busy");
   app.innerHTML = `
     ${drafting() ? "" : tabBar("identify")}
@@ -131,8 +147,7 @@ function render(){
     <div class="block">
       <div class="bh">기본 관측 정보</div>
       <div class="rows">
-        <div class="row"><span class="k">타입</span><span class="v">${
-          t.map(x=>`<span class="chip" style="background:${TYPE_COLORS[x]||"#666"}">${x}</span>`).join("")}</span></div>
+        <div class="row"><span class="k">타입</span><span class="v" id="typeRow">${typeRowHtml()}</span></div>
         <div class="row"><span class="k">키</span><span class="v amber">${answer.heightM ?? "?"} m</span></div>
         <div class="row"><span class="k">몸무게</span><span class="v amber">${answer.weightKg ?? "?"} kg</span></div>
       </div>
@@ -225,6 +240,8 @@ function consultProfessor(){
   if(!spent.has("stat")) pool.push({type:"stat",w:3});
   if((answer.details?.moveRowids||[]).length) pool.push({type:"move",w:3});
   if(!spent.has("ability") && (answer.details?.abilityRowids||[]).length) pool.push({type:"ability",w:1});   // 가장 낮은 확률
+  const type2Pending = !secondTypeExistsKnown || (otherType && !secondTypeValueKnown);
+  if(type2Pending) pool.push({type:"type2",w:3});
   if(!pool.length){
     log("상담", `<span style="color:var(--mut)">더 이상 새로운 정보가 없습니다.</span>`);
     return;
@@ -238,6 +255,21 @@ function consultProfessor(){
     const ids = answer.details.moveRowids;
     const name = MOVE[ids[rnd(0,ids.length-1)]] || "알 수 없는 기술";
     log("상담", `<b>기술</b> · 배울 수 있는 기술 중 하나는 <em>${name}</em>입니다.`);
+  }
+  else if(kind==="type2"){
+    if(!secondTypeExistsKnown){
+      secondTypeExistsKnown = true;
+      if(otherType){
+        log("상담", `<b>타입</b> · 이 개체는 <em>두 번째 타입이 존재</em>합니다. <span style="color:var(--mut)">(어떤 타입인지는 비공개)</span>`);
+      }else{
+        secondTypeValueKnown = true;   // 단일 타입 확정 — 더 밝혀낼 게 없음
+        log("상담", `<b>타입</b> · 이 개체는 <em>단일 타입</em>입니다. 두 번째 타입이 없습니다.`);
+      }
+    }else{
+      secondTypeValueKnown = true;
+      log("상담", `<b>타입</b> · 두 번째 타입은 <em>${otherType}</em>입니다.`);
+    }
+    const tr = $("#typeRow"); if(tr) tr.innerHTML = typeRowHtml();
   }
   else{ // ability
     spent.add("ability");
@@ -404,7 +436,7 @@ function revealResult(outcome){
   const identified = outcome==="captured" || outcome==="fled";
   if(identified) solved++;
   if(outcome==="captured"){
-    addToRoster({ pokemon:answer, alias, level:1, exp:0, favor, favCeil, favFloor, iv, job:null });
+    addToRoster({ pokemon:answer, alias, level:1, exp:0, favor, favCeil, favFloor, iv, aptitude:rollAptitude(), job:null });
   }
   const app = $("#app");
   const t = types(answer);

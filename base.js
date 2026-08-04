@@ -1,5 +1,5 @@
 // ===== 본거지: 로스터 · 자원 · 직무 배정 · 턴 진행 =====
-import { TYPE_COLORS, $, types, tabBar } from "./data.js";
+import { TYPE_COLORS, ART, $, types, tabBar } from "./data.js";
 import { newCase } from "./identify.js";
 
 /* ---- 타입 → 직무 매핑 (노말은 항상 미스매치 없이 아무 직무나 수행) ---- */
@@ -40,11 +40,13 @@ const RES_META = {
 const NATURAL_FAVOR_DECAY = 2;   // 턴마다 안 먹이면 자연 하락
 const FEED_RESTORE = 15;         // 먹이 주기 1회 우호도 회복량
 const CANDY_EXP = 20;            // 사탕 1개 경험치량
+const FAVOR_CAP = 100;           // 우호도 절대 최대치
+const FAVCEIL_GROWTH = 3;        // 레벨업 1회당 우호도 상한 증가폭 (FAVOR_CAP까지 성장)
 
 export let roster = [];
 export let resources = { seed:0, fruit:0, food:0, material:0, gold:0, tool:0,
                           tm:0, candy:0, healItem:0, cureItem:0 };
-let plotCap = 3;
+let plotCap = 1;
 let storageCap = 50;
 let turnCount = 0;
 let lastLog = null;
@@ -89,7 +91,10 @@ function feedCandy(idx){
   if(!m || resources.candy<=0) return;
   resources.candy--;
   m.exp += CANDY_EXP;
-  while(m.exp >= m.level*20){ m.exp -= m.level*20; m.level++; }
+  while(m.exp >= m.level*20){
+    m.exp -= m.level*20; m.level++;
+    m.favCeil = Math.min(FAVOR_CAP, m.favCeil + FAVCEIL_GROWTH);
+  }
   renderBase();
 }
 
@@ -107,7 +112,7 @@ function resolveTurn(){
     if(!job.produce) return;   // till/flatten/chill/치안/침투: 직접 산출 없음
     roster.filter(m=>m.job===jobId).forEach(m=>{
       const mismatch = !isMatch(m, jobId);
-      let amt = JOB_BASE_AMT[jobId] * (1+m.level*0.1) * (mismatch?0.5:1);
+      let amt = JOB_BASE_AMT[jobId] * (0.5+m.aptitude/100) * (1+m.level*0.1) * (mismatch?0.5:1);
       if(jobId==="fruit") amt *= (1+0.2*tillCount);
       amt = Math.max(0, Math.round(amt));
       if(job.consumeRes){
@@ -132,6 +137,32 @@ function resolveTurn(){
   renderBase();
 }
 
+/* 본거지 부지: 직무 배정 인원 상한(plotCap)만큼 칸을 그려 설치된 개체를 보여줌. 남는 칸은 빈 공터 */
+function plotScene(){
+  const filled = roster.filter(m=>m.job);
+  const tiles = [];
+  for(let i=0;i<plotCap;i++){
+    const m = filled[i];
+    if(m){
+      const idx = roster.indexOf(m);
+      const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
+      tiles.push(`
+        <div class="plot filled" data-plot-jump="${idx}" title="${m.pokemon.nameKr} · ${JOBS[m.job]?.label||""}">
+          <img src="${sprite}" alt="${m.pokemon.nameKr}">
+          <span class="plot-name">${m.pokemon.nameKr}</span>
+          <span class="plot-job">${JOBS[m.job]?.label||""}</span>
+        </div>`);
+    }else{
+      tiles.push(`
+        <div class="plot empty">
+          <span class="plus">+</span>
+          <span class="lot-label">빈 공터</span>
+        </div>`);
+    }
+  }
+  return tiles.join("");
+}
+
 function rosterCard(m, i){
   const ts = types(m.pokemon);
   const pct = m.favCeil>0 ? Math.round((m.favor/m.favCeil)*100) : 0;
@@ -140,7 +171,7 @@ function rosterCard(m, i){
     return `<option value="${id}" ${m.job===id?"selected":""}>${job.label}${match?"":" (미스매치)"}</option>`;
   }).join("");
   return `
-    <div class="roster-card">
+    <div class="roster-card" id="roster-${i}">
       <div class="rc-head">
         <span class="rc-name">${m.pokemon.nameKr}</span>
         <span class="rc-lv">Lv.${m.level}</span>
@@ -149,6 +180,10 @@ function rosterCard(m, i){
       <div class="rc-fav">
         <div class="rc-favbar"><div class="rc-favfill" style="width:${pct}%"></div></div>
         <span class="rc-favtxt">우호도 ${Math.round(m.favor)}/${m.favCeil}</span>
+      </div>
+      <div class="rc-fav">
+        <div class="rc-favbar"><div class="rc-favfill apt" style="width:${m.aptitude}%"></div></div>
+        <span class="rc-favtxt">특수능력 ${m.aptitude}/100</span>
       </div>
       <div class="rc-job">
         <label>직무</label>
@@ -187,6 +222,11 @@ export function renderBase(){
       <div class="caseno">턴 <b>${turnCount}</b> · 로스터 <b>${roster.length}</b>마리 · 직무 배정 <b>${assignedCount()}/${plotCap}</b></div>
     </section>
 
+    <div class="base-scene">
+      <div class="base-scene-label">본거지 부지 · ${assignedCount()}/${plotCap}</div>
+      <div class="plot-grid">${plotScene()}</div>
+    </div>
+
     <div class="block">
       <div class="bh">자원 현황 <span style="float:right; font-weight:400">저장 상한 ${storageCap}</span></div>
       <div class="res-grid">
@@ -213,6 +253,12 @@ export function renderBase(){
     </div>
   `;
 
+  app.querySelectorAll("[data-plot-jump]").forEach(el=> el.onclick = ()=>{
+    const card = app.querySelector(`#roster-${el.dataset.plotJump}`);
+    if(!card) return;
+    card.scrollIntoView({behavior:"smooth", block:"center"});
+    card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+  });
   app.querySelectorAll("[data-job]").forEach(sel=>
     sel.addEventListener("change", ()=> assignJob(+sel.dataset.job, sel.value)));
   app.querySelectorAll("[data-feed]").forEach(b=> b.onclick = ()=> feedHeal(+b.dataset.feed));
