@@ -25,6 +25,14 @@ body::after{
 .dots::after{content:""; animation:dots 1.2s steps(4,end) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 
+/* ---- 조사/본거지 탭 ---- */
+.tabbar{display:flex; gap:8px; margin-bottom:12px}
+.tabbtn{flex:1; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.5px;
+  color:var(--mut); background:var(--panel); border:1px solid var(--line); border-radius:4px;
+  padding:9px 0; cursor:pointer}
+.tabbtn:hover{border-color:var(--scan)}
+.tabbtn.on{color:var(--scan); border-color:var(--scan); background:var(--panel2)}
+
 /* ---- header / case ---- */
 .case{border:1px solid var(--line); border-radius:4px; background:linear-gradient(180deg,var(--panel),var(--panel2));
   padding:14px 14px 12px; position:relative; overflow:hidden}
@@ -56,6 +64,54 @@ body::after{
   animation:sweep 2.6s linear infinite}
 @keyframes sweep{0%{top:-24px}100%{top:190px}}
 
+/* ---- 몬스터볼 포획 연출 ---- */
+/* 위치(left/top+margin)와 애니메이션용 transform을 분리해서, 흔들림·페이드 중에 위치가 안 튀게 함 */
+.captfx{position:absolute; left:50%; top:50%; width:58px; height:58px; margin:-29px 0 0 -29px; opacity:0}
+.captfx.drop{animation:fxdrop .55s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes fxdrop{
+  0%{transform:translateY(-170px) scale(.4); opacity:0}
+  70%{transform:translateY(8px) scale(1.05); opacity:1}
+  85%{transform:translateY(-3px) scale(.98); opacity:1}
+  100%{transform:translateY(0) scale(1); opacity:1}
+}
+.captfx.exit{animation:fxexit .32s ease forwards}
+@keyframes fxexit{to{opacity:0}}
+
+/* 공은 원형 마스크(overflow:hidden) 위에 위/아래 반쪽을 얹는 방식 — corner-radius 트릭 대신 확실하게 동그람 */
+.captfx .ball{position:relative; width:100%; height:100%; border-radius:50%; overflow:hidden;
+  border:3px solid #1c1c1c; box-sizing:border-box; background:#f2f2f2; box-shadow:0 6px 10px rgba(0,0,0,.35)}
+.captfx .ball-top{position:absolute; left:-3px; right:-3px; top:-3px; height:54%; background:linear-gradient(180deg,#ff7469,#e0342f)}
+.captfx .ball-bot{position:absolute; left:-3px; right:-3px; bottom:-3px; height:54%; background:#f2f2f2}
+.captfx .ball-band{position:absolute; left:-3px; right:-3px; top:50%; height:7px; margin-top:-3.5px; background:#1c1c1c; z-index:2}
+.captfx .ball-btn{position:absolute; left:50%; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px;
+  border-radius:50%; background:#fff; border:3px solid #1c1c1c; z-index:3; box-sizing:border-box}
+
+/* 흔들림 3회, 사이사이 정지 구간을 둬서 리듬감 있게 (기존 대비 느리고 또렷함) */
+.captfx.shake .ball{animation:fxshake 1.5s ease-in-out}
+@keyframes fxshake{
+  0%,13%,33%,46%,66%,79%,100%{transform:rotate(0)}
+  4%{transform:rotate(-20deg)} 8%{transform:rotate(16deg)} 11%{transform:rotate(-9deg)}
+  37%{transform:rotate(-20deg)} 41%{transform:rotate(16deg)} 44%{transform:rotate(-9deg)}
+  69%{transform:rotate(-15deg)} 73%{transform:rotate(12deg)} 76%{transform:rotate(-6deg)}
+}
+
+.captfx.caught .ball{animation:fxsettle .5s ease}
+@keyframes fxsettle{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+.captfx.caught::after{content:""; position:absolute; inset:-4px; border-radius:50%;
+  box-shadow:0 0 0 0 var(--ok); animation:fxspark .6s ease-out forwards}
+@keyframes fxspark{0%{box-shadow:0 0 0 0 var(--ok); opacity:1}100%{box-shadow:0 0 0 26px var(--ok); opacity:0}}
+
+/* 실패 시엔 원형 클리핑을 풀어서 반쪽들이 실제로 튀어나가 보이게 함 */
+.captfx.broke .ball{overflow:visible}
+.captfx.broke .ball-top{animation:fxpopTop .55s ease forwards}
+.captfx.broke .ball-bot{animation:fxpopBot .55s ease forwards}
+.captfx.broke .ball-band,.captfx.broke .ball-btn{animation:fxfade .3s ease forwards}
+@keyframes fxpopTop{0%{transform:none; opacity:1}100%{transform:translateY(-24px) rotate(-45deg); opacity:0}}
+@keyframes fxpopBot{0%{transform:none; opacity:1}100%{transform:translateY(24px) rotate(35deg); opacity:0}}
+@keyframes fxfade{to{opacity:0}}
+.captfx.broke::after{content:""; position:absolute; inset:-4px; border-radius:50%;
+  box-shadow:0 0 0 0 var(--bad); animation:fxspark .45s ease-out forwards}
+
 /* ---- data rows ---- */
 .block{border:1px solid var(--line); border-radius:4px; background:var(--panel); margin-bottom:12px}
 .block>.bh{font-size:10px; letter-spacing:2px; color:var(--mut); padding:9px 12px; border-bottom:1px solid var(--line); text-transform:uppercase}
@@ -75,6 +131,17 @@ body::after{
 .revealed{animation:pop .35s ease}
 @keyframes pop{0%{opacity:0; transform:translateY(-3px)}100%{opacity:1; transform:none}}
 
+/* ---- candidate selection ---- */
+.candlist{display:flex; flex-direction:column; gap:10px; margin:14px 0}
+.candcard{width:100%; font-family:var(--mono); color:var(--ink); text-align:left; cursor:pointer;
+  border:1px solid var(--line); border-radius:4px; background:linear-gradient(180deg,var(--panel),var(--panel2));
+  padding:12px 14px; transition:border-color .15s, background .15s}
+.candcard:hover{border-color:var(--scan); background:#1b232b}
+.candname{font-family:var(--disp); font-weight:700; font-size:20px; margin-bottom:6px}
+.candrow{display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:12px}
+.candrow .k{color:var(--mut)}
+.candrow .v{color:var(--ink)}
+
 /* ---- action buttons ---- */
 .actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px}
 .btn{font-family:var(--mono); font-size:12px; letter-spacing:.5px; color:var(--ink);
@@ -85,6 +152,7 @@ body::after{
 .btn .lab{display:block; font-weight:700}
 .btn .sub{display:block; font-size:10px; color:var(--mut); margin-top:2px}
 .btn.wide{grid-column:1/-1}
+.grouplab{grid-column:1/-1; font-size:10px; letter-spacing:1.5px; color:var(--mut); text-transform:uppercase; margin:2px 0 -2px; padding-left:2px}
 .btn.confirm{border-color:#3a2f1a; background:linear-gradient(180deg,#241d10,#1c1710)}
 .btn.confirm:hover{border-color:var(--amber)}
 .btn.confirm .lab{color:var(--amber)}
@@ -119,6 +187,8 @@ body::after{
 .result{border:1px solid var(--ok); background:linear-gradient(180deg,#14251b,#101a15); border-radius:4px;
   padding:16px 14px; text-align:center; margin-bottom:12px; animation:pop .4s ease}
 .result.miss{border-color:var(--bad); background:linear-gradient(180deg,#251616,#1a1010)}
+.result.fled{border-color:var(--amber); background:linear-gradient(180deg,#241d10,#1c1710)}
+.result.fled .again{background:var(--amber); color:#0e1216}
 .result .rname{font-family:var(--disp); font-weight:700; font-size:26px; margin:4px 0 2px}
 .result .rmsg{font-size:12px; color:var(--mut)}
 .result .again{margin-top:12px; font-family:var(--mono); font-weight:700; color:#0e1216;
@@ -128,3 +198,33 @@ body::after{
   text-decoration:underline; cursor:pointer; margin-top:10px; display:inline-block}
 .textlink:hover{color:var(--mut)}
 @media (max-width:400px){ .codename{font-size:26px} }
+
+/* ---- 본거지: 자원 그리드 ---- */
+.res-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:10px 12px}
+.res-item{display:flex; flex-direction:column; gap:2px; border:1px solid var(--line); border-radius:4px;
+  background:var(--bg2); padding:8px 10px}
+.res-label{font-size:10px; color:var(--mut); letter-spacing:.5px}
+.res-val{font-family:var(--disp); font-weight:700; font-size:17px; color:var(--ink)}
+
+/* ---- 본거지: 로스터 카드 ---- */
+.roster-card{border:1px solid var(--line); border-radius:4px; background:var(--bg2);
+  padding:10px 12px; margin-bottom:8px}
+.roster-card:last-child{margin-bottom:0}
+.rc-head{display:flex; justify-content:space-between; align-items:baseline}
+.rc-name{font-family:var(--disp); font-weight:700; font-size:16px}
+.rc-lv{font-size:11px; color:var(--amber)}
+.rc-types{margin-top:4px}
+.rc-fav{display:flex; align-items:center; gap:8px; margin-top:8px}
+.rc-favbar{flex:1; height:6px; border-radius:3px; background:var(--redact); overflow:hidden}
+.rc-favfill{height:100%; background:var(--ok)}
+.rc-favtxt{font-size:10px; color:var(--mut); white-space:nowrap}
+.rc-job{display:flex; align-items:center; gap:8px; margin-top:8px}
+.rc-job label{font-size:11px; color:var(--mut); flex:0 0 auto}
+.rc-job select{flex:1; font-family:var(--mono); font-size:11.5px; color:var(--ink);
+  background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:6px}
+.rc-actions{display:flex; gap:8px; margin-top:8px}
+.rc-actions button{flex:1; font-family:var(--mono); font-size:10.5px; color:var(--ink);
+  background:var(--panel2); border:1px solid var(--line); border-radius:4px; padding:7px 4px; cursor:pointer}
+.rc-actions button:hover:not(:disabled){border-color:var(--scan)}
+.rc-actions button:disabled{opacity:.35; cursor:default}
+.basemsg{color:var(--bad); font-size:12px; margin-bottom:10px; padding:0 2px}
