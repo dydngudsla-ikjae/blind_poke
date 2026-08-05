@@ -10,7 +10,7 @@
 html,body{height:100%}
 body{
   background:
-    radial-gradient(120% 80% at 50% -10%, #ffffff 0%, var(--bg) 55%, #e6ecf5 100%);
+    radial-gradient(130% 90% at 50% -10%, #1c2a20 0%, #0e1712 45%, #05090a 100%);
   color:var(--ink); font-family:var(--mono); font-size:14px; line-height:1.5;
   -webkit-font-smoothing:antialiased; min-height:100%;
 }
@@ -28,42 +28,54 @@ body{
 /* ---- 조사/본거지 탭 ---- */
 .tabbar{display:flex; gap:8px; margin-bottom:12px}
 .tabbtn{flex:1; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.5px;
-  color:var(--mut); background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  color:#cfd8e2; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.16); border-radius:10px;
   padding:9px 0; cursor:pointer; transition:border-color .15s, background .15s, transform .15s}
 .tabbtn:hover{border-color:var(--scan)}
-.tabbtn.on{color:var(--scan); border-color:var(--scan); background:var(--panel2)}
+.tabbtn.on{color:#eaf3ff; border-color:var(--scan); background:rgba(47,111,237,.18)}
 
-/* ---- header / case ---- */
-.case{border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,var(--panel),var(--panel2));
-  padding:14px 14px 12px; position:relative; overflow:hidden;
-  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 24px -18px rgba(30,41,59,.35)}
-.case::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--scan)}
 .eyebrow{font-size:10px; letter-spacing:2.5px; color:var(--scan); text-transform:uppercase}
-.coderow{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-top:6px}
-.codename{font-family:var(--disp); font-weight:700; font-size:30px; letter-spacing:.5px; line-height:1}
-.caseno{font-size:11px; color:var(--mut)}
-.stamp{position:absolute; right:10px; top:12px; transform:rotate(8deg);
-  border:2px solid var(--bad); color:var(--bad); font-family:var(--disp); font-weight:700;
-  font-size:11px; letter-spacing:1.5px; padding:3px 8px; border-radius:6px; opacity:.85}
-.stamp.done{border-color:var(--ok); color:var(--ok)}
 
-/* ---- specimen viewport ---- */
-.viewport{margin:12px 0; border:1px solid var(--line); border-radius:14px; background:
-  repeating-linear-gradient(45deg,#eef2f8 0 10px,#e6ebf3 10px 20px);
-  height:190px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden}
-.viewport .crosshair{position:absolute; inset:0; opacity:.16;
+/* ---- 스캐너 화면: 숲에서 만난 개체에 스캐너를 대는 단일 장치 UI — 정보/조작이 전부 이 안에서 오버레이로 표시됨(별도 박스 없음) ---- */
+.scanner{position:relative; border:1px solid rgba(255,255,255,.14); border-radius:16px; overflow:hidden; margin-bottom:14px;
+  background:rgba(10,14,11,.94); box-shadow:0 1px 2px rgba(30,41,59,.04), 0 14px 28px -18px rgba(0,0,0,.55)}
+
+.scn-view{position:relative; height:230px; overflow:hidden; display:flex; align-items:center; justify-content:center;
   background:
-    linear-gradient(90deg,transparent 49.6%,var(--scan) 49.6% 50.4%,transparent 50.4%),
-    linear-gradient(0deg,transparent 49.6%,var(--scan) 49.6% 50.4%,transparent 50.4%)}
-.viewport .qmark{font-family:var(--disp); font-weight:700; font-size:72px; color:#c7d0dc}
-.viewport img{max-height:170px; max-width:88%; image-rendering:auto}
-.viewport img.silhouette{filter:brightness(0) drop-shadow(0 0 10px rgba(47,111,237,.35))}
-.viewport canvas{image-rendering:pixelated; border:1px solid var(--line); border-radius:8px}
-.vp-tag{position:absolute; left:8px; bottom:6px; font-size:9px; letter-spacing:1px; color:var(--dim)}
-.scanline{position:absolute; left:0; right:0; height:24px; top:-24px;
-  background:linear-gradient(180deg,transparent,rgba(47,111,237,.16),transparent);
+    linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.55) 100%),
+    url("assets/forest-bg.png");
+  background-size:cover; background-position:center}
+.scn-view img{max-height:190px; max-width:88%; image-rendering:auto}
+.scn-view img.silhouette{filter:brightness(0) drop-shadow(0 0 10px rgba(130,185,255,.5))}
+.scn-view canvas{image-rendering:pixelated; border:1px solid rgba(255,255,255,.3); border-radius:8px}
+.scn-view .vp-glow{position:absolute; left:50%; top:56%; transform:translate(-50%,-50%);
+  width:110px; height:38px; border-radius:50%; filter:blur(16px); opacity:.65}
+.scn-view .vp-silhouette{animation:encbob 2.2s ease-in-out infinite}
+.vp-tag{position:absolute; left:10px; bottom:8px; font-size:10px; letter-spacing:.5px; color:#dfe6ee;
+  text-shadow:0 1px 3px rgba(0,0,0,.7); z-index:2}
+
+/* 스캐너 뷰파인더 장식: 코너 브래킷 + 스캔라인 스윕 — "스캐너를 갖다 댄" 느낌 */
+.scn-bracket{position:absolute; width:20px; height:20px; border:2px solid rgba(150,200,255,.7); z-index:2}
+.scn-bracket.tl{top:10px; left:10px; border-right:none; border-bottom:none}
+.scn-bracket.tr{top:10px; right:10px; border-left:none; border-bottom:none}
+.scn-bracket.bl{bottom:10px; left:10px; border-right:none; border-top:none}
+.scn-bracket.br{bottom:10px; right:10px; border-left:none; border-top:none}
+.scn-scanline{position:absolute; left:0; right:0; height:26px; top:-26px; z-index:1;
+  background:linear-gradient(180deg,transparent,rgba(130,185,255,.22),transparent);
   animation:sweep 2.6s linear infinite}
-@keyframes sweep{0%{top:-24px}100%{top:190px}}
+@keyframes sweep{0%{top:-26px}100%{top:100%}}
+
+/* 스캐너 판독값: 이름표/상태/타입/치수/단서 카운트 — 전부 뷰파인더 위 오버레이 */
+.scn-namebar{position:absolute; top:12px; left:36px; right:36px; z-index:2;
+  display:flex; align-items:center; justify-content:space-between; gap:8px}
+.scn-name{font-family:var(--disp); font-weight:700; font-size:15px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.7)}
+.scn-stamp{font-family:var(--mono); font-size:9px; letter-spacing:1px; text-transform:uppercase;
+  color:#ff9a9a; border:1px solid rgba(255,154,154,.6); border-radius:5px; padding:2px 6px; white-space:nowrap}
+.scn-stamp.done{color:#8ef0b0; border-color:rgba(142,240,176,.6)}
+.scn-readout{position:absolute; z-index:2; font-family:var(--mono); font-size:10px; color:#cfe6ff;
+  text-shadow:0 1px 3px rgba(0,0,0,.7); letter-spacing:.3px}
+.scn-readout.tl{top:38px; left:14px}
+.scn-readout.tr{top:38px; right:14px; text-align:right}
+.scn-status{position:absolute; z-index:2; bottom:34px; right:14px; font-family:var(--mono); font-size:9.5px; color:#a9c7de}
 
 /* ---- 몬스터볼 포획 연출 ---- */
 /* 위치(left/top+margin)와 애니메이션용 transform을 분리해서, 흔들림·페이드 중에 위치가 안 튀게 함 */
@@ -113,19 +125,9 @@ body{
 .captfx.broke::after{content:""; position:absolute; inset:-4px; border-radius:50%;
   box-shadow:0 0 0 0 var(--bad); animation:fxspark .45s ease-out forwards}
 
-/* ---- data rows ---- */
-.block{border:1px solid var(--line); border-radius:12px; background:var(--panel); margin-bottom:12px;
-  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 24px -20px rgba(30,41,59,.3)}
-.block>.bh{font-size:10px; letter-spacing:2px; color:var(--mut); padding:9px 12px; border-bottom:1px solid var(--line); text-transform:uppercase}
-.rows{padding:6px 12px 10px}
-.row{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 0; border-bottom:1px dashed #e3e9f1}
-.row:last-child{border-bottom:0}
-.row .k{color:var(--mut); font-size:12px; letter-spacing:.5px; flex:0 0 auto}
-.row .v{text-align:right; color:var(--ink)}
 .chip{display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#0e1216; margin-left:4px}
 .chip.redact-chip{background:linear-gradient(90deg,var(--redact),#f7f9fc,var(--redact)); background-size:200% 100%;
   color:var(--mut); animation:shim 2.4s linear infinite}
-.v.amber{color:var(--amber)}
 
 /* redaction bar */
 .redact{display:inline-block; min-width:78px; height:15px; vertical-align:middle;
@@ -135,23 +137,56 @@ body{
 .revealed{animation:pop .35s ease}
 @keyframes pop{0%{opacity:0; transform:translateY(-3px)}100%{opacity:1; transform:none}}
 
-/* ---- candidate selection ---- */
-.candlist{display:flex; flex-direction:column; gap:10px; margin:14px 0}
-@media (min-width:680px){
-  .candlist{flex-direction:row; flex-wrap:wrap}
-  .candcard{flex:1 1 240px}
-}
-.candcard{width:100%; font-family:var(--mono); color:var(--ink); text-align:left; cursor:pointer;
-  border:1px solid var(--line); border-radius:12px; background:linear-gradient(180deg,var(--panel),var(--panel2));
-  padding:12px 14px; transition:border-color .15s, background .15s, transform .15s;
-  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 22px -18px rgba(30,41,59,.3)}
-.candcard:hover{border-color:var(--scan); background:#eef4ff; transform:translateY(-2px)}
-.candname{font-family:var(--disp); font-weight:700; font-size:20px; margin-bottom:6px}
-.candrow{display:flex; justify-content:space-between; align-items:center; padding:3px 0; font-size:12px}
-.candrow .k{color:var(--mut)}
-.candrow .v{color:var(--ink)}
+/* ---- 조우 장면: 후보 3마리를 한 숲 배경 안에서 동시에 마주침 (카드 나열 대신 단일 씬) ----
+   배경: OpenGameArt "Forest - Backgrounds" (CC0) https://opengameart.org/content/forest-backgrounds */
+.encounter-scene{position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:14px;
+  min-height:min(68vh, 560px); padding:20px 12px; display:flex; align-items:flex-end;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.5) 100%),
+    url("assets/forest-bg.png");
+  background-size:cover; background-position:center;
+  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 12px 26px -18px rgba(30,41,59,.4)}
+.encounter-mons{display:flex; justify-content:space-around; align-items:flex-end; width:100%; gap:8px}
+.enc-mon{position:relative; flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center;
+  background:none; border:none; cursor:pointer; padding:0}
+.enc-silhouette{filter:brightness(0) drop-shadow(0 0 11px rgba(130,185,255,.6)) drop-shadow(0 6px 5px rgba(0,0,0,.5));
+  animation:encbob 1.8s ease-in-out infinite}
+.enc-mon:nth-child(2) .enc-silhouette{animation-delay:.25s}
+.enc-mon:nth-child(3) .enc-silhouette{animation-delay:.5s}
+@keyframes encbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
-/* ---- action buttons ---- */
+/* ---- 스캐너 커서: 손에 든 핸드헬드 스캐너 장치 모양(알약형 몸체 + 양끝 렌즈 + 가운데 화면) 그대로 마우스를 따라다님.
+   화면(.sc-screen)은 배경을 칠하지 않은 "구멍"이라 실제 숲/알이 그대로 비쳐 보이고, 알 하나가 딱 들어갈 만큼 키움.
+   개체를 겨누면(.locked) 화면 테두리/렌즈가 초록으로 락온되고 정보가 위(공간 없으면 옆)에 뜸 ---- */
+.encounter-scene{cursor:none}
+.scan-cursor{position:absolute; left:0; top:0; width:132px; height:94px; transform:translate(-50%,-50%);
+  pointer-events:none; opacity:0; transition:opacity .15s; z-index:5;
+  display:flex; align-items:center; gap:6px; padding:7px;
+  background:rgba(40,46,52,.32); border:1px solid rgba(255,255,255,.3);
+  border-radius:44px; box-shadow:0 6px 14px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.12)}
+.scan-cursor .sc-lens{flex:0 0 auto; width:18px; height:18px; border-radius:50%;
+  background:rgba(10,12,14,.7); border:2px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center}
+.scan-cursor .sc-led{width:5px; height:5px; border-radius:50%; background:rgba(150,200,255,.9); box-shadow:0 0 5px rgba(150,200,255,.8)}
+.scan-cursor .sc-screen{flex:1; height:100%; min-width:0; border-radius:12px; overflow:hidden; position:relative;
+  background:rgba(10,26,22,.04); border:2px solid rgba(140,195,255,.55);
+  box-shadow:inset 0 0 10px rgba(0,0,0,.3)}
+.scan-cursor .sc-sweep{position:absolute; top:0; bottom:0; width:30%; left:-30%;
+  background:linear-gradient(90deg,transparent,rgba(140,195,255,.25),transparent);
+  animation:sweepH 1.2s linear infinite}
+@keyframes sweepH{0%{left:-30%}100%{left:100%}}
+.scan-cursor.locked .sc-screen{border-color:var(--ok); background:rgba(10,40,25,.04)}
+.scan-cursor.locked .sc-sweep{background:linear-gradient(90deg,transparent,rgba(90,230,150,.3),transparent)}
+.scan-cursor.locked .sc-led{background:var(--ok); box-shadow:0 0 6px rgba(47,163,96,.9)}
+.scan-info{position:absolute; left:0; top:0; z-index:6; min-width:132px; pointer-events:none;
+  opacity:0; transform:translateY(4px); transition:opacity .12s, transform .12s;
+  background:rgba(8,12,9,.88); border:1px solid rgba(150,200,255,.45); border-radius:10px;
+  padding:8px 10px; backdrop-filter:blur(2px)}
+.scan-info.show{opacity:1; transform:none}
+.scan-info-name{font-family:var(--disp); font-weight:700; font-size:13px; color:#fff}
+.scan-info-row{margin-top:4px; font-size:10.5px; color:#dfe6ee}
+.scan-info-row .chip{margin-left:0}
+
+/* ---- action buttons (base.js "다음 턴" 버튼이 재사용하는 범용 .btn) ---- */
 .actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px}
 .btn{font-family:var(--mono); font-size:12px; letter-spacing:.5px; color:var(--ink);
   background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:11px 10px;
@@ -159,43 +194,54 @@ body{
 .btn:hover{border-color:var(--scan); background:#eef4ff; transform:translateY(-1px);
   box-shadow:0 6px 14px -8px rgba(47,111,237,.35)}
 .btn:disabled{opacity:.45; cursor:default; border-color:var(--line); background:var(--panel2); transform:none; box-shadow:none}
-.btn .lab{display:block; font-weight:700}
-.btn .sub{display:block; font-size:10px; color:var(--mut); margin-top:2px}
 .btn.wide{grid-column:1/-1}
-.grouplab{grid-column:1/-1; font-size:10px; letter-spacing:1.5px; color:var(--mut); text-transform:uppercase; margin:2px 0 -2px; padding-left:2px}
-.btn.confirm{border-color:#eccb8e; background:linear-gradient(180deg,#fff6e6,#fbead0)}
-.btn.confirm:hover{border-color:var(--amber); box-shadow:0 6px 14px -8px rgba(193,122,31,.35)}
-.btn.confirm .lab{color:var(--amber)}
 
-/* ---- log ---- */
-.log .rows{min-height:20px}
-.logline{padding:7px 0; border-bottom:1px dashed #e3e9f1; font-size:12.5px; color:var(--ink); animation:pop .3s ease}
-.logline:last-child{border-bottom:0}
-.logline .tag{color:var(--scan); font-weight:700; margin-right:7px}
-.logline em{color:var(--amber); font-style:normal; font-weight:700}
-.logempty{color:var(--dim); font-size:12px; padding:4px 0}
+/* ---- 스캐너 컨트롤: 단서 버튼을 흰 카드가 아니라 스캐너 하단의 조작 버튼처럼 ---- */
+.scn-controls{margin-bottom:0; background:rgba(255,255,255,.02)}
+.scn-grouplab{grid-column:1/-1; font-size:9.5px; letter-spacing:1.5px; color:#7c8a99; text-transform:uppercase;
+  padding:6px 10px 0}
+.scn-btn{font-family:var(--mono); font-size:12px; font-weight:700; color:#eaf3ff; letter-spacing:.3px;
+  background:rgba(255,255,255,.03); border:none; border-top:1px solid rgba(255,255,255,.08);
+  padding:12px 10px; cursor:pointer; text-align:center; transition:background .15s}
+.scn-btn:hover:not(:disabled){background:rgba(255,255,255,.09)}
+.scn-btn:disabled{opacity:.35; cursor:default}
+.scn-btn.wide{grid-column:1/-1}
+.scn-btn.accent{color:#ffd889}
+.scn-btn .sub{display:block; font-size:9.5px; font-weight:400; color:#9fb0c2; margin-top:3px}
+
+/* ---- 스캐너 로그: 단서를 조회할 때마다 스캐너 화면 아래에 이어지는 판독 기록 ---- */
+.scn-log{padding:8px 14px; max-height:120px; overflow:auto; border-top:1px solid rgba(255,255,255,.1)}
+.scn-log .logline{padding:6px 0; border-bottom:1px dashed rgba(255,255,255,.1); font-size:12px; color:#dfe6ee; animation:pop .3s ease}
+.scn-log .logline:last-child{border-bottom:0}
+.scn-log .logline .tag{color:#7fb8ff; font-weight:700; margin-right:7px}
+.scn-log .logline em{color:#ffd889; font-style:normal; font-weight:700}
+.scn-log .logempty{color:#7c8a99; font-size:11.5px; padding:2px 0}
 .swatch{display:inline-block; width:16px; height:16px; border-radius:5px; margin-left:5px;
-  vertical-align:middle; border:1px solid rgba(0,0,0,.12)}
+  vertical-align:middle; border:1px solid rgba(255,255,255,.25)}
 
-/* ---- guess ---- */
-.guess{display:flex; gap:8px; margin-top:2px}
-.guess input{flex:1; font-family:var(--mono); font-size:14px; color:var(--ink);
-  background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:12px 12px}
-.guess input:focus{outline:none; border-color:var(--scan)}
-.guess .id{flex:0 0 auto; font-weight:700; color:#fff; background:var(--scan); border:none;
-  border-radius:10px; padding:0 16px; cursor:pointer; font-family:var(--mono)}
-.guess .id:active{transform:translateY(1px)}
-.verdict{margin-top:9px; font-size:12.5px; min-height:18px}
+/* ---- 스캐너 하단 독: 이름 입력 + 식별 ---- */
+.scn-dock{display:flex; gap:8px; padding:10px 12px; border-top:1px solid rgba(255,255,255,.1)}
+.scn-dock input{flex:1; font-family:var(--mono); font-size:13.5px; color:#eaf3ff;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:10px 12px}
+.scn-dock input::placeholder{color:#7c8a99}
+.scn-dock input:focus{outline:none; border-color:var(--scan)}
+.scn-id{flex:0 0 auto; font-weight:700; color:#fff; background:var(--scan); border:none;
+  border-radius:8px; padding:0 18px; cursor:pointer; font-family:var(--mono)}
+.scn-id:active{transform:translateY(1px)}
+.scanner .verdict{padding:0 12px 10px; font-size:12.5px; min-height:18px}
+.scanner .verdict.bad{color:#ff8a8a}
+.scanner .verdict.ok{color:#8ef0b0}
+.scanner .textlink{color:#9fb0c2; margin:0 12px 12px; display:inline-block}
+.scanner .textlink:hover{color:#dfe6ee}
+.verdict{font-size:12.5px; min-height:18px}
 .verdict.bad{color:var(--bad)}
 .verdict.ok{color:var(--ok)}
 .shake{animation:shake .4s}
 @keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
 
-/* ---- footer / result ---- */
-.foot{display:flex; justify-content:space-between; color:var(--mut); font-size:11px; letter-spacing:.5px; margin-top:14px; padding:0 2px}
-.foot b{color:var(--ink)}
+/* ---- 결과 배너 / 기타 텍스트 링크 ---- */
 .result{border:1px solid var(--ok); background:linear-gradient(180deg,#eafbf1,#e2f6ea); border-radius:14px;
-  padding:16px 14px; text-align:center; margin-bottom:12px; animation:pop .4s ease;
+  padding:16px 14px; text-align:center; margin:10px 12px; animation:pop .4s ease;
   box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 24px -18px rgba(30,41,59,.3)}
 .result.miss{border-color:var(--bad); background:linear-gradient(180deg,#fdecec,#fbe1e1)}
 .result.fled{border-color:var(--amber); background:linear-gradient(180deg,#fff4e0,#fbe7c4)}
@@ -210,18 +256,19 @@ body{
 .textlink:hover{color:var(--mut)}
 @media (max-width:400px){ .codename{font-size:26px} }
 
-/* ---- 본거지: 부지(설치형) 씬 — 초원 배경 + 흙바닥 부지 (assets/*.svg, 절차적 생성 텍스처) ---- */
+/* ---- 본거지: 부지(설치형) 씬 — 초원 배경 전체를 게임 월드처럼, HUD·드롭다운이 그 위에 얹힘 ----
+   잔디 타일: OpenGameArt "Grass Pixel Art" (CC0) https://opengameart.org/content/grass-pixel-art */
 .base-scene{position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:14px;
-  padding:14px;
+  padding:14px 14px 64px; min-height:min(76vh, 600px);
   background:
     radial-gradient(70% 55% at 30% 10%, rgba(255,255,255,.10), transparent 60%),
-    linear-gradient(180deg, rgba(8,14,9,.12), rgba(5,10,7,.4)),
-    url("assets/grass-bg.svg");
-  background-size:cover; background-position:center;
+    linear-gradient(180deg, rgba(8,14,9,.12), rgba(5,10,7,.42)),
+    url("assets/grass-tile.png");
+  background-repeat:no-repeat, no-repeat, repeat;
+  background-size:auto, auto, 220px 220px;
+  background-position:center, center, center;
   box-shadow:0 1px 2px rgba(30,41,59,.04), 0 12px 26px -18px rgba(30,41,59,.4)}
-.base-scene-label{font-size:10px; letter-spacing:2px; color:#dff0ff; text-transform:uppercase; margin-bottom:10px;
-  text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.plot-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px}
+.plot-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; align-content:start}
 @media (min-width:680px){ .plot-grid{grid-template-columns:repeat(5, 1fr)} }
 @media (min-width:960px){ .plot-grid{grid-template-columns:repeat(7, 1fr)} }
 .plot{position:relative; aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column;
@@ -267,9 +314,92 @@ body{
 .rc-job label{font-size:11px; color:var(--mut); flex:0 0 auto}
 .rc-job select{flex:1; font-family:var(--mono); font-size:11.5px; color:var(--ink);
   background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:6px}
-.rc-actions{display:flex; gap:8px; margin-top:8px}
-.rc-actions button{flex:1; font-family:var(--mono); font-size:10.5px; color:var(--ink);
+.rc-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+.rc-actions button{flex:1 1 30%; font-family:var(--mono); font-size:10.5px; color:var(--ink);
   background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:7px 4px; cursor:pointer}
 .rc-actions button:hover:not(:disabled){border-color:var(--scan)}
 .rc-actions button:disabled{opacity:.35; cursor:default}
-.basemsg{color:var(--bad); font-size:12px; margin-bottom:10px; padding:0 2px}
+.rc-actions button.on{border-color:var(--ok); color:var(--ok); background:#eafbf1}
+
+/* ---- 본거지 HUD: 턴 배지 + 몬스터볼(전투 엔트리)·PC(보유 포켓몬)·자원·로그 아이콘 ---- */
+.hud-top{position:relative; z-index:5; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
+.hud-turn{font-size:11px; font-weight:700; color:#eaf3ff; letter-spacing:.5px; cursor:pointer;
+  background:rgba(8,14,10,.5); border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:6px 12px;
+  text-shadow:0 1px 3px rgba(0,0,0,.6); backdrop-filter:blur(2px)}
+.hud-icons{display:flex; gap:8px}
+.hud-btn{position:relative; width:40px; height:40px; border-radius:12px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(8,14,10,.5); border:1px solid rgba(255,255,255,.22);
+  box-shadow:0 4px 10px rgba(0,0,0,.3); backdrop-filter:blur(2px); transition:border-color .15s, transform .15s}
+.hud-btn:hover{transform:translateY(-1px)}
+.hud-btn.active{border-color:var(--scan); box-shadow:0 0 0 2px rgba(47,111,237,.35)}
+.hud-ico{font-size:18px; line-height:1}
+.hud-badge{position:absolute; right:-5px; top:-6px; background:var(--scan); color:#fff; font-size:8.5px; font-weight:700;
+  border-radius:8px; padding:1px 5px; line-height:1.4; box-shadow:0 1px 3px rgba(0,0,0,.5); white-space:nowrap}
+.hud-ico-ball{position:relative; display:block; width:19px; height:19px; border-radius:50%; overflow:hidden;
+  border:2px solid #1c1c1c; box-sizing:border-box; background:#f2f2f2}
+.hud-ico-ball .hb-top{position:absolute; left:-2px; right:-2px; top:-2px; height:52%; background:linear-gradient(180deg,#ff7469,#e0342f)}
+.hud-ico-ball .hb-band{position:absolute; left:-2px; right:-2px; top:50%; height:3px; margin-top:-1.5px; background:#1c1c1c}
+.hud-ico-ball .hb-btn{position:absolute; left:50%; top:50%; width:7px; height:7px; margin:-3.5px 0 0 -3.5px;
+  border-radius:50%; background:#fff; border:1.5px solid #1c1c1c; box-sizing:border-box}
+
+.hud-nextturn{position:absolute; left:14px; right:14px; bottom:14px; z-index:5;
+  font-family:var(--disp); font-weight:700; font-size:14px; letter-spacing:.5px; text-align:center;
+  color:#eafbee; background:rgba(8,14,10,.78); border:2px solid var(--ok); border-radius:14px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 10px 22px -8px rgba(0,0,0,.6);
+  backdrop-filter:blur(2px); padding:12px 10px; transition:transform .1s}
+.hud-nextturn:hover{border-color:var(--ok); background:rgba(8,14,10,.78); transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 10px 22px -8px rgba(0,0,0,.6)}
+.hud-nextturn:active{transform:translateY(2px)}
+.basemsg-toast{position:absolute; left:14px; right:14px; bottom:76px; z-index:6; text-align:center;
+  font-size:11.5px; font-weight:700; color:#fff; background:rgba(140,20,20,.9); border:1px solid rgba(255,255,255,.2); border-radius:10px;
+  padding:8px 10px; box-shadow:0 6px 16px rgba(0,0,0,.4); animation:pop .25s ease}
+
+/* ---- 드롭다운 패널 (자원/엔트리/로그) — HUD 아이콘 아래로 펼쳐짐, 한 번에 하나만 노출. 어두운 유리 패널(HUD 아이콘과 동일 톤) ---- */
+.dd{position:absolute; top:56px; right:14px; z-index:20; width:min(300px, calc(100% - 28px));
+  max-height:min(58vh, 420px); background:rgba(12,16,13,.92);
+  border:1px solid rgba(255,255,255,.16); border-radius:14px;
+  box-shadow:0 16px 32px -10px rgba(0,0,0,.6); backdrop-filter:blur(3px);
+  overflow:hidden; display:flex; flex-direction:column; animation:ddopen .15s ease}
+@keyframes ddopen{0%{opacity:0; transform:translateY(-6px)}100%{opacity:1; transform:none}}
+.dd-head{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 12px;
+  background:rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.14);
+  font-size:10.5px; letter-spacing:1px; color:#cfd8e2; text-transform:uppercase; flex:0 0 auto}
+.dd-close{background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25); color:#eaf3ff; cursor:pointer;
+  font-size:11px; line-height:1; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center}
+.dd-close:hover{background:rgba(255,255,255,.2)}
+.dd-body{padding:10px 12px; overflow:auto}
+.dd .res-grid{padding:0}
+
+/* ---- 전투 엔트리 (몬스터볼) ---- */
+.entry-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:10px}
+.entry-slot{aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  background:var(--bg2); border:1px dashed var(--line); overflow:hidden}
+.entry-slot.filled{border-style:solid; border-color:var(--scan); background:var(--panel2)}
+.entry-slot img{width:82%; height:82%; object-fit:contain}
+.entry-slot.empty{color:var(--dim); font-size:8.5px; text-align:center; padding:2px}
+.entry-list .entry-row{display:flex; justify-content:space-between; align-items:center; gap:8px;
+  padding:6px 0; border-bottom:1px dashed #e3e9f1; font-size:12px}
+.entry-list .entry-row:last-child{border-bottom:0}
+.entry-row button{flex:0 0 auto; font-family:var(--mono); font-size:10.5px; color:var(--ink);
+  background:var(--panel2); border:1px solid var(--line); border-radius:7px; padding:5px 10px; cursor:pointer}
+.entry-row button.on{border-color:var(--ok); color:var(--ok); background:#eafbf1}
+
+/* ---- PC 모달 (보유 포켓몬 전체) — 어두운 유리 패널 ---- */
+.modal-overlay{position:fixed; inset:0; z-index:50; background:rgba(4,6,5,.68); backdrop-filter:blur(2px);
+  display:flex; align-items:center; justify-content:center; padding:16px}
+.modal-box{width:min(720px,100%); max-height:86vh; display:flex; flex-direction:column;
+  background:rgba(12,16,13,.94); border:1px solid rgba(255,255,255,.16); border-radius:18px; overflow:hidden;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.7); backdrop-filter:blur(3px); animation:pop .2s ease}
+.modal-head{display:flex; justify-content:space-between; align-items:center; padding:12px 16px;
+  background:rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.14);
+  font-family:var(--disp); font-size:13px; font-weight:700; color:#eaf3ff; flex:0 0 auto}
+.modal-body{overflow:auto; padding:12px 16px}
+.pc-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(64px,1fr)); gap:8px; margin-bottom:14px}
+.pc-cell{aspect-ratio:1; border-radius:10px; border:1px solid var(--line); background:var(--bg2);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px; cursor:pointer;
+  transition:border-color .15s, background .15s}
+.pc-cell:hover{border-color:var(--scan)}
+.pc-cell.selected{border-color:var(--scan); background:#eef4ff}
+.pc-cell img{width:72%; height:72%; object-fit:contain}
+.pc-cell-name{font-size:8.5px; margin-top:2px; color:var(--mut); max-width:100%; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap}

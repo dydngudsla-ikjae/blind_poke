@@ -17,12 +17,25 @@ let startRoundIdx = 0;             // 0,1,2 진행 중, 3이면 드래프트 종
 const startSeenIds = new Set();    // 드래프트 동안 이미 등장한 종(중복 방지)
 function drafting(){ return startRoundIdx < START_ROUNDS; }
 
+/* ---- 정체불명 실루엣: 정답 형상이 아닌 알(egg) 모양 — 스캔 전까지는 무슨 개체인지 전혀 티가 안 나야 함
+   (스타팅 드래프트에서는 안 씀 — 그건 골라서 바로 데려가는 거라 진짜 실루엣을 보여줌) ---- */
+const EGG_PATH = "M32,3 C20,3 12,20 12,36 C12,52 20,61 32,61 C44,61 52,52 52,36 C52,20 44,3 32,3 Z";
+function eggSvg(w, h, color, extraClass=""){
+  return `<svg class="enc-silhouette ${extraClass}" width="${w}" height="${h}" viewBox="0 0 64 64" fill="${color}"><path d="${EGG_PATH}"/></svg>`;
+}
+/* ---- 스타팅 드래프트용: 정답 아트워크 그대로의 실루엣(누구인지 형태는 보이되 이름/타입/수치는 스캔해야 나옴) ---- */
+function realSilhouetteImg(pokemon){
+  const fallback = pokemon.details?.sprites?.front_default || "";
+  return `<img class="enc-silhouette" src="${ART(pokemon.pokemonRowid)}" data-fallback="${fallback}"
+    style="height:70px;width:auto;max-width:92px;object-fit:contain" alt="">`;
+}
+
 /* ---- 가명 생성: ~~몬 (정답 누출 방지) ---- */
 const SYL = ["가","라","보","슈","크","펜","다","조","리","무","포","케","드","비","우","토","네","하","쿠","미","젠","롯","퀴","벨","단"];
 function makeAlias(existing=[]){
   let a;
-  do{ const n = Math.random()<0.5?2:3;
-      a = Array.from({length:n},()=>SYL[rnd(0,SYL.length-1)]).join("")+"몬";
+  do{ const n = Math.random()<0.5?3:4;
+      a = Array.from({length:n},()=>SYL[rnd(0,SYL.length-1)]).join("");
   }while(POKE.some(p=>p.nameKr===a) || existing.includes(a));
   return a;
 }
@@ -65,34 +78,105 @@ export function newCase(){
   renderSelect();
 }
 
+/* 숲 속에서 후보 3마리를 동시에 마주치는 단일 조우 장면 — 마우스로 든 스캐너가 포인터를 따라다니고,
+   개체 위에 겨누면 스캐너 오른쪽에 정보가 뜸(항상 보이는 이름표 대신 스캔해야 알 수 있게).
+   스타팅 드래프트 중에는 골라서 바로 데려가는 것뿐이라 실루엣도 실제 형태로 보여주고, 클릭하면
+   단서 조회 없이 즉시 로스터에 합류시킴 — 힌트로 알아맞히는 로직은 드래프트 이후 야생 조우에서만 그대로 유지 */
 function renderSelect(){
   const app = $("#app"); app.removeAttribute("aria-busy");
-  const draftLabel = drafting() ? `스타팅 드래프트 ${startRoundIdx+1}/${START_ROUNDS} · 9마리 중 3마리 선정` : "조사할 개체를 선택하세요";
+  const draft = drafting();
   app.innerHTML = `
-    ${drafting() ? "" : tabBar("identify")}
-    <section class="case">
-      <div class="eyebrow">개체 식별 터미널</div>
-      <div class="coderow"><div class="codename" style="font-size:20px">신규 개체 선정</div></div>
-      <div class="caseno">${draftLabel} · 후보 ${POKE.length}종</div>
-    </section>
-
-    <div class="candlist">
-      ${candidates.map((c,i)=>`
-        <button class="candcard" data-idx="${i}">
-          <div class="candname">${c.alias}</div>
-          <div class="candrow"><span class="k">타입</span><span class="v"><span class="chip" style="background:${TYPE_COLORS[c.shownType]||'#666'}">${c.shownType}</span></span></div>
-          <div class="candrow"><span class="k">키</span><span class="v amber">${c.pokemon.heightM ?? "?"} m</span></div>
-          <div class="candrow"><span class="k">몸무게</span><span class="v amber">${c.pokemon.weightKg ?? "?"} kg</span></div>
-        </button>
-      `).join("")}
-    </div>
-
-    <div class="foot">
-      <span>해결 <b>${solved}</b> / 시도 <b>${seen}</b></span>
+    ${draft ? "" : tabBar("identify")}
+    <div class="encounter-scene" id="encScene">
+      <div class="scan-cursor" id="scanCursor">
+        <span class="sc-lens"><span class="sc-led"></span></span>
+        <span class="sc-screen"><span class="sc-sweep"></span></span>
+        <span class="sc-lens"></span>
+      </div>
+      <div class="scan-info" id="scanInfo"></div>
+      <div class="encounter-mons">
+        ${candidates.map((c,i)=>`
+          <button class="enc-mon" data-idx="${i}">
+            ${draft ? realSilhouetteImg(c.pokemon) : eggSvg(64,70,"#0a0a0a")}
+          </button>
+        `).join("")}
+      </div>
     </div>
   `;
-  app.querySelectorAll(".candcard").forEach(b=> b.onclick=()=>enterCase(candidates[+b.dataset.idx]));
+  app.querySelectorAll(".enc-mon").forEach(b=> b.onclick=()=>{
+    const cand = candidates[+b.dataset.idx];
+    draft ? draftPick(cand) : enterCase(cand);
+  });
+  if(draft){
+    app.querySelectorAll("img.enc-silhouette").forEach(img=> img.onerror = ()=>{
+      if(img.dataset.fb) return;
+      img.dataset.fb = 1;
+      if(img.dataset.fallback) img.src = img.dataset.fallback;
+    });
+  }
+  wireEncounterScanner();
   wireTabBar();
+}
+
+/* 스타팅 드래프트 선택: 식별 없이 즉시 로스터에 합류(실패/도주 없음) 후 다음 후보 또는 본거지로 */
+function draftPick(cand){
+  addToRoster({ pokemon:cand.pokemon, alias:cand.alias, level:1, exp:0,
+    favor:cand.favCeil, favCeil:cand.favCeil, favFloor:cand.favFloor, iv:cand.iv,
+    aptitude:rollAptitude(), job:null });
+  if(++startRoundIdx >= START_ROUNDS){ renderBase(); }
+  else{ newCase(); }
+}
+
+/* 스캐너 커서: 씬 안에서 마우스를 따라다니다가 개체 위에 겨누면 스캐너 위쪽(공간 없으면 오른쪽/아래)에 정보 패널 표시 */
+function wireEncounterScanner(){
+  const app = $("#app");
+  const scene = app.querySelector("#encScene");
+  const cursor = app.querySelector("#scanCursor");
+  const info = app.querySelector("#scanInfo");
+  if(!scene) return;
+  let hoveredIdx = null;
+
+  function placeInfo(x, y, rect){
+    const panelW = info.offsetWidth || 150, panelH = info.offsetHeight || 70;
+    let left = x - panelW/2;
+    let top = y - 34 - panelH;               // 기본: 스캐너 바로 위
+    if(top < 6){                             // 위쪽 공간 부족 -> 오른쪽으로
+      left = x + 56; top = y - panelH/2;
+      if(left + panelW > rect.width) left = x - panelW - 56;   // 오른쪽도 부족하면 왼쪽
+    }
+    left = Math.max(6, Math.min(left, rect.width - panelW - 6));
+    top = Math.max(6, Math.min(top, rect.height - panelH - 6));
+    info.style.left = left+"px"; info.style.top = top+"px";
+  }
+
+  scene.addEventListener("mousemove", e=>{
+    const r = scene.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    cursor.style.left = x+"px"; cursor.style.top = y+"px";
+    cursor.style.opacity = 1;
+    if(hoveredIdx!=null) placeInfo(x, y, r);
+  });
+  scene.addEventListener("mouseleave", ()=>{ cursor.style.opacity = 0; info.classList.remove("show"); hoveredIdx=null; });
+
+  app.querySelectorAll(".enc-mon").forEach((b,i)=>{
+    b.addEventListener("mouseenter", ()=>{
+      hoveredIdx = i;
+      const c = candidates[i];
+      cursor.classList.add("locked");
+      info.innerHTML = `
+        <div class="scan-info-name">${c.alias}</div>
+        <div class="scan-info-row"><span class="chip" style="background:${TYPE_COLORS[c.shownType]||'#666'}">${c.shownType}</span></div>
+        <div class="scan-info-row">${c.pokemon.heightM ?? "?"}m · ${c.pokemon.weightKg ?? "?"}kg</div>
+      `;
+      info.classList.add("show");
+      const r = scene.getBoundingClientRect();
+      placeInfo(parseFloat(cursor.style.left)||0, parseFloat(cursor.style.top)||0, r);
+    });
+    b.addEventListener("mouseleave", ()=>{
+      hoveredIdx=null; info.classList.remove("show");
+      cursor.classList.remove("locked");
+    });
+  });
 }
 
 function wireTabBar(){
@@ -124,63 +208,44 @@ function typeRowHtml(){
   return chips.join("");
 }
 
+/* 스캐너 화면: 숲에서 만난 개체에 스캐너를 가져다 댄 것 — 정보/조작을 전부 스캐너 화면 하나 안에 오버레이로 표시 (별도 박스 나열 없음) */
 function render(){
   const app = $("#app"); app.removeAttribute("aria-busy");
   app.innerHTML = `
     ${drafting() ? "" : tabBar("identify")}
-    <section class="case">
-      <div class="stamp">신원 미상</div>
-      <div class="eyebrow">개체 식별 터미널</div>
-      <div class="coderow">
-        <div class="codename">${alias}</div>
-      </div>
-      <div class="caseno">${drafting() ? `스타팅 드래프트 ${startRoundIdx+1}/${START_ROUNDS}` : `개체 파일 #${String(seen).padStart(3,"0")}`} · 후보 ${POKE.length}종</div>
-    </section>
-
-    <div class="viewport" id="viewport">
-      <div class="scanline"></div>
-      <div class="crosshair"></div>
-      <div class="qmark">?</div>
-      <div class="vp-tag">SPECIMEN VIEW</div>
-    </div>
-
-    <div class="block">
-      <div class="bh">기본 관측 정보</div>
-      <div class="rows">
-        <div class="row"><span class="k">타입</span><span class="v" id="typeRow">${typeRowHtml()}</span></div>
-        <div class="row"><span class="k">키</span><span class="v amber">${answer.heightM ?? "?"} m</span></div>
-        <div class="row"><span class="k">몸무게</span><span class="v amber">${answer.weightKg ?? "?"} kg</span></div>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn wide" data-clue="consult"><span class="lab">박사와 상담하기</span><span class="sub">능력치·기술·특성 중 무작위 힌트 · 반복 가능</span></button>
-      <div class="grouplab">직접 관찰하기</div>
-      <button class="btn" data-clue="color"><span class="lab">멀리서 지켜봤다</span><span class="sub">색상 추출 — 이번 개체 1회</span></button>
-      <button class="btn" data-clue="patch"><span class="lab">정밀하게 지켜봤다</span><span class="sub">표본 확대 · 반복 가능</span></button>
-      <button class="btn confirm wide" data-clue="silhouette"><span class="lab">본인확인서 대조</span><span class="sub">외곽 실루엣 — 최종 단서</span></button>
-    </div>
-
-    <div class="block log">
-      <div class="bh">조사 로그</div>
-      <div class="rows" id="log"><div class="logempty">아직 조회한 단서가 없습니다.</div></div>
-    </div>
-
-    <div class="block">
-      <div class="bh">개체 식별</div>
-      <div class="rows">
-        <div class="guess">
-          <input id="guessInput" placeholder="포켓몬 이름 입력" autocomplete="off">
-          <button class="id" id="guessBtn">식별</button>
+    <div class="scanner">
+      <div class="scn-view" id="viewport">
+        <div class="scn-scanline"></div>
+        <div class="scn-bracket tl"></div><div class="scn-bracket tr"></div>
+        <div class="scn-bracket bl"></div><div class="scn-bracket br"></div>
+        <div class="enc-glow vp-glow" style="background:${TYPE_COLORS[knownType]||'#888'}"></div>
+        ${eggSvg(88,96,"#0a0a0a","vp-silhouette")}
+        <div class="scn-namebar">
+          <span class="scn-name">${alias}</span>
+          <span class="scn-stamp">신원 미상</span>
         </div>
-        <div class="verdict" id="verdict"></div>
-        <button class="textlink" id="giveup">식별 포기 — 정답 공개</button>
+        <div class="scn-readout tl" id="typeRow">${typeRowHtml()}</div>
+        <div class="scn-readout tr">${answer.heightM ?? "?"}m · ${answer.weightKg ?? "?"}kg</div>
+        <div class="scn-status" id="statusReadout">단서 0 · 오답 0</div>
+        <div class="vp-tag">관찰 중</div>
       </div>
-    </div>
 
-    <div class="foot">
-      <span>해결 <b>${solved}</b> / 시도 <b>${seen}</b></span>
-      <span>이번 개체 · 단서 <b>${cluesUsed}</b> · 오답 <b>${attempts}</b></span>
+      <div class="scn-controls actions">
+        <button class="scn-btn wide" data-clue="consult">박사와 상담하기<span class="sub">능력치·기술·특성 무작위 · 반복 가능</span></button>
+        <div class="scn-grouplab">직접 관찰하기</div>
+        <button class="scn-btn" data-clue="color">멀리서 지켜봤다<span class="sub">색상 추출 · 1회</span></button>
+        <button class="scn-btn" data-clue="patch">정밀하게 지켜봤다<span class="sub">표본 확대 · 반복</span></button>
+        <button class="scn-btn accent wide" data-clue="silhouette">본인확인서 대조<span class="sub">외곽 실루엣 · 최종 단서</span></button>
+      </div>
+
+      <div class="scn-log" id="log"><div class="logempty">아직 조회한 단서가 없습니다.</div></div>
+
+      <div class="scn-dock">
+        <input id="guessInput" placeholder="포켓몬 이름 입력" autocomplete="off">
+        <button class="scn-id" id="guessBtn">식별</button>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <button class="textlink" id="giveup">식별 포기 — 정답 공개</button>
     </div>
   `;
 
@@ -201,8 +266,8 @@ function log(tag, html){
   return el;
 }
 function bumpFoot(){
-  const f = $(".foot"); if(!f) return;
-  f.lastElementChild.innerHTML = `이번 개체 · 단서 <b>${cluesUsed}</b> · 오답 <b>${attempts}</b>`;
+  const s = $("#statusReadout"); if(!s) return;
+  s.textContent = `단서 ${cluesUsed} · 오답 ${attempts}`;
 }
 function useClue(kind, btn){
   const repeatable = kind==="consult" || kind==="patch";   // 상담·정밀 관찰은 반복 가능
@@ -302,11 +367,11 @@ function showPatch(){
     const sx = rnd(Math.round(w*0.30), Math.round(w*0.70)-box);  // 중앙부(피사체) 안에서
     const sy = rnd(Math.round(h*0.28), Math.round(h*0.72)-box);
     ctx.drawImage(img, sx,sy,box,box, 0,0,140,140);
-    vp.querySelector(".qmark")?.remove();
+    vp.querySelector(".vp-silhouette")?.remove(); vp.querySelector(".vp-glow")?.remove();
     vp.querySelector("img")?.remove();
     let old=vp.querySelector("canvas"); if(old) old.remove();
     vp.appendChild(cv);
-    setTag(vp,"SURFACE SAMPLE");
+    setTag(vp,"표면 확대");
   };
   img.onerror = ()=> log("관찰", `<span style="color:var(--bad)">표본 이미지를 불러오지 못했습니다.</span>`);
   img.src = ART(answer.pokemonRowid);
@@ -316,11 +381,11 @@ function showSilhouette(){
   const img = new Image();
   img.className="silhouette";
   img.onload = ()=>{
-    vp.querySelector(".qmark")?.remove();
+    vp.querySelector(".vp-silhouette")?.remove(); vp.querySelector(".vp-glow")?.remove();
     vp.querySelector("canvas")?.remove();
     vp.querySelector("img")?.remove();
     vp.appendChild(img);
-    setTag(vp,"SILHOUETTE MATCH");
+    setTag(vp,"실루엣 대조");
   };
   img.onerror = ()=>{ // 아트워크 없으면 기본 스프라이트로 폴백
     if(img.dataset.fb) return;
@@ -406,23 +471,23 @@ function playCaptureFx(outcome){
   return new Promise(resolve=>{
     const vp = $("#viewport");
     if(!vp){ resolve(); return; }
-    vp.querySelector(".qmark")?.remove();
+    vp.querySelector(".vp-silhouette")?.remove(); vp.querySelector(".vp-glow")?.remove();
     vp.querySelector("canvas")?.remove();
     vp.querySelector("img")?.remove();
     const fx = document.createElement("div");
     fx.className = "captfx";
     fx.innerHTML = `<div class="ball"><div class="ball-top"></div><div class="ball-bot"></div><div class="ball-band"></div><div class="ball-btn"></div></div>`;
     vp.appendChild(fx);
-    setTag(vp,"CAPTURING…");
+    setTag(vp,"포획 중…");
     requestAnimationFrame(()=> fx.classList.add("drop"));
     setTimeout(()=> fx.classList.add("shake"), FX_DROP_MS);
     setTimeout(()=>{
       if(outcome==="captured"){
         fx.classList.add("caught");
-        setTag(vp,"CAPTURED");
+        setTag(vp,"포획 성공");
       }else{
         fx.classList.add("broke");
-        setTag(vp,"ESCAPED");
+        setTag(vp,"놓침");
       }
       setTimeout(()=>{
         fx.classList.add("exit");
@@ -458,18 +523,19 @@ function revealResult(outcome){
   const vp = $("#viewport");
   if(vp){
     const img=new Image();
-    img.onload=()=>{ vp.querySelector(".qmark")?.remove(); vp.querySelector("canvas")?.remove();
-      vp.querySelector("img")?.remove(); vp.appendChild(img); setTag(vp,"IDENTIFIED"); };
+    img.onload=()=>{ vp.querySelector(".vp-silhouette")?.remove(); vp.querySelector(".vp-glow")?.remove(); vp.querySelector("canvas")?.remove();
+      vp.querySelector("img")?.remove(); vp.appendChild(img); setTag(vp,"정체 확인"); };
     img.onerror=()=>{ if(!img.dataset.fb){img.dataset.fb=1; img.src=answer.details?.sprites?.front_default||"";} };
     img.src = ART(answer.pokemonRowid);
   }
   // 스탬프 갱신
-  const stamp=$(".stamp");
+  const stamp=$(".scn-stamp");
   if(stamp){
     if(outcome==="captured") stamp.classList.add("done");
     stamp.textContent = outcome==="captured" ? "포획 완료" : outcome==="fled" ? "확인 · 도주" : "미해결";
   }
-  app.insertBefore(banner, app.querySelector(".actions"));
+  const controls = app.querySelector(".scn-controls");
+  controls.parentNode.insertBefore(banner, controls);
   banner.scrollIntoView({behavior:"smooth", block:"center"});
   $("#again").onclick = ()=>{
     if(drafting() && ++startRoundIdx >= START_ROUNDS){ renderBase(); }

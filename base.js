@@ -42,6 +42,7 @@ const FEED_RESTORE = 15;         // 먹이 주기 1회 우호도 회복량
 const CANDY_EXP = 20;            // 사탕 1개 경험치량
 const FAVOR_CAP = 100;           // 우호도 절대 최대치
 const FAVCEIL_GROWTH = 3;        // 레벨업 1회당 우호도 상한 증가폭 (FAVOR_CAP까지 성장)
+const ENTRY_CAP = 6;             // 전투 엔트리 최대 등록 수
 
 export let roster = [];
 export let resources = { seed:0, fruit:0, food:0, material:0, gold:0, tool:0,
@@ -52,7 +53,12 @@ let turnCount = 0;
 let lastLog = null;
 let baseMsg = "";
 
+/* ---- HUD 드롭다운/모달 상태 (재렌더 간 유지) ---- */
+let openPanel = null;      // "bag" | "ball" | "pc" | "log" | null
+let pcSelected = null;     // PC 모달에서 선택된 roster 인덱스
+
 export function addToRoster(entry){
+  entry.inEntry = false;
   roster.push(entry);
 }
 
@@ -63,6 +69,9 @@ function isMatch(member, jobId){
 }
 function assignedCount(){
   return roster.filter(m=>m.job).length;
+}
+function entryCount(){
+  return roster.filter(m=>m.inEntry).length;
 }
 
 function assignJob(idx, jobId){
@@ -75,6 +84,19 @@ function assignJob(idx, jobId){
   }
   baseMsg = "";
   m.job = jobId || null;
+  renderBase();
+}
+
+function toggleEntry(idx){
+  const m = roster[idx];
+  if(!m) return;
+  if(!m.inEntry && entryCount()>=ENTRY_CAP){
+    baseMsg = `전투 엔트리는 최대 ${ENTRY_CAP}마리까지 등록할 수 있습니다.`;
+    renderBase();
+    return;
+  }
+  baseMsg = "";
+  m.inEntry = !m.inEntry;
   renderBase();
 }
 
@@ -134,6 +156,7 @@ function resolveTurn(){
 
   turnCount++;
   lastLog = { gain, used, flattenCount, chillCount };
+  openPanel = "log";
   renderBase();
 }
 
@@ -195,12 +218,13 @@ function rosterCard(m, i){
       <div class="rc-actions">
         <button data-feed="${i}" ${resources.healItem<=0?"disabled":""}>먹이 주기(+우호도)</button>
         <button data-candy="${i}" ${resources.candy<=0?"disabled":""}>사탕 먹이기(+경험치)</button>
+        <button data-entry="${i}" class="${m.inEntry?"on":""}">${m.inEntry?"엔트리 해제":"엔트리 등록"}</button>
       </div>
     </div>
   `;
 }
 
-function renderTurnLog(){
+function renderTurnLogRows(){
   if(!lastLog) return `<div class="logempty">아직 진행한 턴이 없습니다.</div>`;
   const parts = [];
   Object.entries(lastLog.gain).forEach(([k,v])=>{ if(v>0) parts.push(`${RES_META[k]} +${v}`); });
@@ -212,58 +236,140 @@ function renderTurnLog(){
     : `<div class="logempty">이번 턴은 산출이 없었습니다.</div>`;
 }
 
+/* ---- HUD: 턴 표시 + 몬스터볼(전투 엔트리) · PC(보유 포켓몬) · 자원 · 로그 아이콘 ---- */
+function hudTop(){
+  return `
+    <div class="hud-top">
+      <div class="hud-turn" data-hud="log">턴 <b>${turnCount}</b></div>
+      <div class="hud-icons">
+        <button class="hud-btn ${openPanel==="bag"?"active":""}" data-hud="bag" title="자원 현황">
+          <span class="hud-ico">🎒</span>
+        </button>
+        <button class="hud-btn ${openPanel==="ball"?"active":""}" data-hud="ball" title="전투 엔트리">
+          <span class="hud-ico-ball"><span class="hb-top"></span><span class="hb-band"></span><span class="hb-btn"></span></span>
+          <span class="hud-badge">${entryCount()}/${ENTRY_CAP}</span>
+        </button>
+        <button class="hud-btn ${openPanel==="pc"?"active":""}" data-hud="pc" title="보유 포켓몬">
+          <span class="hud-ico">💻</span>
+          <span class="hud-badge">${roster.length}</span>
+        </button>
+      </div>
+    </div>`;
+}
+
+function bagDropdown(){
+  return `
+    <div class="dd" data-panel="bag">
+      <div class="dd-head"><span>자원 현황 · 저장 상한 ${storageCap}</span><button class="dd-close" data-hud-close>✕</button></div>
+      <div class="dd-body">
+        <div class="res-grid">
+          ${Object.entries(RES_META).map(([k,label])=>`
+            <div class="res-item"><span class="res-label">${label}</span><span class="res-val">${resources[k]}</span></div>
+          `).join("")}
+        </div>
+      </div>
+    </div>`;
+}
+
+function ballDropdown(){
+  const entries = roster.filter(m=>m.inEntry);
+  const slots = [];
+  for(let i=0;i<ENTRY_CAP;i++){
+    const m = entries[i];
+    if(m){
+      const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
+      slots.push(`<div class="entry-slot filled"><img src="${sprite}" alt="${m.pokemon.nameKr}"></div>`);
+    }else{
+      slots.push(`<div class="entry-slot empty">빈 슬롯</div>`);
+    }
+  }
+  const list = roster.length ? roster.map((m,i)=>`
+      <div class="entry-row">
+        <span>${m.pokemon.nameKr} <span style="color:var(--dim)">Lv.${m.level}</span></span>
+        <button data-entry="${i}" class="${m.inEntry?"on":""}">${m.inEntry?"해제":"등록"}</button>
+      </div>
+    `).join("") : `<div class="logempty">아직 포획한 개체가 없습니다.</div>`;
+  return `
+    <div class="dd" data-panel="ball">
+      <div class="dd-head"><span>전투 엔트리 · ${entryCount()}/${ENTRY_CAP}</span><button class="dd-close" data-hud-close>✕</button></div>
+      <div class="dd-body">
+        <div class="entry-grid">${slots.join("")}</div>
+        <div class="entry-list">${list}</div>
+      </div>
+    </div>`;
+}
+
+function logDropdown(){
+  return `
+    <div class="dd" data-panel="log">
+      <div class="dd-head"><span>턴 로그 · 로스터 ${roster.length}마리 · 직무 배정 ${assignedCount()}/${plotCap}</span><button class="dd-close" data-hud-close>✕</button></div>
+      <div class="dd-body">${renderTurnLogRows()}</div>
+    </div>`;
+}
+
+function pcModal(){
+  const sel = pcSelected!=null && roster[pcSelected] ? pcSelected : (roster.length?0:null);
+  const grid = roster.length ? roster.map((m,i)=>{
+    const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
+    return `
+      <div class="pc-cell ${sel===i?"selected":""}" data-pc-pick="${i}">
+        <img src="${sprite}" alt="${m.pokemon.nameKr}">
+        <span class="pc-cell-name">${m.pokemon.nameKr}</span>
+      </div>`;
+  }).join("") : "";
+  return `
+    <div class="modal-overlay" data-modal="pc">
+      <div class="modal-box">
+        <div class="modal-head"><span>보유 포켓몬 · ${roster.length}마리</span><button class="dd-close" data-hud-close>✕</button></div>
+        <div class="modal-body">
+          ${roster.length ? `<div class="pc-grid">${grid}</div>` : `<div class="logempty">아직 포획한 개체가 없습니다. "개체 조사" 탭에서 포획해보세요.</div>`}
+          ${sel!=null ? rosterCard(roster[sel], sel) : ""}
+        </div>
+      </div>
+    </div>`;
+}
+
 export function renderBase(){
   const app = $("#app"); app.removeAttribute("aria-busy");
   app.innerHTML = `
     ${tabBar("base")}
-    <section class="case">
-      <div class="eyebrow">본거지</div>
-      <div class="coderow"><div class="codename" style="font-size:20px">내정</div></div>
-      <div class="caseno">턴 <b>${turnCount}</b> · 로스터 <b>${roster.length}</b>마리 · 직무 배정 <b>${assignedCount()}/${plotCap}</b></div>
-    </section>
 
     <div class="base-scene">
-      <div class="base-scene-label">본거지 부지 · ${assignedCount()}/${plotCap}</div>
+      ${hudTop()}
       <div class="plot-grid">${plotScene()}</div>
+      <button class="btn hud-nextturn" id="nextTurn">다음 턴 →</button>
+      ${baseMsg ? `<div class="basemsg-toast">${baseMsg}</div>` : ""}
+
+      ${openPanel==="bag" ? bagDropdown() : ""}
+      ${openPanel==="ball" ? ballDropdown() : ""}
+      ${openPanel==="log" ? logDropdown() : ""}
     </div>
 
-    <div class="block">
-      <div class="bh">자원 현황 <span style="float:right; font-weight:400">저장 상한 ${storageCap}</span></div>
-      <div class="res-grid">
-        ${Object.entries(RES_META).map(([k,label])=>`
-          <div class="res-item"><span class="res-label">${label}</span><span class="res-val">${resources[k]}</span></div>
-        `).join("")}
-      </div>
-    </div>
-
-    <div class="block">
-      <div class="bh">로스터</div>
-      <div class="rows">
-        ${roster.length ? roster.map((m,i)=> rosterCard(m,i)).join("") : `<div class="logempty">아직 포획한 개체가 없습니다. "개체 조사" 탭에서 포획해보세요.</div>`}
-      </div>
-    </div>
-
-    ${baseMsg ? `<div class="basemsg">${baseMsg}</div>` : ""}
-
-    <button class="btn confirm wide" id="nextTurn">다음 턴 →</button>
-
-    <div class="block log">
-      <div class="bh">턴 로그</div>
-      <div class="rows">${renderTurnLog()}</div>
-    </div>
+    ${openPanel==="pc" ? pcModal() : ""}
   `;
 
   app.querySelectorAll("[data-plot-jump]").forEach(el=> el.onclick = ()=>{
-    const card = app.querySelector(`#roster-${el.dataset.plotJump}`);
-    if(!card) return;
-    card.scrollIntoView({behavior:"smooth", block:"center"});
-    card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+    pcSelected = +el.dataset.plotJump;
+    openPanel = "pc";
+    renderBase();
   });
   app.querySelectorAll("[data-job]").forEach(sel=>
     sel.addEventListener("change", ()=> assignJob(+sel.dataset.job, sel.value)));
   app.querySelectorAll("[data-feed]").forEach(b=> b.onclick = ()=> feedHeal(+b.dataset.feed));
   app.querySelectorAll("[data-candy]").forEach(b=> b.onclick = ()=> feedCandy(+b.dataset.candy));
+  app.querySelectorAll("[data-entry]").forEach(b=> b.onclick = ()=> toggleEntry(+b.dataset.entry));
+  app.querySelectorAll("[data-pc-pick]").forEach(el=> el.onclick = ()=>{ pcSelected = +el.dataset.pcPick; renderBase(); });
   $("#nextTurn").onclick = resolveTurn;
+
+  app.querySelectorAll("[data-hud]").forEach(b=> b.onclick = ()=>{
+    const name = b.dataset.hud;
+    openPanel = (openPanel===name) ? null : name;
+    renderBase();
+  });
+  app.querySelectorAll("[data-hud-close]").forEach(b=> b.onclick = ()=>{ openPanel = null; renderBase(); });
+  app.querySelector('[data-modal="pc"]')?.addEventListener("click", (e)=>{
+    if(e.target.dataset.modal==="pc"){ openPanel = null; renderBase(); }
+  });
 
   app.querySelector('[data-tab="identify"]')?.addEventListener("click", ()=> newCase());
   app.querySelector('[data-tab="base"]')?.addEventListener("click", ()=> renderBase());
