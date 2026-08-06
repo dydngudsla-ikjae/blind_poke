@@ -1,8 +1,8 @@
 :root{
-  --bg:#eef2f8; --bg2:#f6f9fc; --panel:#ffffff; --panel2:#f2f6fd;
-  --line:#e1e8f0; --ink:#202a37; --mut:#6b7686; --dim:#8b95a6;
+  --bg:#0b0f0a; --bg2:#141914; --panel:#1a201a; --panel2:#171d16;
+  --line:rgba(255,255,255,.14); --ink:#e7edf1; --mut:#93a0ac; --dim:#6d7a86;
   --scan:#2f6fed; --amber:#c17a1f; --ok:#2fa360; --bad:#e5484d;
-  --redact:#e3e9f2;
+  --redact:rgba(255,255,255,.10);
   --mono:"Space Grotesk",system-ui,sans-serif;
   --disp:"Space Grotesk",system-ui,sans-serif;
 }
@@ -25,13 +25,12 @@ body{
 .dots::after{content:""; animation:dots 1.2s steps(4,end) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 
-/* ---- 조사/본거지 탭 ---- */
-.tabbar{display:flex; gap:8px; margin-bottom:12px}
-.tabbtn{flex:1; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.5px;
+/* ---- 사냥터/스캐너 화면에서 본거지로: 탭이 아니라 화면 상단의 단일 복귀 버튼 하나 ---- */
+.scene-nav{margin-bottom:10px}
+.back-btn{font-family:var(--mono); font-size:11.5px; font-weight:700; letter-spacing:.3px;
   color:#cfd8e2; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.16); border-radius:10px;
-  padding:9px 0; cursor:pointer; transition:border-color .15s, background .15s, transform .15s}
-.tabbtn:hover{border-color:var(--scan)}
-.tabbtn.on{color:#eaf3ff; border-color:var(--scan); background:rgba(47,111,237,.18)}
+  padding:8px 14px; cursor:pointer; transition:border-color .15s, background .15s, color .15s}
+.back-btn:hover{border-color:var(--scan); background:rgba(47,111,237,.12); color:#eaf3ff}
 
 .eyebrow{font-size:10px; letter-spacing:2.5px; color:var(--scan); text-transform:uppercase}
 
@@ -126,12 +125,12 @@ body{
   box-shadow:0 0 0 0 var(--bad); animation:fxspark .45s ease-out forwards}
 
 .chip{display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; color:#0e1216; margin-left:4px}
-.chip.redact-chip{background:linear-gradient(90deg,var(--redact),#f7f9fc,var(--redact)); background-size:200% 100%;
+.chip.redact-chip{background:linear-gradient(90deg,var(--redact),rgba(255,255,255,.22),var(--redact)); background-size:200% 100%;
   color:var(--mut); animation:shim 2.4s linear infinite}
 
 /* redaction bar */
 .redact{display:inline-block; min-width:78px; height:15px; vertical-align:middle;
-  background:linear-gradient(90deg,var(--redact),#f7f9fc,var(--redact)); background-size:200% 100%;
+  background:linear-gradient(90deg,var(--redact),rgba(255,255,255,.22),var(--redact)); background-size:200% 100%;
   border-radius:6px; animation:shim 2.4s linear infinite}
 @keyframes shim{0%{background-position:0 0}100%{background-position:200% 0}}
 .revealed{animation:pop .35s ease}
@@ -149,6 +148,9 @@ body{
 .encounter-mons{display:flex; justify-content:space-around; align-items:flex-end; width:100%; gap:8px}
 .enc-mon{position:relative; flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center;
   background:none; border:none; cursor:pointer; padding:0}
+/* 야생 조우: 알을 나란히 늘어놓지 않고 숲 이곳저곳에 흩어 숨은 것처럼 배치 */
+.encounter-mons.scattered{position:absolute; inset:0; display:block; width:auto}
+.enc-mon.hidden-spot{position:absolute; flex:none; transform:translate(-50%,0) scale(var(--hide-scale,1)); transform-origin:bottom center}
 .enc-silhouette{filter:brightness(0) drop-shadow(0 0 11px rgba(130,185,255,.6)) drop-shadow(0 6px 5px rgba(0,0,0,.5));
   animation:encbob 1.8s ease-in-out infinite}
 .enc-mon:nth-child(2) .enc-silhouette{animation-delay:.25s}
@@ -191,7 +193,7 @@ body{
 .btn{font-family:var(--mono); font-size:12px; letter-spacing:.5px; color:var(--ink);
   background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:11px 10px;
   cursor:pointer; text-align:left; transition:border-color .15s, background .15s, transform .15s, box-shadow .15s; position:relative}
-.btn:hover{border-color:var(--scan); background:#eef4ff; transform:translateY(-1px);
+.btn:hover{border-color:var(--scan); background:rgba(47,111,237,.16); transform:translateY(-1px);
   box-shadow:0 6px 14px -8px rgba(47,111,237,.35)}
 .btn:disabled{opacity:.45; cursor:default; border-color:var(--line); background:var(--panel2); transform:none; box-shadow:none}
 .btn.wide{grid-column:1/-1}
@@ -240,11 +242,11 @@ body{
 @keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
 
 /* ---- 결과 배너 / 기타 텍스트 링크 ---- */
-.result{border:1px solid var(--ok); background:linear-gradient(180deg,#eafbf1,#e2f6ea); border-radius:14px;
+.result{border:1px solid var(--ok); background:linear-gradient(180deg,rgba(47,163,96,.18),rgba(47,163,96,.08)); border-radius:14px;
   padding:16px 14px; text-align:center; margin:10px 12px; animation:pop .4s ease;
-  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 10px 24px -18px rgba(30,41,59,.3)}
-.result.miss{border-color:var(--bad); background:linear-gradient(180deg,#fdecec,#fbe1e1)}
-.result.fled{border-color:var(--amber); background:linear-gradient(180deg,#fff4e0,#fbe7c4)}
+  box-shadow:0 1px 2px rgba(0,0,0,.2), 0 10px 24px -18px rgba(0,0,0,.5)}
+.result.miss{border-color:var(--bad); background:linear-gradient(180deg,rgba(229,72,77,.18),rgba(229,72,77,.08))}
+.result.fled{border-color:var(--amber); background:linear-gradient(180deg,rgba(193,122,31,.22),rgba(193,122,31,.10))}
 .result .rname{font-family:var(--disp); font-weight:700; font-size:26px; margin:4px 0 2px}
 .result .rmsg{font-size:12px; color:var(--mut)}
 .result .again{margin-top:12px; font-family:var(--mono); font-weight:700; color:#fff;
@@ -311,15 +313,17 @@ body{
 .rc-favfill.apt{background:var(--amber)}
 .rc-favtxt{font-size:10px; color:var(--mut); white-space:nowrap}
 .rc-job{display:flex; align-items:center; gap:8px; margin-top:8px}
-.rc-job label{font-size:11px; color:var(--mut); flex:0 0 auto}
-.rc-job select{flex:1; font-family:var(--mono); font-size:11.5px; color:var(--ink);
-  background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:6px}
+.rc-job-label{font-size:11.5px; color:var(--ink)}
+.rc-job-label.dim{color:var(--dim)}
+.rc-unassign{margin-left:auto; flex:0 0 auto; font-family:var(--mono); font-size:10.5px; color:var(--bad);
+  background:var(--panel2); border:1px solid var(--line); border-radius:7px; padding:5px 10px; cursor:pointer}
+.rc-unassign:hover{border-color:var(--bad)}
 .rc-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
 .rc-actions button{flex:1 1 30%; font-family:var(--mono); font-size:10.5px; color:var(--ink);
   background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:7px 4px; cursor:pointer}
 .rc-actions button:hover:not(:disabled){border-color:var(--scan)}
 .rc-actions button:disabled{opacity:.35; cursor:default}
-.rc-actions button.on{border-color:var(--ok); color:var(--ok); background:#eafbf1}
+.rc-actions button.on{border-color:var(--ok); color:var(--ok); background:rgba(47,163,96,.18)}
 
 /* ---- 본거지 HUD: 턴 배지 + 몬스터볼(전투 엔트리)·PC(보유 포켓몬)·자원·로그 아이콘 ---- */
 .hud-top{position:relative; z-index:5; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
@@ -378,11 +382,11 @@ body{
 .entry-slot img{width:82%; height:82%; object-fit:contain}
 .entry-slot.empty{color:var(--dim); font-size:8.5px; text-align:center; padding:2px}
 .entry-list .entry-row{display:flex; justify-content:space-between; align-items:center; gap:8px;
-  padding:6px 0; border-bottom:1px dashed #e3e9f1; font-size:12px}
+  padding:6px 0; border-bottom:1px dashed var(--line); font-size:12px}
 .entry-list .entry-row:last-child{border-bottom:0}
 .entry-row button{flex:0 0 auto; font-family:var(--mono); font-size:10.5px; color:var(--ink);
   background:var(--panel2); border:1px solid var(--line); border-radius:7px; padding:5px 10px; cursor:pointer}
-.entry-row button.on{border-color:var(--ok); color:var(--ok); background:#eafbf1}
+.entry-row button.on{border-color:var(--ok); color:var(--ok); background:rgba(47,163,96,.18)}
 
 /* ---- PC 모달 (보유 포켓몬 전체) — 어두운 유리 패널 ---- */
 .modal-overlay{position:fixed; inset:0; z-index:50; background:rgba(4,6,5,.68); backdrop-filter:blur(2px);
@@ -395,11 +399,16 @@ body{
   font-family:var(--disp); font-size:13px; font-weight:700; color:#eaf3ff; flex:0 0 auto}
 .modal-body{overflow:auto; padding:12px 16px}
 .pc-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(64px,1fr)); gap:8px; margin-bottom:14px}
-.pc-cell{aspect-ratio:1; border-radius:10px; border:1px solid var(--line); background:var(--bg2);
+.pc-cell{position:relative; aspect-ratio:1; border-radius:10px; border:1px solid var(--line); background:var(--bg2);
   display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px; cursor:pointer;
   transition:border-color .15s, background .15s}
+.pc-ball{position:absolute; top:3px; right:3px; z-index:2; box-shadow:0 2px 4px rgba(0,0,0,.5)}
 .pc-cell:hover{border-color:var(--scan)}
-.pc-cell.selected{border-color:var(--scan); background:#eef4ff}
+.pc-cell.selected{border-color:var(--scan); background:rgba(47,111,237,.16)}
 .pc-cell img{width:72%; height:72%; object-fit:contain}
 .pc-cell-name{font-size:8.5px; margin-top:2px; color:var(--mut); max-width:100%; overflow:hidden;
   text-overflow:ellipsis; white-space:nowrap}
+
+/* ---- 설치 모달 (빈 공터에 개체 배치) ---- */
+.install-note{font-size:11.5px; color:var(--mut); line-height:1.5; margin-bottom:10px}
+.install-confirm{margin-top:12px; text-align:center}

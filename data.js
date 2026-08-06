@@ -28,11 +28,3 @@ export async function loadData(){
 export function types(p){
   return [p.type1Rowid,p.type2Rowid].filter((v,i,arr)=>arr.indexOf(v)===i).map(id=>TYPE[id]).filter(Boolean);
 }
-
-/* 화면 상단 조사/본거지 탭 전환 바 — 두 화면 템플릿 맨 위에 공통으로 삽입 */
-export function tabBar(active){
-  return `<div class="tabbar">
-    <button class="tabbtn${active==="identify"?" on":""}" data-tab="identify">개체 조사</button>
-    <button class="tabbtn${active==="base"?" on":""}" data-tab="base">본거지</button>
-  </div>`;
-}

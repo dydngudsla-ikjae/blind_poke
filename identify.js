@@ -1,5 +1,5 @@
 // ===== 개체 식별 터미널 : 후보 선택 → 단서 조회 → 포획 =====
-import { TYPE_COLORS, STAT_LABEL, ART, $, rnd, POKE, MOVE, ABILITY, types, tabBar } from "./data.js";
+import { TYPE_COLORS, STAT_LABEL, ART, $, rnd, POKE, MOVE, ABILITY, types } from "./data.js";
 import { addToRoster, renderBase } from "./base.js";
 
 let answer=null, alias="", solved=0, seen=0, cluesUsed=0, attempts=0, paletteCache=null;
@@ -22,6 +22,27 @@ function drafting(){ return startRoundIdx < START_ROUNDS; }
 const EGG_PATH = "M32,3 C20,3 12,20 12,36 C12,52 20,61 32,61 C44,61 52,52 52,36 C52,20 44,3 32,3 Z";
 function eggSvg(w, h, color, extraClass=""){
   return `<svg class="enc-silhouette ${extraClass}" width="${w}" height="${h}" viewBox="0 0 64 64" fill="${color}"><path d="${EGG_PATH}"/></svg>`;
+}
+
+/* ---- 야생 조우: 알들을 숲 이곳저곳에 흩어 숨겨진 것처럼 배치(스타팅 드래프트는 나란히 고르는 화면이라 미적용) ---- */
+const HIDE_SPOTS = [
+  {left:"14%", top:"60%", scale:1.05}, {left:"30%", top:"30%", scale:.85},
+  {left:"48%", top:"68%", scale:1},    {left:"64%", top:"36%", scale:.9},
+  {left:"80%", top:"62%", scale:1.1},  {left:"90%", top:"34%", scale:.8},
+];
+function pickHideSpots(n){
+  const pool = [...HIDE_SPOTS];
+  const picked = [];
+  for(let i=0;i<n && pool.length;i++) picked.push(pool.splice(rnd(0,pool.length-1),1)[0]);
+  return picked;
+}
+
+/* ---- 본거지로 돌아가기: 탭 대신 화면 상단의 단일 버튼 하나로만 이동(스타팅 드래프트 중엔 돌아갈 본거지가 없어 숨김) ---- */
+function backButtonHtml(){
+  return `<div class="scene-nav"><button class="back-btn" id="backToBase">← 본거지로</button></div>`;
+}
+function wireBackButton(){
+  $("#backToBase")?.addEventListener("click", ()=> renderBase());
 }
 /* ---- 스타팅 드래프트용: 정답 아트워크 그대로의 실루엣(누구인지 형태는 보이되 이름/타입/수치는 스캔해야 나옴) ---- */
 function realSilhouetteImg(pokemon){
@@ -85,8 +106,9 @@ export function newCase(){
 function renderSelect(){
   const app = $("#app"); app.removeAttribute("aria-busy");
   const draft = drafting();
+  const spots = draft ? null : pickHideSpots(candidates.length);
   app.innerHTML = `
-    ${draft ? "" : tabBar("identify")}
+    ${draft ? "" : backButtonHtml()}
     <div class="encounter-scene" id="encScene">
       <div class="scan-cursor" id="scanCursor">
         <span class="sc-lens"><span class="sc-led"></span></span>
@@ -94,9 +116,10 @@ function renderSelect(){
         <span class="sc-lens"></span>
       </div>
       <div class="scan-info" id="scanInfo"></div>
-      <div class="encounter-mons">
+      <div class="encounter-mons${draft?"":" scattered"}">
         ${candidates.map((c,i)=>`
-          <button class="enc-mon" data-idx="${i}">
+          <button class="enc-mon${draft?"":" hidden-spot"}" data-idx="${i}"
+            ${spots?`style="left:${spots[i].left}; top:${spots[i].top}; --hide-scale:${spots[i].scale}"`:""}>
             ${draft ? realSilhouetteImg(c.pokemon) : eggSvg(64,70,"#0a0a0a")}
           </button>
         `).join("")}
@@ -115,7 +138,7 @@ function renderSelect(){
     });
   }
   wireEncounterScanner();
-  wireTabBar();
+  wireBackButton();
 }
 
 /* 스타팅 드래프트 선택: 식별 없이 즉시 로스터에 합류(실패/도주 없음) 후 다음 후보 또는 본거지로 */
@@ -179,12 +202,6 @@ function wireEncounterScanner(){
   });
 }
 
-function wireTabBar(){
-  const app = $("#app");
-  app.querySelector('[data-tab="identify"]')?.addEventListener("click", ()=> newCase());
-  app.querySelector('[data-tab="base"]')?.addEventListener("click", ()=> renderBase());
-}
-
 function enterCase(cand){
   answer = cand.pokemon;
   alias = cand.alias;
@@ -212,7 +229,7 @@ function typeRowHtml(){
 function render(){
   const app = $("#app"); app.removeAttribute("aria-busy");
   app.innerHTML = `
-    ${drafting() ? "" : tabBar("identify")}
+    ${drafting() ? "" : backButtonHtml()}
     <div class="scanner">
       <div class="scn-view" id="viewport">
         <div class="scn-scanline"></div>
@@ -253,7 +270,7 @@ function render(){
   $("#guessBtn").onclick = submitGuess;
   $("#guessInput").addEventListener("keydown",e=>{ if(e.key==="Enter") submitGuess(); });
   $("#giveup").onclick = ()=>finish("giveup");
-  wireTabBar();
+  wireBackButton();
 }
 
 /* ---- 단서 사용 ---- */

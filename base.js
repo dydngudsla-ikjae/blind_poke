@@ -1,5 +1,5 @@
 // ===== 본거지: 로스터 · 자원 · 직무 배정 · 턴 진행 =====
-import { TYPE_COLORS, ART, $, types, tabBar } from "./data.js";
+import { TYPE_COLORS, ART, $, types } from "./data.js";
 import { newCase } from "./identify.js";
 
 /* ---- 타입 → 직무 매핑 (노말은 항상 미스매치 없이 아무 직무나 수행) ---- */
@@ -43,19 +43,22 @@ const CANDY_EXP = 20;            // 사탕 1개 경험치량
 const FAVOR_CAP = 100;           // 우호도 절대 최대치
 const FAVCEIL_GROWTH = 3;        // 레벨업 1회당 우호도 상한 증가폭 (FAVOR_CAP까지 성장)
 const ENTRY_CAP = 6;             // 전투 엔트리 최대 등록 수
+const INSTALL_JOB = "till";      // 설치 재료 없이 지금 바로 지을 수 있는 유일한 시설(밭) — 다른 시설은 재료 시스템 도입 전까지 비활성
+const INSTALL_MIN_MEMBERS = 2;   // 밭 설치에 필요한 최소 인원(타입 무관)
 
 export let roster = [];
 export let resources = { seed:0, fruit:0, food:0, material:0, gold:0, tool:0,
                           tm:0, candy:0, healItem:0, cureItem:0 };
-let plotCap = 1;
+let plotCap = INSTALL_MIN_MEMBERS;  // 밭 설치에 필요한 최소 인원만큼은 시작부터 배정 가능해야 함
 let storageCap = 50;
 let turnCount = 0;
 let lastLog = null;
 let baseMsg = "";
 
 /* ---- HUD 드롭다운/모달 상태 (재렌더 간 유지) ---- */
-let openPanel = null;      // "bag" | "ball" | "pc" | "log" | null
+let openPanel = null;      // "bag" | "ball" | "pc" | "log" | "install" | null
 let pcSelected = null;     // PC 모달에서 선택된 roster 인덱스
+let installPicks = new Set();  // 설치 모달에서 다중 선택된 roster 인덱스(미배정 개체, 밭 설치용)
 
 export function addToRoster(entry){
   entry.inEntry = false;
@@ -76,15 +79,14 @@ function entryCount(){
 
 function assignJob(idx, jobId){
   const m = roster[idx];
-  if(!m) return;
+  if(!m) return false;
   if(jobId && !m.job && assignedCount()>=plotCap){
     baseMsg = `직무 배정 인원 상한(${plotCap})을 초과했습니다. 땅 평탄화로 슬롯을 늘리세요.`;
-    renderBase();
-    return;
+    return false;
   }
   baseMsg = "";
   m.job = jobId || null;
-  renderBase();
+  return true;
 }
 
 function toggleEntry(idx){
@@ -177,7 +179,7 @@ function plotScene(){
         </div>`);
     }else{
       tiles.push(`
-        <div class="plot empty">
+        <div class="plot empty" data-plot-install="1">
           <span class="plus">+</span>
           <span class="lot-label">빈 공터</span>
         </div>`);
@@ -186,13 +188,16 @@ function plotScene(){
   return tiles.join("");
 }
 
+/* 목록에서 이 개체가 전투 엔트리에 등록돼 있으면 몬스터볼 배지로 표시 */
+function entryBadge(m){
+  return m.inEntry
+    ? `<span class="hud-ico-ball pc-ball" title="전투 엔트리 등록됨"><span class="hb-top"></span><span class="hb-band"></span><span class="hb-btn"></span></span>`
+    : "";
+}
+
 function rosterCard(m, i){
   const ts = types(m.pokemon);
-  const pct = m.favCeil>0 ? Math.round((m.favor/m.favCeil)*100) : 0;
-  const jobOptions = Object.entries(JOBS).map(([id,job])=>{
-    const match = isMatch(m, id);
-    return `<option value="${id}" ${m.job===id?"selected":""}>${job.label}${match?"":" (미스매치)"}</option>`;
-  }).join("");
+  const pct = Math.round((m.favor/FAVOR_CAP)*100);
   return `
     <div class="roster-card" id="roster-${i}">
       <div class="rc-head">
@@ -202,18 +207,16 @@ function rosterCard(m, i){
       <div class="rc-types">${ts.map(t=>`<span class="chip" style="background:${TYPE_COLORS[t]||"#666"}">${t}</span>`).join("")}</div>
       <div class="rc-fav">
         <div class="rc-favbar"><div class="rc-favfill" style="width:${pct}%"></div></div>
-        <span class="rc-favtxt">우호도 ${Math.round(m.favor)}/${m.favCeil}</span>
+        <span class="rc-favtxt">우호도 ${Math.round(m.favor)}/${FAVOR_CAP}</span>
       </div>
       <div class="rc-fav">
         <div class="rc-favbar"><div class="rc-favfill apt" style="width:${m.aptitude}%"></div></div>
         <span class="rc-favtxt">특수능력 ${m.aptitude}/100</span>
       </div>
       <div class="rc-job">
-        <label>직무</label>
-        <select data-job="${i}">
-          <option value="">미배정</option>
-          ${jobOptions}
-        </select>
+        ${m.job
+          ? `<span class="rc-job-label">직무: ${JOBS[m.job]?.label||""}</span><button data-unassign="${i}" class="rc-unassign">해제</button>`
+          : `<span class="rc-job-label dim">미배정 · 부지의 빈 공터에서 설치하세요</span>`}
       </div>
       <div class="rc-actions">
         <button data-feed="${i}" ${resources.healItem<=0?"disabled":""}>먹이 주기(+우호도)</button>
@@ -242,6 +245,9 @@ function hudTop(){
     <div class="hud-top">
       <div class="hud-turn" data-hud="log">턴 <b>${turnCount}</b></div>
       <div class="hud-icons">
+        <button class="hud-btn" data-action="hunt" title="사냥하러 나가기">
+          <span class="hud-ico">🌲</span>
+        </button>
         <button class="hud-btn ${openPanel==="bag"?"active":""}" data-hud="bag" title="자원 현황">
           <span class="hud-ico">🎒</span>
         </button>
@@ -313,6 +319,7 @@ function pcModal(){
     const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
     return `
       <div class="pc-cell ${sel===i?"selected":""}" data-pc-pick="${i}">
+        ${entryBadge(m)}
         <img src="${sprite}" alt="${m.pokemon.nameKr}">
         <span class="pc-cell-name">${m.pokemon.nameKr}</span>
       </div>`;
@@ -322,8 +329,42 @@ function pcModal(){
       <div class="modal-box">
         <div class="modal-head"><span>보유 포켓몬 · ${roster.length}마리</span><button class="dd-close" data-hud-close>✕</button></div>
         <div class="modal-body">
-          ${roster.length ? `<div class="pc-grid">${grid}</div>` : `<div class="logempty">아직 포획한 개체가 없습니다. "개체 조사" 탭에서 포획해보세요.</div>`}
+          ${roster.length ? `<div class="pc-grid">${grid}</div>` : `<div class="logempty">아직 포획한 개체가 없습니다. 🌲 아이콘으로 사냥하러 나가보세요.</div>`}
           ${sel!=null ? rosterCard(roster[sel], sel) : ""}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* 빈 공터 클릭 시: 설치 재료 없이 지을 수 있는 시설(밭)만 우선 개방 — 밭은 2마리 이상(타입 무관) 다중 배정해야 설치됨 */
+function installModal(){
+  const unassigned = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job);
+  const validPicks = [...installPicks].filter(i=> roster[i] && !roster[i].job);
+  if(validPicks.length !== installPicks.size) installPicks = new Set(validPicks);
+  const remain = Math.max(0, plotCap - assignedCount());
+  const grid = unassigned.map(({m,i})=>{
+    const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
+    return `
+      <div class="pc-cell ${installPicks.has(i)?"selected":""}" data-install-pick="${i}">
+        ${entryBadge(m)}
+        <img src="${sprite}" alt="${m.pokemon.nameKr}">
+        <span class="pc-cell-name">${m.pokemon.nameKr}</span>
+      </div>`;
+  }).join("");
+  const enough = installPicks.size >= INSTALL_MIN_MEMBERS;
+  return `
+    <div class="modal-overlay" data-modal="install">
+      <div class="modal-box">
+        <div class="modal-head"><span>부지에 설치 · 배정 가능 ${remain}칸</span><button class="dd-close" data-hud-close>✕</button></div>
+        <div class="modal-body">
+          <div class="install-note">설치 재료 없이 지금 지을 수 있는 시설은 <b>${JOBS[INSTALL_JOB].label}</b>뿐입니다.
+            타입 무관하게 ${INSTALL_MIN_MEMBERS}마리 이상을 함께 배정해야 설치됩니다.</div>
+          ${unassigned.length
+            ? `<div class="pc-grid">${grid}</div>`
+            : `<div class="logempty">배정할 수 있는 개체가 없습니다. 모든 개체가 이미 직무를 수행 중입니다.</div>`}
+          <button class="btn wide install-confirm" data-install-confirm ${enough?"":"disabled"}>
+            ${JOBS[INSTALL_JOB].label} 설치 (${installPicks.size}/${INSTALL_MIN_MEMBERS}+ 선택됨)
+          </button>
         </div>
       </div>
     </div>`;
@@ -332,8 +373,6 @@ function pcModal(){
 export function renderBase(){
   const app = $("#app"); app.removeAttribute("aria-busy");
   app.innerHTML = `
-    ${tabBar("base")}
-
     <div class="base-scene">
       ${hudTop()}
       <div class="plot-grid">${plotScene()}</div>
@@ -346,6 +385,7 @@ export function renderBase(){
     </div>
 
     ${openPanel==="pc" ? pcModal() : ""}
+    ${openPanel==="install" ? installModal() : ""}
   `;
 
   app.querySelectorAll("[data-plot-jump]").forEach(el=> el.onclick = ()=>{
@@ -353,8 +393,33 @@ export function renderBase(){
     openPanel = "pc";
     renderBase();
   });
-  app.querySelectorAll("[data-job]").forEach(sel=>
-    sel.addEventListener("change", ()=> assignJob(+sel.dataset.job, sel.value)));
+  app.querySelectorAll("[data-plot-install]").forEach(el=> el.onclick = ()=>{
+    installPicks = new Set();
+    openPanel = "install";
+    renderBase();
+  });
+  app.querySelectorAll("[data-install-pick]").forEach(el=> el.onclick = ()=>{
+    const idx = +el.dataset.installPick;
+    if(installPicks.has(idx)) installPicks.delete(idx); else installPicks.add(idx);
+    renderBase();
+  });
+  app.querySelector("[data-install-confirm]")?.addEventListener("click", ()=>{
+    const picks = [...installPicks];
+    if(picks.length < INSTALL_MIN_MEMBERS) return;
+    if(assignedCount() + picks.length > plotCap){
+      baseMsg = `직무 배정 인원 상한(${plotCap})을 초과했습니다. 땅 평탄화로 슬롯을 늘리세요.`;
+      renderBase();
+      return;
+    }
+    picks.forEach(idx=> assignJob(idx, INSTALL_JOB));
+    installPicks = new Set();
+    openPanel = null;
+    renderBase();
+  });
+  app.querySelectorAll("[data-unassign]").forEach(b=> b.onclick = ()=>{
+    assignJob(+b.dataset.unassign, null);
+    renderBase();
+  });
   app.querySelectorAll("[data-feed]").forEach(b=> b.onclick = ()=> feedHeal(+b.dataset.feed));
   app.querySelectorAll("[data-candy]").forEach(b=> b.onclick = ()=> feedCandy(+b.dataset.candy));
   app.querySelectorAll("[data-entry]").forEach(b=> b.onclick = ()=> toggleEntry(+b.dataset.entry));
@@ -366,11 +431,12 @@ export function renderBase(){
     openPanel = (openPanel===name) ? null : name;
     renderBase();
   });
-  app.querySelectorAll("[data-hud-close]").forEach(b=> b.onclick = ()=>{ openPanel = null; renderBase(); });
+  app.querySelector('[data-action="hunt"]')?.addEventListener("click", ()=> newCase());
+  app.querySelectorAll("[data-hud-close]").forEach(b=> b.onclick = ()=>{ openPanel = null; installPicks = new Set(); renderBase(); });
   app.querySelector('[data-modal="pc"]')?.addEventListener("click", (e)=>{
     if(e.target.dataset.modal==="pc"){ openPanel = null; renderBase(); }
   });
-
-  app.querySelector('[data-tab="identify"]')?.addEventListener("click", ()=> newCase());
-  app.querySelector('[data-tab="base"]')?.addEventListener("click", ()=> renderBase());
+  app.querySelector('[data-modal="install"]')?.addEventListener("click", (e)=>{
+    if(e.target.dataset.modal==="install"){ openPanel = null; installPicks = new Set(); renderBase(); }
+  });
 }
