@@ -24,11 +24,13 @@ function eggSvg(w, h, color, extraClass=""){
   return `<svg class="enc-silhouette ${extraClass}" width="${w}" height="${h}" viewBox="0 0 64 64" fill="${color}"><path d="${EGG_PATH}"/></svg>`;
 }
 
-/* ---- 야생 조우: 알들을 숲 이곳저곳에 흩어 숨겨진 것처럼 배치(스타팅 드래프트는 나란히 고르는 화면이라 미적용) ---- */
+/* ---- 조우 스폰 위치: 숲 이곳저곳에 흩어 놓은 고정 좌표 풀. newCase()에서 후보마다 하나씩 배정되면
+   그 인카운터가 끝날 때까지 절대 바뀌지 않는다(드래프트/야생 조우 공통).
+   가장자리·우하단 SCAN DATA 패널과 안 겹치도록 20~84%/32~64% 안쪽으로 safe margin을 둠 ---- */
 const HIDE_SPOTS = [
-  {left:"14%", top:"60%", scale:1.05}, {left:"30%", top:"30%", scale:.85},
-  {left:"48%", top:"68%", scale:1},    {left:"64%", top:"36%", scale:.9},
-  {left:"80%", top:"62%", scale:1.1},  {left:"90%", top:"34%", scale:.8},
+  {left:"20%", top:"58%", scale:1.05}, {left:"34%", top:"32%", scale:.85},
+  {left:"50%", top:"62%", scale:1},    {left:"64%", top:"36%", scale:.9},
+  {left:"76%", top:"56%", scale:1.1},  {left:"84%", top:"34%", scale:.8},
 ];
 function pickHideSpots(n){
   const pool = [...HIDE_SPOTS];
@@ -45,10 +47,10 @@ function wireBackButton(){
   $("#backToBase")?.addEventListener("click", ()=> renderBase());
 }
 /* ---- 스타팅 드래프트용: 정답 아트워크 그대로의 실루엣(누구인지 형태는 보이되 이름/타입/수치는 스캔해야 나옴) ---- */
-function realSilhouetteImg(pokemon){
+function realSilhouetteImg(pokemon, h=70, maxW=92){
   const fallback = pokemon.details?.sprites?.front_default || "";
   return `<img class="enc-silhouette" src="${ART(pokemon.pokemonRowid)}" data-fallback="${fallback}"
-    style="height:70px;width:auto;max-width:92px;object-fit:contain" alt="">`;
+    style="height:${h}px;width:auto;max-width:${maxW}px;object-fit:contain" alt="">`;
 }
 
 /* ---- 가명 생성: ~~몬 (정답 누출 방지) ---- */
@@ -69,76 +71,118 @@ function highestStat(p, ivObj={}){
 }
 
 /* ---- 우호도: 개체별 상한/하한을 랜덤으로 굴려서 부여 (전설/환상은 상한이 낮음) ---- */
-function rollFavor(p){
+export function rollFavor(p){
   const rare = p.details?.isLegendary || p.details?.isMythical;
   const ceil = rare ? rnd(30,55) : rnd(70,95);
   const floor = Math.min(rnd(10,30), ceil-5);
   return { ceil, floor };
 }
 /* ---- 개체값: 종족값에 -15~+15 랜덤 보정 (원작 0~31 개념을 0 기준 대칭으로 절반 축소) ---- */
-function rollIV(){
+export function rollIV(){
   const keys=["hp","atk","def","satk","sdef","spd"];
   const out={};
   keys.forEach(k=> out[k]=rnd(-15,15));
   return out;
 }
 /* ---- 특수능력: 0~100 랜덤 — 본거지 직무 산출량으로 환산되는 개체별 재능치 ---- */
-function rollAptitude(){ return rnd(0,100); }
-/* ---- 새 라운드: 후보 3종 제시 후 선택 (드래프트 중엔 이미 나온 종 제외) ---- */
+export function rollAptitude(){ return rnd(0,100); }
+/* ---- 새 라운드: 후보 3종 제시 후 선택 (드래프트 중엔 이미 나온 종 제외).
+   각 후보의 숲 속 스폰 위치(spot)는 여기서 딱 한 번만 정해지고, 이후 선택/hover가 바뀌어도
+   절대 움직이지 않는다 — 위치는 고정, 강조는 오직 시각 효과(스케일/투명도/링)로만 표현 ---- */
 export function newCase(){
   const pool = drafting() ? POKE.filter(p=>!startSeenIds.has(p.pokemonRowid)) : [...POKE];
   const aliases = [];
-  candidates = Array.from({length:Math.min(CAND_N,pool.length)},()=>{
+  const n = Math.min(CAND_N, pool.length);
+  const spots = pickHideSpots(n);
+  candidates = Array.from({length:n},(_,idx)=>{
     const p = pool.splice(rnd(0,pool.length-1),1)[0];
     if(drafting()) startSeenIds.add(p.pokemonRowid);
     const a = makeAlias(aliases); aliases.push(a);
     const t = types(p);
     const f = rollFavor(p);
-    return { pokemon:p, alias:a, shownType:t[rnd(0,t.length-1)], favCeil:f.ceil, favFloor:f.floor, iv:rollIV() };
+    return { pokemon:p, alias:a, shownType:t[rnd(0,t.length-1)], favCeil:f.ceil, favFloor:f.floor, iv:rollIV(),
+              spot:spots[idx] };
   });
   renderSelect();
 }
 
-/* 숲 속에서 후보 3마리를 동시에 마주치는 단일 조우 장면 — 마우스로 든 스캐너가 포인터를 따라다니고,
-   개체 위에 겨누면 스캐너 오른쪽에 정보가 뜸(항상 보이는 이름표 대신 스캔해야 알 수 있게).
-   스타팅 드래프트 중에는 골라서 바로 데려가는 것뿐이라 실루엣도 실제 형태로 보여주고, 클릭하면
-   단서 조회 없이 즉시 로스터에 합류시킴 — 힌트로 알아맞히는 로직은 드래프트 이후 야생 조우에서만 그대로 유지 */
+/* 선택된(포커스된) 개체 뒤에만 얹히는 스캐너 링 — 바깥쪽 점선 원 + 안쪽 얇은 원이 서로 다른 속도로 회전하고,
+   네 방향엔 회전하지 않는 짧은 target bracket을 고정 배치. 세로 스캔라인이 위아래로 훑음.
+   포켓몬 실루엣보다 튀지 않도록 얇고 옅게 유지 */
+function scannerRingHtml(){
+  return `
+    <span class="enc-selected-ring">
+      <svg class="ring-svg" viewBox="0 0 200 200">
+        <circle class="ring ring-outer" cx="100" cy="100" r="92"/>
+        <circle class="ring ring-inner" cx="100" cy="100" r="70"/>
+      </svg>
+      <span class="ring-bracket top"></span><span class="ring-bracket right"></span>
+      <span class="ring-bracket bottom"></span><span class="ring-bracket left"></span>
+      <span class="ring-scanline"></span>
+    </span>`;
+}
+
+/* 실루엣과 그 뒤 장식(스캐너 링/감지 링/바닥 글로우)을 한 세트로 반환 — 메인 씬과 우측 패널 미니뷰에서 재사용 */
+function monVisual(c, draft, size){
+  const sil = draft ? realSilhouetteImg(c.pokemon, size, size*1.3) : eggSvg(size*0.9, size, "#0a0a0a");
+  return sil;
+}
+
+/* 숲 속에서 후보 3마리를 동시에 마주치는 단일 조우 장면. 각 개체는 newCase()에서 정해진 고유 스폰
+   위치(c.spot)에 절대 고정되며, hover/클릭이 바뀌어도 절대 움직이지 않는다 — 포켓몬은 숲 속 제자리에
+   그대로 있고, 플레이어의 스캐너가 그 자리를 겨눠 강조하는 구조. 강조는 오직 그 자리에서의 시각 효과
+   (스케일/투명도/스캐너 링)로만 표현된다.
+   2단계 스캐너 UX: (1) 작은 scanner cursor가 마우스를 따라다니며 "탐색 중"을 표현하고,
+   (2) 포켓몬 위에 hover하면 그 포켓몬의 고정된 자리에서 큰 LOCK-ON 링이 fade-in되는 방식으로 "분석 중"을
+   표현한다 — 큰 링 자체는 절대 마우스를 따라다니지 않는다. hover=스캔(정보만 미리보기), click=데려가기.
+   숲 배경이 화면 끝까지 이어지는 단일 무대이고, SCAN DATA는 그 위에 뜬 작은 휴대 장치 패널(우하단
+   플로팅)일 뿐 별도 사이드바가 아니다 */
 function renderSelect(){
   const app = $("#app"); app.removeAttribute("aria-busy");
   const draft = drafting();
-  const spots = draft ? null : pickHideSpots(candidates.length);
   app.innerHTML = `
     ${draft ? "" : backButtonHtml()}
     <div class="encounter-scene" id="encScene">
-      <div class="scan-cursor" id="scanCursor">
-        <span class="sc-lens"><span class="sc-led"></span></span>
-        <span class="sc-screen"><span class="sc-sweep"></span></span>
-        <span class="sc-lens"></span>
-      </div>
-      <div class="scan-info" id="scanInfo"></div>
-      <div class="encounter-mons${draft?"":" scattered"}">
+      <div class="enc-ground-light"></div>
+      <div class="encounter-mons">
         ${candidates.map((c,i)=>`
-          <button class="enc-mon${draft?"":" hidden-spot"}" data-idx="${i}"
-            ${spots?`style="left:${spots[i].left}; top:${spots[i].top}; --hide-scale:${spots[i].scale}"`:""}>
-            ${draft ? realSilhouetteImg(c.pokemon) : eggSvg(64,70,"#0a0a0a")}
+          <button class="enc-mon${types(c.pokemon).includes("비행")?" is-flying":""}" data-idx="${i}"
+            style="left:${c.spot.left}; top:${c.spot.top}; --hide-scale:${c.spot.scale}">
+            <span class="enc-silhouette-wrap">
+              ${scannerRingHtml()}
+              <span class="enc-contact-shadow"></span>
+              ${monVisual(c, draft, 70)}
+            </span>
           </button>
         `).join("")}
       </div>
+      <span class="scan-mini-cursor" id="miniCursor">
+        <svg viewBox="0 0 40 40">
+          <circle cx="20" cy="20" r="13"/>
+          <line x1="20" y1="2" x2="20" y2="8"/>
+          <line x1="20" y1="32" x2="20" y2="38"/>
+          <line x1="2" y1="20" x2="8" y2="20"/>
+          <line x1="32" y1="20" x2="38" y2="20"/>
+          <circle class="mc-dot" cx="20" cy="20" r="1.6"/>
+        </svg>
+      </span>
+      <div class="scan-panel" id="scanPanel"></div>
     </div>
   `;
-  app.querySelectorAll(".enc-mon").forEach(b=> b.onclick=()=>{
-    const cand = candidates[+b.dataset.idx];
-    draft ? draftPick(cand) : enterCase(cand);
-  });
-  if(draft){
-    app.querySelectorAll("img.enc-silhouette").forEach(img=> img.onerror = ()=>{
+  wireSilhouetteFallback(app);
+  wireEncounterScanner(draft);
+  wireBackButton();
+}
+
+/* 실루엣 이미지 로드 실패 시 스프라이트로 대체(드래프트 중 정답 아트워크에만 해당) */
+function wireSilhouetteFallback(root){
+  root.querySelectorAll("img.enc-silhouette").forEach(img=>{
+    img.onerror = ()=>{
       if(img.dataset.fb) return;
       img.dataset.fb = 1;
       if(img.dataset.fallback) img.src = img.dataset.fallback;
-    });
-  }
-  wireEncounterScanner();
-  wireBackButton();
+    };
+  });
 }
 
 /* 스타팅 드래프트 선택: 식별 없이 즉시 로스터에 합류(실패/도주 없음) 후 다음 후보 또는 본거지로 */
@@ -150,56 +194,77 @@ function draftPick(cand){
   else{ newCase(); }
 }
 
-/* 스캐너 커서: 씬 안에서 마우스를 따라다니다가 개체 위에 겨누면 스캐너 위쪽(공간 없으면 오른쪽/아래)에 정보 패널 표시 */
-function wireEncounterScanner(){
+/* 개체 위에 마우스를 올리면(hover) 그 자리에서 스캔됨 — 위치는 절대 바꾸지 않고, 그 자리에서만
+   확대+LOCK-ON 링이 붙고 불투명해짐. 나머지는 제자리에서 반투명해질 뿐 위치·순서 변경 없음
+   (과거엔 hover로 선택을 다른 좌표로 옮기다가 마우스 아래 요소가 계속 바뀌는 무한 순환 버그가
+   있었음 — 좌표는 절대 건드리지 않으므로 이 문제는 원천적으로 발생하지 않는다).
+   우하단 플로팅 SCAN DATA 패널에 정보가 미리보기로 뜨고, 그 개체를 클릭하면 곧바로 데려간다
+   (별도 확정 버튼 없음 — hover=탐색/스캔, click=데려가기라는 상호작용 자체로 의미 전달) */
+function wireEncounterScanner(draft){
   const app = $("#app");
+  const mons = [...app.querySelectorAll(".enc-mon")];
+  const panel = app.querySelector("#scanPanel");
+  const cursor = app.querySelector("#miniCursor");
   const scene = app.querySelector("#encScene");
-  const cursor = app.querySelector("#scanCursor");
-  const info = app.querySelector("#scanInfo");
-  if(!scene) return;
-  let hoveredIdx = null;
+  if(!mons.length || !panel) return;
 
-  function placeInfo(x, y, rect){
-    const panelW = info.offsetWidth || 150, panelH = info.offsetHeight || 70;
-    let left = x - panelW/2;
-    let top = y - 34 - panelH;               // 기본: 스캐너 바로 위
-    if(top < 6){                             // 위쪽 공간 부족 -> 오른쪽으로
-      left = x + 56; top = y - panelH/2;
-      if(left + panelW > rect.width) left = x - panelW - 56;   // 오른쪽도 부족하면 왼쪽
-    }
-    left = Math.max(6, Math.min(left, rect.width - panelW - 6));
-    top = Math.max(6, Math.min(top, rect.height - panelH - 6));
-    info.style.left = left+"px"; info.style.top = top+"px";
+  function focusIdx(i){
+    mons.forEach((m,j)=> m.classList.toggle("is-selected", j===i));
+    cursor?.classList.add("suppressed"); // LOCK-ON 중엔 작은 탐색 커서를 거의 숨겨 링이 주된 표현이 되게 함
+    const c = candidates[i];
+    panel.innerHTML = `
+      <span class="sp-frame-bracket tr"></span><span class="sp-frame-bracket bl"></span>
+      <div class="sp-inner">
+        <div class="sp-eyebrow"><span>SCAN DATA</span><span class="sp-ticks"></span></div>
+        <div class="sp-body">
+          <div class="sp-mini">
+            <svg class="sp-mini-ring" viewBox="0 0 100 100">
+              <circle class="mr-outer" cx="50" cy="50" r="46"/>
+              <circle class="mr-inner" cx="50" cy="50" r="36"/>
+            </svg>
+            <span class="mini-bracket t"></span><span class="mini-bracket r"></span>
+            <span class="mini-bracket b"></span><span class="mini-bracket l"></span>
+            <span class="sp-mini-sil">${monVisual(c, draft, 41)}</span>
+          </div>
+          <div class="sp-text">
+            <div class="sp-name">${c.alias}</div>
+            <div class="sp-row">
+              <span class="sp-pill" style="background:${TYPE_COLORS[c.shownType]||'#666'}">${c.shownType}</span>
+              <span class="sp-stats">${c.pokemon.heightM ?? "?"}m · ${c.pokemon.weightKg ?? "?"}kg</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    panel.classList.add("show");
+    wireSilhouetteFallback(panel);
+  }
+  function blurAll(){
+    mons.forEach(m=> m.classList.remove("is-selected"));
+    panel.classList.remove("show");
+    cursor?.classList.remove("suppressed");
   }
 
-  scene.addEventListener("mousemove", e=>{
-    const r = scene.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
-    cursor.style.left = x+"px"; cursor.style.top = y+"px";
-    cursor.style.opacity = 1;
-    if(hoveredIdx!=null) placeInfo(x, y, r);
+  mons.forEach((b,i)=>{
+    b.addEventListener("mouseenter", ()=> focusIdx(i));
+    b.addEventListener("mouseleave", blurAll);
+    b.onclick = ()=>{
+      const cand = candidates[i];
+      draft ? draftPick(cand) : enterCase(cand);
+    };
   });
-  scene.addEventListener("mouseleave", ()=>{ cursor.style.opacity = 0; info.classList.remove("show"); hoveredIdx=null; });
 
-  app.querySelectorAll(".enc-mon").forEach((b,i)=>{
-    b.addEventListener("mouseenter", ()=>{
-      hoveredIdx = i;
-      const c = candidates[i];
-      cursor.classList.add("locked");
-      info.innerHTML = `
-        <div class="scan-info-name">${c.alias}</div>
-        <div class="scan-info-row"><span class="chip" style="background:${TYPE_COLORS[c.shownType]||'#666'}">${c.shownType}</span></div>
-        <div class="scan-info-row">${c.pokemon.heightM ?? "?"}m · ${c.pokemon.weightKg ?? "?"}kg</div>
-      `;
-      info.classList.add("show");
+  // 작은 scanner cursor: 씬 안에서 마우스를 부드럽게 따라다니는 탐색 표시(포켓몬 LOCK-ON과는 별개).
+  // 포켓몬을 스캔 중일 땐(.suppressed) 거의 숨겨서 LOCK-ON 링이 주된 표현이 되게 함
+  if(cursor && scene){
+    scene.addEventListener("mousemove", e=>{
       const r = scene.getBoundingClientRect();
-      placeInfo(parseFloat(cursor.style.left)||0, parseFloat(cursor.style.top)||0, r);
+      cursor.style.left = (e.clientX - r.left) + "px";
+      cursor.style.top = (e.clientY - r.top) + "px";
+      cursor.style.opacity = cursor.classList.contains("suppressed") ? .12 : 1;
     });
-    b.addEventListener("mouseleave", ()=>{
-      hoveredIdx=null; info.classList.remove("show");
-      cursor.classList.remove("locked");
-    });
-  });
+    scene.addEventListener("mouseleave", ()=>{ cursor.style.opacity = 0; });
+  }
 }
 
 function enterCase(cand){

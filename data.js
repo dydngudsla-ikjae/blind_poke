@@ -10,7 +10,7 @@ export const ART = id => `https://raw.githubusercontent.com/PokeAPI/sprites/mast
 export const $ = (s,r=document)=>r.querySelector(s);
 export const rnd = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 
-export let POKE=[], TYPE={}, MOVE={}, ABILITY={};
+export let POKE=[], TYPE={}, MOVE={}, ABILITY={}, MOVE_DATA={}, TYPE_CHART={};
 
 export async function loadData(){
   const [pk,tp,mv,ab] = await Promise.all([
@@ -19,10 +19,22 @@ export async function loadData(){
     fetch("./data/move.json").then(r=>r.json()),
     fetch("./data/ability.json").then(r=>r.json()),
   ]);
-  tp.forEach(t=> TYPE[t.typeRowid]=t.nameKr);
-  mv.forEach(m=> MOVE[m.moveRowid]=m.nameKr);
+  tp.forEach(t=>{ TYPE[t.typeRowid]=t.nameKr; TYPE_CHART[t.typeRowid]=t.relation?.relationMap||{}; });
+  mv.forEach(m=>{ MOVE[m.moveRowid]=m.nameKr; MOVE_DATA[m.moveRowid]=m; });
   ab.forEach(a=> ABILITY[a.abilityRowid]=a.nameKr);
   POKE = pk.filter(p=>p.details?.isDefault !== false);
+}
+
+/* 배틀에서 실제로 쓸 수 있는 기술만 필터링 — move.json 중 일부는 "사용할 수 없는 기술"로 명시돼 있음 */
+export function isUsableMove(moveId){
+  const m = MOVE_DATA[moveId];
+  return !!m && !(m.descriptionKr||"").includes("사용할 수 없는");
+}
+/* 공격측 typeRowid → 방어측 typeRowid 상성 배율(0.5/1/2 등). type.json의 relationMap은
+   "이 타입이 상대 타입으로부터 받는/주는 배율"이므로 공격자 기준 typeRowid에서 조회해 damageTo를 사용 */
+export function typeEffectiveness(attackTypeRowid, defenderTypeRowids){
+  const rel = TYPE_CHART[attackTypeRowid] || {};
+  return defenderTypeRowids.reduce((mult, tId)=> mult * (rel[tId]?.damageTo ?? 1), 1);
 }
 
 export function types(p){

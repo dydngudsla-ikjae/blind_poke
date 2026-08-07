@@ -3,6 +3,7 @@
   --line:rgba(255,255,255,.14); --ink:#e7edf1; --mut:#93a0ac; --dim:#6d7a86;
   --scan:#2f6fed; --amber:#c17a1f; --ok:#2fa360; --bad:#e5484d;
   --redact:rgba(255,255,255,.10);
+  --teal-rgb:120,200,210;
   --mono:"Space Grotesk",system-ui,sans-serif;
   --disp:"Space Grotesk",system-ui,sans-serif;
 }
@@ -49,6 +50,7 @@ body{
 .scn-view .vp-glow{position:absolute; left:50%; top:56%; transform:translate(-50%,-50%);
   width:110px; height:38px; border-radius:50%; filter:blur(16px); opacity:.65}
 .scn-view .vp-silhouette{animation:encbob 2.2s ease-in-out infinite}
+@keyframes encbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .vp-tag{position:absolute; left:10px; bottom:8px; font-size:10px; letter-spacing:.5px; color:#dfe6ee;
   text-shadow:0 1px 3px rgba(0,0,0,.7); z-index:2}
 
@@ -136,57 +138,128 @@ body{
 .revealed{animation:pop .35s ease}
 @keyframes pop{0%{opacity:0; transform:translateY(-3px)}100%{opacity:1; transform:none}}
 
-/* ---- 조우 장면: 후보 3마리를 한 숲 배경 안에서 동시에 마주침 (카드 나열 대신 단일 씬) ----
-   배경: OpenGameArt "Forest - Backgrounds" (CC0) https://opengameart.org/content/forest-backgrounds */
-.encounter-scene{position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:14px;
-  min-height:min(68vh, 560px); padding:20px 12px; display:flex; align-items:flex-end;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.5) 100%),
+/* ---- 조우 장면: 숲 배경이 화면 끝까지 이어지는 하나의 무대. 후보 3마리는 각자 고정된 자리에 그대로
+   있고, hover로 스캔된 한 마리만 확대+LOCK-ON 링으로 강조되며, 클릭하면 곧바로 데려간다.
+   SCAN DATA는 별도 사이드바가 아니라 이 무대 위에 뜬 작은 휴대 장치 패널(우하단 플로팅)이다.
+   배경: 사용자 제공 forest-bg.png(무드 있는 안개 숲). 시각적 우선순위: hover 중인 포켓몬 > 그 스캔
+   연출(LOCK-ON) > 플로팅 SCAN DATA 패널 > 다른 미확인 포켓몬 > 작은 scanner cursor 등 장식 HUD ---- */
+.encounter-scene{position:relative; width:100%; border-radius:6px; overflow:hidden; margin-bottom:14px;
+  min-height:min(68vh, 560px); cursor:none; background:
+    linear-gradient(180deg, rgba(5,7,6,.1) 0%, rgba(5,7,6,.55) 100%),
     url("assets/forest-bg.png");
   background-size:cover; background-position:center;
   box-shadow:0 1px 2px rgba(30,41,59,.04), 0 12px 26px -18px rgba(30,41,59,.4)}
-.encounter-mons{display:flex; justify-content:space-around; align-items:flex-end; width:100%; gap:8px}
-.enc-mon{position:relative; flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center;
-  background:none; border:none; cursor:pointer; padding:0}
-/* 야생 조우: 알을 나란히 늘어놓지 않고 숲 이곳저곳에 흩어 숨은 것처럼 배치 */
-.encounter-mons.scattered{position:absolute; inset:0; display:block; width:auto}
-.enc-mon.hidden-spot{position:absolute; flex:none; transform:translate(-50%,0) scale(var(--hide-scale,1)); transform-origin:bottom center}
-.enc-silhouette{filter:brightness(0) drop-shadow(0 0 11px rgba(130,185,255,.6)) drop-shadow(0 6px 5px rgba(0,0,0,.5));
-  animation:encbob 1.8s ease-in-out infinite}
-.enc-mon:nth-child(2) .enc-silhouette{animation-delay:.25s}
-.enc-mon:nth-child(3) .enc-silhouette{animation-delay:.5s}
-@keyframes encbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+/* 각 개체는 newCase()에서 한 번 정해진 좌표(left/top, 인라인 style)에 절대 고정된다.
+   hover 상태가 바뀌어도 이 left/top은 절대 건드리지 않고, transform(scale)·opacity만 그 자리에서
+   바뀐다 — 위치를 옮기면 마우스 아래 요소가 바뀌어버려 호버가 무한 순환하는 버그가 생기므로 금지 */
+/* 포켓몬들이 놓인 중앙 바닥만 아주 살짝 밝혀서 가독성을 높임(캔버스 전체를 밝히지 않음).
+   포켓몬(z-index:1~2)보다 아래(z-index:0)에 깔려 은은한 조명 웅덩이처럼만 보이게 함 */
+.enc-ground-light{position:absolute; left:50%; top:56%; transform:translate(-50%,-50%);
+  width:78%; height:44%; border-radius:50%; z-index:0; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(255,248,232,.06), transparent 72%)}
+.encounter-mons{position:absolute; inset:0}
+.enc-mon{position:absolute; width:104px; height:104px; display:flex; align-items:flex-end; justify-content:center;
+  background:none; border:none; cursor:none; padding:0; opacity:.76; filter:brightness(.92);
+  --spot-scale:var(--hide-scale,1); transform:translate(-50%,0) scale(var(--spot-scale));
+  transform-origin:bottom center; transition:transform .3s ease, opacity .25s ease, filter .25s ease; z-index:1}
+.enc-mon.is-selected{transform:translate(-50%,0) scale(calc(var(--spot-scale) * 1.2)); opacity:1; filter:none; z-index:2}
+/* 실루엣 이미지 크기에 딱 맞게 감싸는 박스 — 뒤에 얹히는 링/글로우가 실제 이미지 중심에 정확히 맞도록 함.
+   비선택 개체는 옅은 rim light로 배경에 안 묻히게, 선택된 개체는 그보다 또렷한 rim light로
+   가장자리가 검은 덩어리처럼 안 보이게 함(항상 선택 쪽이 더 또렷함) */
+.enc-silhouette-wrap{position:relative; z-index:2; display:inline-flex; align-items:center; justify-content:center}
+.enc-silhouette{position:relative; z-index:2; filter:brightness(0) drop-shadow(0 0 7px rgba(195,215,255,.24)) drop-shadow(0 6px 5px rgba(0,0,0,.5))}
+.enc-mon.is-selected .enc-silhouette{filter:brightness(0) drop-shadow(0 0 11px rgba(255,255,255,.4)) drop-shadow(0 6px 5px rgba(0,0,0,.5))}
 
-/* ---- 스캐너 커서: 손에 든 핸드헬드 스캐너 장치 모양(알약형 몸체 + 양끝 렌즈 + 가운데 화면) 그대로 마우스를 따라다님.
-   화면(.sc-screen)은 배경을 칠하지 않은 "구멍"이라 실제 숲/알이 그대로 비쳐 보이고, 알 하나가 딱 들어갈 만큼 키움.
-   개체를 겨누면(.locked) 화면 테두리/렌즈가 초록으로 락온되고 정보가 위(공간 없으면 옆)에 뜸 ---- */
-.encounter-scene{cursor:none}
-.scan-cursor{position:absolute; left:0; top:0; width:132px; height:94px; transform:translate(-50%,-50%);
-  pointer-events:none; opacity:0; transition:opacity .15s; z-index:5;
-  display:flex; align-items:center; gap:6px; padding:7px;
-  background:rgba(40,46,52,.32); border:1px solid rgba(255,255,255,.3);
-  border-radius:44px; box-shadow:0 6px 14px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.12)}
-.scan-cursor .sc-lens{flex:0 0 auto; width:18px; height:18px; border-radius:50%;
-  background:rgba(10,12,14,.7); border:2px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center}
-.scan-cursor .sc-led{width:5px; height:5px; border-radius:50%; background:rgba(150,200,255,.9); box-shadow:0 0 5px rgba(150,200,255,.8)}
-.scan-cursor .sc-screen{flex:1; height:100%; min-width:0; border-radius:12px; overflow:hidden; position:relative;
-  background:rgba(10,26,22,.04); border:2px solid rgba(140,195,255,.55);
-  box-shadow:inset 0 0 10px rgba(0,0,0,.3)}
-.scan-cursor .sc-sweep{position:absolute; top:0; bottom:0; width:30%; left:-30%;
-  background:linear-gradient(90deg,transparent,rgba(140,195,255,.25),transparent);
-  animation:sweepH 1.2s linear infinite}
-@keyframes sweepH{0%{left:-30%}100%{left:100%}}
-.scan-cursor.locked .sc-screen{border-color:var(--ok); background:rgba(10,40,25,.04)}
-.scan-cursor.locked .sc-sweep{background:linear-gradient(90deg,transparent,rgba(90,230,150,.3),transparent)}
-.scan-cursor.locked .sc-led{background:var(--ok); box-shadow:0 0 6px rgba(47,163,96,.9)}
-.scan-info{position:absolute; left:0; top:0; z-index:6; min-width:132px; pointer-events:none;
-  opacity:0; transform:translateY(4px); transition:opacity .12s, transform .12s;
-  background:rgba(8,12,9,.88); border:1px solid rgba(150,200,255,.45); border-radius:10px;
-  padding:8px 10px; backdrop-filter:blur(2px)}
-.scan-info.show{opacity:1; transform:none}
-.scan-info-name{font-family:var(--disp); font-weight:700; font-size:13px; color:#fff}
-.scan-info-row{margin-top:4px; font-size:10.5px; color:#dfe6ee}
-.scan-info-row .chip{margin-left:0}
+/* ---- 선택된 개체 전용: 바깥 점선 원 + 안쪽 얇은 원 + 고정 target bracket 4방향 + 아주 옅은 세로 스캔라인.
+   포켓몬 실루엣이 링보다 먼저 눈에 들어오도록 선을 가늘고 옅게, 회전/펄스는 느리고 부드럽게 ---- */
+.enc-selected-ring{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:98px; height:98px; z-index:0; opacity:0; transition:opacity .22s; pointer-events:none}
+.enc-mon.is-selected .enc-selected-ring{opacity:1}
+.ring-svg{position:absolute; inset:0; width:100%; height:100%; overflow:visible}
+.ring-svg .ring{fill:none; stroke:var(--amber); transform-origin:100px 100px}
+.ring-outer{stroke-width:.9; stroke-opacity:.36; stroke-dasharray:3 9; animation:ringspin 26s linear infinite}
+.ring-inner{stroke-width:.7; stroke-opacity:.24; animation:ringspin 19s linear infinite reverse}
+@keyframes ringspin{to{transform:rotate(360deg)}}
+.ring-bracket{position:absolute; border:1.1px solid rgba(255,255,255,.32)}
+.ring-bracket.top{top:-3px; left:50%; width:10px; height:4px; margin-left:-5px; border-bottom:none; border-left:none; border-right:none}
+.ring-bracket.bottom{bottom:-3px; left:50%; width:10px; height:4px; margin-left:-5px; border-top:none; border-left:none; border-right:none}
+.ring-bracket.left{left:-3px; top:50%; width:4px; height:10px; margin-top:-5px; border-right:none; border-top:none; border-bottom:none}
+.ring-bracket.right{right:-3px; top:50%; width:4px; height:10px; margin-top:-5px; border-left:none; border-top:none; border-bottom:none}
+.ring-scanline{position:absolute; left:18%; right:18%; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(193,122,31,.32), transparent);
+  animation:ringscan 3.6s ease-in-out infinite}
+@keyframes ringscan{0%,100%{top:18%}50%{top:82%}}
+
+/* ---- 발밑 접지 표현: 아주 옅은 contact shadow만 사용(과한 원형 글로우 이펙트 없음).
+   지상형은 또렷하고 작게, 비행형은 더 흐리고 옅게 표현해 접지감 차이를 줌.
+   포켓몬·링·그림자가 전부 같은 중심축(left:50%)을 공유해 접지감을 만듦 ---- */
+.enc-contact-shadow{position:absolute; left:50%; bottom:-2px; transform:translate(-50%,0);
+  width:62%; height:7px; border-radius:50%; z-index:-1; opacity:0; transition:opacity .3s; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent 75%)}
+.enc-mon.is-selected .enc-contact-shadow{opacity:1}
+.enc-mon.is-flying .enc-contact-shadow{width:46%; height:10px; filter:blur(3px);
+  background:radial-gradient(closest-side, rgba(0,0,0,.3), transparent 75%)}
+
+/* ---- SCAN DATA 패널: 정보 카드가 아니라 "지금 이 포켓몬을 분석 중인 휴대 스캐너 장치"처럼 보이게.
+   완전한 직사각형을 피해 두 모서리를 잘라낸 비대칭 프레임 + 나머지 두 모서리엔 LOCK-ON 링과 같은
+   bracket 장식을 둬서, 선택 포켓몬의 스캐너 링과 같은 시각 언어(청록 프레임 + 옅은 오렌지 포인트)를
+   공유하는 하나의 스캔 시스템처럼 느껴지게 함 ---- */
+.scan-panel{position:absolute; right:20px; bottom:30px; z-index:5; width:min(190px, 54%);
+  padding:1.2px; /* = 프레임 테두리 두께. 바깥은 청록색, 안쪽 .sp-inner가 어두운 실제 배경 */
+  clip-path:polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  background:rgba(120,200,210,.55);
+  opacity:0; transform:translateY(8px);
+  transition:opacity .22s ease, transform .22s ease, filter .22s ease;
+  pointer-events:none; filter:drop-shadow(0 10px 20px rgba(0,0,0,.55))}
+/* show 상태일 때 오렌지 톤을 살짝 섞어 선택 포켓몬의 LOCK-ON 링(오렌지)과 "같은 스캔 시스템"처럼
+   보이게 함 — 노골적인 연결선 대신 색·타이밍을 맞추는 정도로만 */
+.scan-panel.show{opacity:1; transform:none; pointer-events:auto;
+  filter:drop-shadow(0 0 9px rgba(193,122,31,.16)) drop-shadow(0 10px 20px rgba(0,0,0,.55))}
+.sp-inner{clip-path:polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  background:linear-gradient(155deg, rgba(9,15,17,.94), rgba(5,8,9,.92));
+  padding:8px 9px 7px}
+/* 잘리지 않은 나머지 두 모서리엔 LOCK-ON 링의 target bracket과 같은 모양의 장식을 둬서
+   패널이 별도 카드가 아니라 같은 스캐너 장치의 일부처럼 보이게 함 */
+.sp-frame-bracket{position:absolute; width:9px; height:9px; border:1.1px solid rgba(150,210,220,.55); pointer-events:none}
+.sp-frame-bracket.tr{top:3px; right:3px; border-left:none; border-bottom:none}
+.sp-frame-bracket.bl{bottom:3px; left:3px; border-right:none; border-top:none}
+.sp-eyebrow{display:flex; align-items:center; justify-content:space-between; gap:6px;
+  font-size:8.5px; letter-spacing:1.8px; color:rgba(150,210,220,.85); font-weight:700; margin-bottom:6px;
+  border-bottom:1px solid rgba(120,200,210,.22); padding-bottom:4px}
+/* 살짝 기술적인 느낌을 더하는 바코드형 눈금 장식 — 헤더 우측 끝, 아주 절제된 크기로만 */
+.sp-ticks{width:16px; height:7px; opacity:.55;
+  background:repeating-linear-gradient(90deg, rgba(150,210,220,.8) 0 1px, transparent 1px 3px)}
+.sp-body{display:flex; align-items:center; gap:8px; position:relative}
+.sp-body::before{content:""; position:absolute; left:51px; top:-2px; bottom:-2px; width:1px;
+  background:linear-gradient(180deg, transparent, rgba(120,200,210,.25), transparent)}
+.sp-text{flex:1; min-width:0}
+.sp-name{font-family:var(--disp); font-weight:700; font-size:12.5px; color:#fff; line-height:1.15}
+.sp-row{margin-top:5px; display:flex; flex-wrap:wrap; align-items:center; gap:6px}
+.sp-pill{display:inline-block; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; color:#0e1216}
+.sp-stats{font-size:9px; color:#a9c2c6; letter-spacing:.2px}
+/* 미니 실루엣 스캐너: 단순 아이콘이 아니라 패널 안의 핵심 분석 모듈처럼 — 선택 포켓몬의 LOCK-ON 링과
+   동일한 이중 원 + 4방향 bracket 구성을 축소해 그대로 재사용 */
+.sp-mini{position:relative; flex:0 0 auto; width:43px; height:43px;
+  display:flex; align-items:center; justify-content:center}
+.sp-mini-ring{position:absolute; inset:0; width:100%; height:100%}
+.sp-mini-ring .mr-outer{fill:none; stroke:rgba(193,122,31,.55); stroke-width:1.1; stroke-dasharray:3 5}
+.sp-mini-ring .mr-inner{fill:none; stroke:rgba(120,200,210,.4); stroke-width:.9}
+.mini-bracket{position:absolute; border:1px solid rgba(255,255,255,.4)}
+.mini-bracket.t{top:-1px; left:50%; width:7px; height:3px; margin-left:-3.5px; border-bottom:none; border-left:none; border-right:none}
+.mini-bracket.b{bottom:-1px; left:50%; width:7px; height:3px; margin-left:-3.5px; border-top:none; border-left:none; border-right:none}
+.mini-bracket.l{left:-1px; top:50%; width:3px; height:7px; margin-top:-3.5px; border-right:none; border-top:none; border-bottom:none}
+.mini-bracket.r{right:-1px; top:50%; width:3px; height:7px; margin-top:-3.5px; border-left:none; border-top:none; border-bottom:none}
+.sp-mini-sil{position:relative; z-index:1; display:flex; align-items:center; justify-content:center}
+.sp-mini-sil .enc-silhouette{filter:brightness(0) drop-shadow(0 0 4px rgba(255,255,255,.2))}
+
+/* ---- 작은 scanner cursor: 씬 안에서 마우스를 따라다니는 탐색 표시(30~45px, 심플한 원+짧은 눈금+중앙 점).
+   포켓몬의 큰 LOCK-ON 링과는 별개 — 이건 절대 포켓몬 자리로 이동하거나 커지지 않는다.
+   포켓몬을 스캔 중일 땐(.suppressed, JS가 opacity를 낮춤) 거의 안 보이게 물러나 LOCK-ON 링이 주역이 됨 ---- */
+.scan-mini-cursor{position:absolute; left:0; top:0; width:36px; height:36px; transform:translate(-50%,-50%);
+  pointer-events:none; opacity:0; transition:opacity .2s; z-index:3}
+.scan-mini-cursor svg{width:100%; height:100%; overflow:visible}
+.scan-mini-cursor circle, .scan-mini-cursor line{fill:none; stroke:rgba(255,255,255,.5); stroke-width:1.3}
+.scan-mini-cursor .mc-dot{fill:rgba(255,255,255,.6); stroke:none}
 
 /* ---- action buttons (base.js "다음 턴" 버튼이 재사용하는 범용 .btn) ---- */
 .actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px}
@@ -258,35 +331,58 @@ body{
 .textlink:hover{color:var(--mut)}
 @media (max-width:400px){ .codename{font-size:26px} }
 
-/* ---- 본거지: 부지(설치형) 씬 — 초원 배경 전체를 게임 월드처럼, HUD·드롭다운이 그 위에 얹힘 ----
-   잔디 타일: OpenGameArt "Grass Pixel Art" (CC0) https://opengameart.org/content/grass-pixel-art */
-.base-scene{position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:14px;
-  padding:14px 14px 64px; min-height:min(76vh, 600px);
+/* ---- 본거지: 부지(설치형) 씬 — town-bg.png 자체를 게임 월드로 쓰고 HUD는 그 위/아래에 얇게 얹힘 ---- */
+.base-scene{position:relative; display:flex; flex-direction:column; gap:7px;
+  border:1px solid rgba(var(--teal-rgb),.22); border-radius:10px; background:rgba(6,12,13,.4);
+  padding:7px; margin-bottom:14px;
+  box-shadow:0 1px 2px rgba(0,0,0,.2), 0 12px 26px -18px rgba(0,0,0,.6)}
+/* town-bg.png는 실제 그림 안에 부지 10칸(5x2)이 그려져 있는 고정 구도 에셋 — .base-art를
+   이미지 원본 비율(1672:941)로 고정하고, HUD 상단/부지 그리드를 전부 절대 위치 오버레이로 얹어야
+   plot-grid 칸이 그림 속 실제 부지 테두리와 항상 일치한다(배경만 cover로 늘리면 어긋남). */
+.base-art{position:relative; width:100%; aspect-ratio:1672/941; border-radius:7px; overflow:hidden;
   background:
-    radial-gradient(70% 55% at 30% 10%, rgba(255,255,255,.10), transparent 60%),
-    linear-gradient(180deg, rgba(8,14,9,.12), rgba(5,10,7,.42)),
-    url("assets/grass-tile.png");
-  background-repeat:no-repeat, no-repeat, repeat;
-  background-size:auto, auto, 220px 220px;
-  background-position:center, center, center;
-  box-shadow:0 1px 2px rgba(30,41,59,.04), 0 12px 26px -18px rgba(30,41,59,.4)}
-.plot-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; align-content:start}
-@media (min-width:680px){ .plot-grid{grid-template-columns:repeat(5, 1fr)} }
-@media (min-width:960px){ .plot-grid{grid-template-columns:repeat(7, 1fr)} }
-.plot{position:relative; aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; text-align:center; cursor:pointer; transition:transform .15s; padding:4px;
-  background:url("assets/dirt-bg.svg"); background-size:cover; background-position:center;
-  box-shadow:inset 0 0 0 2px rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.35)}
-.plot:hover{transform:translateY(-2px)}
-.plot.empty{color:rgba(255,255,255,.75)}
-.plot.empty::before{content:""; position:absolute; inset:0; border-radius:9px; border:2px dashed rgba(255,255,255,.35)}
-.plot.empty .plus{font-size:22px; font-weight:700; line-height:1; text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.plot.empty .lot-label{font-size:9px; margin-top:3px; letter-spacing:.5px; text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.plot.filled img{width:58%; height:58%; object-fit:contain; image-rendering:pixelated;
-  filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
-.plot .plot-name{font-size:9.5px; margin-top:1px; color:#fff; font-weight:700; text-shadow:0 1px 3px rgba(0,0,0,.75);
-  max-width:92%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.plot .plot-job{font-size:8.5px; color:#ffd489; text-shadow:0 1px 3px rgba(0,0,0,.75)}
+    linear-gradient(180deg, rgba(4,9,10,.14) 0%, rgba(4,9,10,.02) 26%, rgba(4,9,10,.08) 60%, rgba(4,9,10,.4) 100%),
+    url("assets/town-bg.png");
+  background-repeat:no-repeat; background-size:cover; background-position:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.4)}
+
+/* 부지 칸: 배경 속 실제 흙밭 자리에 좌표만 얹는 투명 interaction area.
+   기본 상태는 완전히 투명 — 사각 카드가 아니라 그림 속 흙밭 그 자체가 UI가 되어야 한다. */
+.plot-grid{position:absolute; left:11%; right:8.2%; top:38%; bottom:12%;
+  display:grid; grid-template-columns:repeat(5, 1fr); grid-template-rows:repeat(2, 1fr); gap:3.2% 1.6%}
+.plot{position:relative; width:100%; height:100%; text-align:center; cursor:pointer;
+  background:none; border:none; padding:0; -webkit-tap-highlight-color:transparent}
+.plot.locked{cursor:default}
+
+/* 실제 부지 폴리곤을 따라 그려지는 hover 전용 반응 레이어 — 평상시 opacity:0 (완전 투명) */
+.plot-fx{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible}
+.plot-fx-fill{fill:rgba(var(--teal-rgb),.16); opacity:0; transition:opacity .16s ease}
+.plot-fx-outline{fill:none; stroke:rgba(var(--teal-rgb),.85); stroke-width:1; opacity:0; transition:opacity .16s ease}
+.plot-fx-corner{fill:none; stroke:rgba(var(--teal-rgb),.95); stroke-width:1.6; stroke-linecap:round; opacity:0; transition:opacity .16s ease}
+.plot:hover .plot-fx-fill, .plot:hover .plot-fx-outline, .plot:hover .plot-fx-corner{opacity:1}
+.plot.locked .plot-fx-fill{fill:rgba(180,190,195,.1)}
+.plot.locked .plot-fx-outline, .plot.locked .plot-fx-corner{stroke:rgba(190,200,205,.55)}
+
+/* 평상시 보이는 것은 작은 아이콘 + 한 줄 라벨뿐 — 보조 설명은 hover 시에만 등장.
+   tag는 칸 위쪽(38%)에, info는 칸 맨 아래(4%)에 각각 절대 위치시켜 hover 시 겹치지 않게 한다. */
+.plot-tag{position:absolute; left:0; right:0; top:36%; transform:translateY(-50%); z-index:1;
+  display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none}
+.plot-tag svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.plot-tag span{font-size:8.5px; font-weight:700; letter-spacing:.2px;
+  text-shadow:0 1px 2px rgba(0,0,0,.9), 0 0 5px rgba(0,0,0,.55)}
+.plot.empty .plot-tag span{color:#d8f5f8}
+.plot.empty .plot-tag svg{color:#d8f5f8}
+.plot.locked .plot-tag span{color:rgba(222,232,234,.7); font-weight:600}
+.plot.locked .plot-tag svg{color:rgba(222,232,234,.7)}
+.plot-sprite{width:60%; max-width:32px; object-fit:contain; image-rendering:pixelated;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+
+/* 개척 조건/근무 인원 같은 보조 정보 — hover 시에만 짧게 노출, tag와 겹치지 않도록 칸 맨 아래에 고정 */
+.plot-info{position:absolute; left:4%; right:4%; bottom:3%; z-index:1; font-size:6.5px; line-height:1.25;
+  font-weight:600; letter-spacing:.1px; color:rgba(222,238,240,.9);
+  text-shadow:0 1px 2px rgba(0,0,0,.9); opacity:0; transition:opacity .16s ease; pointer-events:none}
+.plot-info b{display:block; font-size:7px; color:#fff; font-weight:700}
+.plot:hover .plot-info{opacity:1}
 
 /* ---- 본거지: 자원 그리드 ---- */
 .res-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:10px 12px}
@@ -318,6 +414,7 @@ body{
 .rc-unassign{margin-left:auto; flex:0 0 auto; font-family:var(--mono); font-size:10.5px; color:var(--bad);
   background:var(--panel2); border:1px solid var(--line); border-radius:7px; padding:5px 10px; cursor:pointer}
 .rc-unassign:hover{border-color:var(--bad)}
+.rc-item-ico{width:16px; height:16px; object-fit:contain; vertical-align:middle; margin-right:5px}
 .rc-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
 .rc-actions button{flex:1 1 30%; font-family:var(--mono); font-size:10.5px; color:var(--ink);
   background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:7px 4px; cursor:pointer}
@@ -325,43 +422,67 @@ body{
 .rc-actions button:disabled{opacity:.35; cursor:default}
 .rc-actions button.on{border-color:var(--ok); color:var(--ok); background:rgba(47,163,96,.18)}
 
-/* ---- 본거지 HUD: 턴 배지 + 몬스터볼(전투 엔트리)·PC(보유 포켓몬)·자원·로그 아이콘 ---- */
-.hud-top{position:relative; z-index:5; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
-.hud-turn{font-size:11px; font-weight:700; color:#eaf3ff; letter-spacing:.5px; cursor:pointer;
-  background:rgba(8,14,10,.5); border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:6px 12px;
-  text-shadow:0 1px 3px rgba(0,0,0,.6); backdrop-filter:blur(2px)}
-.hud-icons{display:flex; gap:8px}
-.hud-btn{position:relative; width:40px; height:40px; border-radius:12px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  background:rgba(8,14,10,.5); border:1px solid rgba(255,255,255,.22);
-  box-shadow:0 4px 10px rgba(0,0,0,.3); backdrop-filter:blur(2px); transition:border-color .15s, transform .15s}
-.hud-btn:hover{transform:translateY(-1px)}
-.hud-btn.active{border-color:var(--scan); box-shadow:0 0 0 2px rgba(47,111,237,.35)}
-.hud-ico{font-size:18px; line-height:1}
-.hud-badge{position:absolute; right:-5px; top:-6px; background:var(--scan); color:#fff; font-size:8.5px; font-weight:700;
-  border-radius:8px; padding:1px 5px; line-height:1.4; box-shadow:0 1px 3px rgba(0,0,0,.5); white-space:nowrap}
-.hud-ico-ball{position:relative; display:block; width:19px; height:19px; border-radius:50%; overflow:hidden;
-  border:2px solid #1c1c1c; box-sizing:border-box; background:#f2f2f2}
-.hud-ico-ball .hb-top{position:absolute; left:-2px; right:-2px; top:-2px; height:52%; background:linear-gradient(180deg,#ff7469,#e0342f)}
-.hud-ico-ball .hb-band{position:absolute; left:-2px; right:-2px; top:50%; height:3px; margin-top:-1.5px; background:#1c1c1c}
-.hud-ico-ball .hb-btn{position:absolute; left:50%; top:50%; width:7px; height:7px; margin:-3.5px 0 0 -3.5px;
-  border-radius:50%; background:#fff; border:1.5px solid #1c1c1c; box-sizing:border-box}
+/* ---- 본거지 HUD: 좌상단 턴/행동력 모듈 + 우상단 Command Bar (아이콘 하나하나를 박스로 만들지 않음) ---- */
+.hud-top{position:absolute; z-index:5; left:2%; right:2%; top:3%; display:flex; justify-content:space-between; align-items:flex-start; gap:6px}
 
-.hud-nextturn{position:absolute; left:14px; right:14px; bottom:14px; z-index:5;
-  font-family:var(--disp); font-weight:700; font-size:14px; letter-spacing:.5px; text-align:center;
-  color:#eafbee; background:rgba(8,14,10,.78); border:2px solid var(--ok); border-radius:14px;
-  box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 10px 22px -8px rgba(0,0,0,.6);
-  backdrop-filter:blur(2px); padding:12px 10px; transition:transform .1s}
-.hud-nextturn:hover{border-color:var(--ok); background:rgba(8,14,10,.78); transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 10px 22px -8px rgba(0,0,0,.6)}
-.hud-nextturn:active{transform:translateY(2px)}
-.basemsg-toast{position:absolute; left:14px; right:14px; bottom:76px; z-index:6; text-align:center;
-  font-size:11.5px; font-weight:700; color:#fff; background:rgba(140,20,20,.9); border:1px solid rgba(255,255,255,.2); border-radius:10px;
-  padding:8px 10px; box-shadow:0 6px 16px rgba(0,0,0,.4); animation:pop .25s ease}
+.turn-hud{position:relative; display:flex; align-items:center; gap:5px; cursor:pointer;
+  background:rgba(6,14,15,.72); border:1px solid rgba(var(--teal-rgb),.35); border-radius:7px; padding:5px 8px;
+  backdrop-filter:blur(2px); color:#d7e7e9; transition:border-color .15s}
+.turn-hud:hover{border-color:rgba(var(--teal-rgb),.6)}
+.turn-hud svg{flex:0 0 auto; opacity:.9}
+.turn-hud-num{font-family:var(--disp); font-size:9.5px; font-weight:700; letter-spacing:.2px; white-space:nowrap}
+.turn-hud-num b{font-size:11px; color:#fff}
+.turn-hud-num.sub{font-size:7.5px; font-weight:600; color:rgba(200,225,228,.8)}
+.turn-hud-div{width:1px; align-self:stretch; background:rgba(255,255,255,.14)}
+.energy-gauge{display:flex; align-items:flex-end; gap:1.5px}
+.eg-seg{width:3px; height:8px; border-radius:1px; background:rgba(255,255,255,.16)}
+.eg-seg.on{background:rgba(var(--teal-rgb),1); box-shadow:0 0 4px rgba(var(--teal-rgb),.7)}
+
+.cmdbar{display:flex; align-items:stretch; background:rgba(6,14,15,.72); border:1px solid rgba(var(--teal-rgb),.35);
+  border-radius:7px; backdrop-filter:blur(2px)}
+.cmd-item{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  width:31px; padding:5px 1px 4px; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer;
+  color:rgba(205,222,225,.62); transition:color .15s ease, border-color .15s ease}
+.cmd-item svg{width:14px; height:14px}
+.cmd-item:hover{color:rgba(230,245,247,.92); border-bottom-color:rgba(var(--teal-rgb),.5)}
+.cmd-item.active{color:#bdfaff; border-bottom-color:rgba(var(--teal-rgb),.9)}
+.cmd-item:disabled{opacity:.32; cursor:default}
+.cmd-item:disabled:hover{color:rgba(205,222,225,.62); border-bottom-color:transparent}
+.cmd-label{font-size:6.5px; letter-spacing:.1px; white-space:nowrap}
+.cmd-badge{position:absolute; top:1px; right:2px; background:var(--amber); color:#1a1206; font-size:6px; font-weight:700;
+  border-radius:6px; padding:1px 3px; line-height:1.2; white-space:nowrap}
+
+/* ---- 본거지 HUD 하단: 마을 정보 · 최근 활동 · 다음 턴을 하나의 얇은 Dock으로 통합 (base-art 아래 일반 흐름) ---- */
+.hud-dock{position:relative; z-index:5; display:flex; align-items:stretch;
+  background:rgba(6,14,15,.68); border:1px solid rgba(var(--teal-rgb),.28); border-radius:8px; overflow:hidden}
+.dock-zone{display:flex; align-items:center; gap:6px; padding:7px 10px; font-size:10px; color:#d7e7e9}
+.dock-divider{width:1px; align-self:stretch; margin:7px 0; background:rgba(255,255,255,.1)}
+.dock-village{flex:0 0 auto; white-space:nowrap}
+.dock-stat{font-size:9.5px; color:rgba(205,225,228,.85)}
+.dock-stat b{font-family:var(--disp); color:#fff; font-weight:700}
+.dock-sep{color:rgba(255,255,255,.25); font-size:9px}
+.dock-mini-bar{width:32px; height:4px; border-radius:2px; background:rgba(255,255,255,.14); overflow:hidden; margin-left:2px}
+.dock-mini-bar span{display:block; height:100%; background:rgba(var(--teal-rgb),.95)}
+.dock-activity{flex:1 1 auto; min-width:0; cursor:pointer; background:none; border:none; text-align:left; font-family:var(--mono);
+  transition:background .15s}
+.dock-activity:hover{background:rgba(var(--teal-rgb),.08)}
+.dock-label{flex:0 0 auto; font-size:7.5px; letter-spacing:.5px; text-transform:uppercase; color:rgba(160,210,218,.75)}
+.dock-activity-text{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9.5px; color:rgba(220,235,236,.85)}
+.dock-nextturn{flex:0 0 auto; display:flex; align-items:center; gap:5px; cursor:pointer; color:#bdfaff;
+  background:none; border:none; font-family:var(--disp); font-weight:700; font-size:10px; letter-spacing:.3px;
+  transition:background .15s, color .15s}
+.dock-nextturn:hover{background:rgba(var(--teal-rgb),.16); color:#eafffd}
+.dock-nextturn svg{transition:transform .15s}
+.dock-nextturn:hover svg{transform:translateX(2px)}
+
+.basemsg-toast{position:relative; z-index:6; text-align:center;
+  font-size:10.5px; font-weight:700; color:#ffe9c7; background:rgba(24,17,8,.9); border:1px solid rgba(193,122,31,.55); border-radius:8px;
+  padding:7px 9px; box-shadow:0 6px 16px rgba(0,0,0,.4); animation:pop .25s ease}
 
 /* ---- 드롭다운 패널 (자원/엔트리/로그) — HUD 아이콘 아래로 펼쳐짐, 한 번에 하나만 노출. 어두운 유리 패널(HUD 아이콘과 동일 톤) ---- */
-.dd{position:absolute; top:56px; right:14px; z-index:20; width:min(300px, calc(100% - 28px));
-  max-height:min(58vh, 420px); background:rgba(12,16,13,.92);
-  border:1px solid rgba(255,255,255,.16); border-radius:14px;
+.dd{position:absolute; top:52px; right:8px; z-index:20; width:min(280px, calc(100% - 16px));
+  max-height:min(58vh, 420px); background:rgba(9,17,18,.94);
+  border:1px solid rgba(120,200,210,.35); border-radius:12px;
   box-shadow:0 16px 32px -10px rgba(0,0,0,.6); backdrop-filter:blur(3px);
   overflow:hidden; display:flex; flex-direction:column; animation:ddopen .15s ease}
 @keyframes ddopen{0%{opacity:0; transform:translateY(-6px)}100%{opacity:1; transform:none}}
@@ -372,6 +493,9 @@ body{
   font-size:11px; line-height:1; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center}
 .dd-close:hover{background:rgba(255,255,255,.2)}
 .dd-body{padding:10px 12px; overflow:auto}
+.dd-body .logline{font-size:12px; color:var(--ink); padding:4px 0}
+.dd-body .logline.leave{color:var(--bad); font-weight:600}
+.dd-body .logempty{color:var(--dim); font-size:11.5px; padding:2px 0}
 .dd .res-grid{padding:0}
 
 /* ---- 전투 엔트리 (몬스터볼) ---- */
@@ -410,5 +534,68 @@ body{
   text-overflow:ellipsis; white-space:nowrap}
 
 /* ---- 설치 모달 (빈 공터에 개체 배치) ---- */
+.install-tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px}
+.install-tab{flex:1 1 30%; font-family:var(--mono); font-size:11.5px; font-weight:700; color:var(--mut);
+  background:var(--panel2); border:1px solid var(--line); border-radius:9px; padding:8px 6px; cursor:pointer}
+.install-tab:hover{border-color:var(--scan)}
+.install-tab.active{border-color:var(--scan); color:var(--ink); background:rgba(47,111,237,.16)}
 .install-note{font-size:11.5px; color:var(--mut); line-height:1.5; margin-bottom:10px}
 .install-confirm{margin-top:12px; text-align:center}
+
+/* ---- 세력전 지도 ---- */
+.map-scene{position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden;
+  padding:14px; min-height:min(70vh, 520px);
+  background:
+    radial-gradient(70% 55% at 30% 10%, rgba(255,255,255,.10), transparent 60%),
+    linear-gradient(180deg, rgba(8,14,9,.25), rgba(5,10,7,.55)),
+    url("assets/grass-tile.png");
+  background-repeat:no-repeat, no-repeat, repeat; background-size:cover, cover, auto}
+.map-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;
+  font-size:11px; font-weight:700; color:#eaf3ff; text-shadow:0 1px 3px rgba(0,0,0,.6); margin-bottom:10px}
+.map-head-sub{font-weight:400; color:rgba(255,255,255,.75); font-size:10.5px}
+.map-board{position:relative; width:100%; aspect-ratio:4/3}
+.map-edges{position:absolute; inset:0; width:100%; height:100%}
+.map-node{position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center;
+  gap:2px; background:none; border:none; cursor:default; padding:0}
+.map-node-dot{width:22px; height:22px; border-radius:50%; background:#8a8f86;
+  border:2px solid rgba(255,255,255,.4); box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.map-node.owned .map-node-dot{background:var(--ok); box-shadow:0 0 0 3px rgba(255,255,255,.25), 0 2px 6px rgba(0,0,0,.5)}
+.map-node.attackable{cursor:pointer}
+.map-node.attackable .map-node-dot{background:var(--amber); animation:mapPulse 1.6s ease-in-out infinite}
+@keyframes mapPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.35)}50%{box-shadow:0 0 0 6px rgba(255,255,255,0)}}
+.map-node-label{font-size:9px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.75); white-space:nowrap}
+.map-node-sub{font-size:8px; color:rgba(255,255,255,.75); text-shadow:0 1px 3px rgba(0,0,0,.75); white-space:nowrap}
+.map-legend{display:flex; gap:12px; flex-wrap:wrap; margin-top:10px}
+.map-legend-item{display:flex; align-items:center; gap:5px; font-size:10.5px; color:rgba(255,255,255,.85);
+  text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.map-legend-dot{width:9px; height:9px; border-radius:50%; display:inline-block}
+.map-legend-dot.owned{background:var(--ok)}
+.map-legend-dot.wild{background:#8a8f86}
+
+/* ---- 배틀 ---- */
+.battle-scene{border:1px solid var(--line); border-radius:16px; padding:14px; background:var(--panel)}
+.battle-field{display:flex; flex-direction:column; gap:14px; margin-bottom:12px}
+.battle-mon{display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px;
+  border:1px solid var(--line); border-radius:12px; background:var(--bg2)}
+.battle-mon.enemy{align-self:flex-start; width:60%}
+.battle-mon.player{align-self:flex-end; width:60%}
+.battle-mon.fainted{opacity:.4}
+.battle-mon img{width:56px; height:56px; object-fit:contain; image-rendering:pixelated}
+.battle-name{font-size:12px; font-weight:700; color:var(--ink)}
+.battle-lv{font-weight:400; color:var(--dim)}
+.battle-hpbar{width:100%; height:7px; border-radius:4px; background:var(--redact); overflow:hidden}
+.battle-hpfill{height:100%; background:var(--ok); transition:width .3s ease}
+.battle-hptext{font-size:10px; color:var(--mut)}
+.battle-log{border:1px solid var(--line); border-radius:10px; background:var(--bg2); padding:8px 10px;
+  min-height:80px; margin-bottom:12px; display:flex; flex-direction:column-reverse; gap:3px}
+.battle-log .logline{font-size:11.5px; color:var(--ink)}
+.battle-moves{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.battle-move{font-family:var(--mono); text-align:left; background:var(--panel2); border:1px solid var(--line);
+  border-radius:10px; padding:8px 10px; cursor:pointer}
+.battle-move:hover{border-color:var(--scan)}
+.bm-name{display:block; font-weight:700; font-size:12.5px; color:var(--ink)}
+.bm-meta{display:block; font-size:10px; color:var(--mut); margin-top:2px}
+.battle-result{text-align:center; font-family:var(--disp); font-weight:700; font-size:18px; padding:10px;
+  border-radius:10px; margin-bottom:10px}
+.battle-result.win{color:var(--ok); background:rgba(47,163,96,.15)}
+.battle-result.lose{color:var(--bad); background:rgba(229,72,77,.15)}
