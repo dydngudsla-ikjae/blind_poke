@@ -7,14 +7,25 @@ import { renderMap, resolveMapTurn } from "./map.js";
    전부 24x24 viewBox · stroke-width 1.7 · round cap/join, 색상은 currentColor로 상속받아
    기본은 off-white/gray-blue, 활성 상태에서만 cyan/teal, 알림 배지에서만 orange를 쓰게 한다. ---- */
 const ICON_PATHS = {
-  pc:      `<rect x="3" y="4" width="18" height="12" rx="1.4"/><path d="M7 8.2h6M7 11h4"/><path d="M8.5 20h7M12 16v4"/>`,
-  entry:   `<circle cx="12" cy="12" r="8"/><path d="M4 12h5.4M14.6 12H20"/><circle cx="12" cy="12" r="2.2"/>`,
-  shop:    `<path d="M6.2 8 7.4 4.8A2 2 0 0 1 9.3 3.5h5.4a2 2 0 0 1 1.9 1.3L17.8 8"/><rect x="4.5" y="8" width="15" height="11.6" rx="1.4"/><path d="M9 11.2v1.4a3 3 0 0 0 6 0v-1.4"/>`,
-  gauge:   `<path d="M6 18.5V11M12 18.5V5.5M18 18.5v-6"/><path d="M4 21h16"/>`,
+  pc:      `<rect x="4.5" y="4" width="15" height="15" rx="2"/><path d="M9.3 21h5.4M10.6 19v2"/><circle cx="12" cy="11.3" r="4"/><path d="M7.7 11.3h8.6"/><circle cx="12" cy="11.3" r="1.1" fill="currentColor" stroke="none"/>`,
+  entry:   `<circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="5.5" r="1.15" fill="currentColor" stroke="none"/><circle cx="17.63" cy="8.75" r="1.15" fill="currentColor" stroke="none"/>
+    <circle cx="17.63" cy="15.25" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="18.5" r="1.15" fill="currentColor" stroke="none"/>
+    <circle cx="6.37" cy="15.25" r="1.15" fill="currentColor" stroke="none"/><circle cx="6.37" cy="8.75" r="1.15" fill="currentColor" stroke="none"/>`,
+  shop:    `<path d="M4.5 7.5H15.5M12 4.5 15.5 7.5 12 10.5"/><path d="M19.5 16.5H8.5M12 13.5 8.5 16.5 12 19.5"/>`,
+  gauge:   `<rect x="4.5" y="13" width="4" height="7.5" rx="0.9"/><rect x="10" y="8" width="4" height="12.5" rx="0.9"/><rect x="15.5" y="10.5" width="4" height="10" rx="0.9"/><path d="M4 20.9h16"/><path d="M5.3 15.2h1.4M10.8 10.2h2.4M16.3 12.7h1.8"/>`,
   map:     `<path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2-6-2Z"/><path d="M9 4v14M15 6v14"/>`,
-  explore: `<path d="M12 3.4 16 10h-2.6l3.4 5.6H14l2.6 5H7.4L10 15.6H7.2L11 10H8.4L12 3.4Z"/>`,
+  explore: `<circle cx="13" cy="11" r="6.5"/><path d="M13 6.45 14.4 11 13 15.55 11.6 11Z" fill="currentColor" stroke="none"/><path d="M13 3.2v1.3M19.8 11h-1.3M13 18.8v-1.3M6.2 11h1.3"/><path d="M5 19Q4 14.7 9.7 12.3Q8.8 16.8 5 19Z" fill="currentColor" stroke="none"/>`,
+  slot:    `<rect x="6" y="6" width="12" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/>`,
+  parcel:  `<rect x="5" y="5" width="14" height="14" rx="1.8"/><path d="M5 12h14M12 5v14"/>`,
   lock:    `<rect x="5" y="10.6" width="14" height="9" rx="1.4"/><path d="M8 10.6V7.8a4 4 0 0 1 8 0v2.8"/>`,
   plus:    `<path d="M12 5.5v13M5.5 12h13"/>`,
+  /* ---- 건설 모달의 건축물 카테고리 아이콘(밭/레스토랑/훈련소/제작소/치료소) ---- */
+  bFarm:       `<path d="M4 8.5h16M4 13h16M4 17.5h16"/><path d="M9 8.5v-2.6M12 8.5v-3.4M15 8.5v-2.6"/>`,
+  bRestaurant: `<path d="M4 15.5a8 8 0 0 1 16 0"/><path d="M3 15.5h18M12 6.6v2.2"/><circle cx="12" cy="5.3" r="1.1" fill="currentColor" stroke="none"/>`,
+  bDojo:       `<circle cx="6.3" cy="12" r="2.3"/><circle cx="17.7" cy="12" r="2.3"/><path d="M8.6 12h6.8M6.3 9.4v5.2M17.7 9.4v5.2"/>`,
+  bWorkshop:   `<path d="M8.3 5h7.4l3.1 5.5-3.1 5.5H8.3l-3.1-5.5Z"/><circle cx="12" cy="10.5" r="2.3"/>`,
+  bClinic:     `<circle cx="12" cy="12" r="7.5"/><path d="M12 8v8M8 12h8"/>`,
   cycle:   `<path d="M4.5 12a7.5 7.5 0 0 1 12.6-5.5M19.5 12a7.5 7.5 0 0 1-12.6 5.5"/><path d="M17.6 3.6v3.4h-3.4M6.4 20.4v-3.4h3.4"/>`,
   bolt:    `<path d="M13 2 5 14h5.5l-1 8L18 10h-5.5L13 2Z"/>`,
   chevron: `<path d="M9 5l7 7-7 7"/>`,
@@ -24,17 +35,82 @@ function icon(name, size=16, extraClass=""){
   return `<svg class="ic${extraClass?` ${extraClass}`:""}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 }
 
-/* ---- 부지 폴리곤 유틸: town-bg.png 속 실제 흙밭 테두리에 맞춘 clip-path/SVG 좌표를 만든다.
-   각 plot은 완전한 HTML 사각형이 아니라 원근이 살짝 들어간 사다리꼴 hit-area를 갖는다. ---- */
-function clampPct(v){ return Math.max(0, Math.min(100, v)); }
-function plotPolygon(col){
-  const lean = (col - 2) * 2.1; // 가운데(2열)를 기준으로 좌우 열이 원근에 맞춰 살짝 기울어짐
-  return [
-    [clampPct(8 - lean * 0.5), 6],
-    [clampPct(92 - lean * 0.5), 6],
-    [clampPct(97 - lean), 94],
-    [clampPct(3 - lean), 94],
-  ];
+/* ---- 부지 폴리곤 유틸: town-bg.png(1672x941) 속 실제 흙밭 10칸의 픽셀 좌표를 Playwright로
+   실측해서 얻은 값(assets/town-bg.png, isDirt 휴리스틱으로 각 칸의 상/하단 좌우 끝점을 찾음).
+   부지마다 원근에 따라 폭/기울기가 다르므로 칸마다 자기만의 바운딩 박스(box, .base-art 기준 %)와
+   그 박스 안에서의 로컬 폴리곤 좌표(0~100%)를 따로 갖는다 — 균일한 그리드 수식으로는 근사가 안 됨.
+   i는 plotScene()의 DOM 순서(0~9, row-major: 0~4=위쪽 행, 5~9=아래쪽 행)와 그대로 대응된다. */
+const PLOT_LAYOUT = [
+  // row0 (뒤쪽 행)
+  { box:{left:11.45, top:42.30, width:13.80, height:15.94}, pts:[[14.43,0],[100,0],[90.60,98.27],[0,100]] },
+  { box:{left:26.98, top:42.24, width:13.27, height:16.01}, pts:[[7.93,0],[100,0],[95.54,98.81],[0,100]] },
+  { box:{left:43.12, top:42.24, width:13.10, height:16.18}, pts:[[2.28,0],[98.68,0],[100,100],[0,97.05]] },
+  { box:{left:59.04, top:42.02, width:13.40, height:16.42}, pts:[[0,2.46],[92.82,0],[100,100],[3.93,98.25]] },
+  { box:{left:74.41, top:41.82, width:14.19, height:16.35}, pts:[[0,0],[89.59,2.73],[100,98.90],[8.64,100]] },
+  // row1 (앞쪽 행 — 카메라에 더 가까워서 폭이 더 넓다)
+  { box:{left:8.27,  top:64.35, width:15.02, height:18.76}, pts:[[14.33,0],[100,1.76],[90.13,100],[0,100]] },
+  { box:{left:25.31, top:64.12, width:14.49, height:18.98}, pts:[[9.74,0],[100,3.64],[94.92,100],[0,100]] },
+  { box:{left:42.77, top:64.51, width:14.09, height:18.86}, pts:[[1.74,0],[95.67,0],[100,100],[0,97.97]] },
+  { box:{left:59.81, top:64.37, width:14.47, height:18.91}, pts:[[0,0],[91.15,1.74],[100,100],[4.38,96.74]] },
+  { box:{left:76.24, top:64.14, width:15.23, height:18.91}, pts:[[0,0],[88.02,4.16],[100,100],[9.98,100]] },
+];
+function plotBox(i){ return PLOT_LAYOUT[i].box; }
+function plotPolygon(i){ return PLOT_LAYOUT[i].pts; }
+function plotCentroid(i){
+  const pts = PLOT_LAYOUT[i].pts;
+  const cx = pts.reduce((s,[x])=>s+x, 0) / pts.length;
+  const cy = pts.reduce((s,[,y])=>s+y, 0) / pts.length;
+  return [cx, cy];
+}
+/* 배치된 포켓몬 스프라이트 위치: 폴리곤 정중앙(plotCentroid)에 두면 건축물 이미지의 지붕/간판 같은
+   디테일과 겹쳐서 어색해 보인다 — 아랫변(입구/마당 쪽) 중점을 안쪽으로 살짝 당겨서 "건물 앞에
+   서 있는" 자리로 옮긴다. */
+function plotBottomAnchor(i, insetFrac=0.14){
+  const [,, br, bl] = PLOT_LAYOUT[i].pts;
+  const midX = (br[0]+bl[0])/2;
+  const midY = (br[1]+bl[1])/2;
+  return [midX, midY - insetFrac*100];
+}
+/* .plot-tag는 더 이상 .plot의 자식이 아니라 형제 요소(.plot-grid 기준 절대좌표)로 그려진다 —
+   .plot의 clip-path(실측 폴리곤)에 잘리면 스프라이트 여러 마리를 가로로 늘어놓을 때 옆으로 삐져나온
+   부분(또는 +N 배지)이 잘려나가기 때문. 그래서 폴리곤 로컬 좌표(0~100, plot 박스 기준)를
+   .base-art 기준 전역 퍼센트로 변환해줘야 한다. */
+function plotLocalToGlobal(i, localX, localY){
+  const box = plotBox(i);
+  return [box.left + (localX/100)*box.width, box.top + (localY/100)*box.height];
+}
+/* 근무/대기 중인 인원이 여럿이어도 1마리만 보이던 문제 — 최대 3마리까지 나란히 겹쳐 보여주고,
+   그 이상은 "+N" 배지로 표시한다. i는 idle 모션 타이밍을 칸/개체별로 어긋나게 하는 데만 쓴다. */
+function spriteClusterHtml(members, i){
+  const MAX_VISIBLE = 3;
+  const shown = members.slice(0, MAX_VISIBLE);
+  const extra = members.length - shown.length;
+  const imgs = shown.map(({m}, idx)=>{
+    const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
+    const offset = ((i*0.37) + idx*0.53) % 2.3;
+    return `<img class="plot-sprite" style="--idle-offset:${offset.toFixed(2)}" src="${sprite}" alt="${m.pokemon.nameKr}">`;
+  }).join("");
+  const badge = extra>0 ? `<span class="plot-sprite-more">+${extra}</span>` : "";
+  return imgs + badge;
+}
+/* 부지 폴리곤은 원근 때문에 사다리꼴로 기울어져 있는데, 그 위에 얹는 건축물 이미지는 순수 직사각형이라
+   가만히 두면 부지의 기울기와 어긋나 "삐딱하게" 보인다. 각 부지의 좌/우 변이 위→아래로 얼마나
+   가로 이동하는지(픽셀 기준)를 재서 평균 낸 뒤 skewX 각도로 바꿔주면 이미지 밑변은 그대로 두고
+   윗변만 부지의 기울기만큼 따라가게 만들 수 있다(transform-origin을 bottom으로 둬서 밑변 고정). */
+function plotArtSkewDeg(i){
+  const IMG_W = 1672, IMG_H = 941;
+  const { box, pts:[tl,tr,br,bl] } = PLOT_LAYOUT[i];
+  const boxWpx = box.width/100*IMG_W, boxHpx = box.height/100*IMG_H;
+  const leftShiftPx = (tl[0]-bl[0])/100*boxWpx;
+  const rightShiftPx = (tr[0]-br[0])/100*boxWpx;
+  const avgShiftPx = (leftShiftPx+rightShiftPx)/2;
+  return -(Math.atan(avgShiftPx/boxHpx)*180/Math.PI);
+}
+function boxStyleStr(box, scale=1, shiftXFrac=0){
+  if(scale===1 && !shiftXFrac) return `left:${box.left}%; top:${box.top}%; width:${box.width}%; height:${box.height}%`;
+  const w = box.width*scale, h = box.height*scale;
+  const left = box.left - (w-box.width)/2 - w*shiftXFrac, top = box.top - (h-box.height)/2;
+  return `left:${left.toFixed(2)}%; top:${top.toFixed(2)}%; width:${w.toFixed(2)}%; height:${h.toFixed(2)}%`;
 }
 function clipPathStr(pts){
   return `polygon(${pts.map(([x,y])=>`${x.toFixed(1)}% ${y.toFixed(1)}%`).join(", ")})`;
@@ -55,15 +131,22 @@ function cornerBracketPaths(pts, legLen=9){
     return `M ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L ${cur[0].toFixed(1)} ${cur[1].toFixed(1)} L ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
   });
 }
-/* 부지 hover 시 실제 흙밭 폴리곤을 따라 나타나는 반응 레이어(평상시 opacity:0, 완전 투명) */
-function plotFxSvg(pts){
+/* 부지 hover 시 실제 흙밭 폴리곤을 따라 나타나는 반응 레이어(평상시 opacity:0, 완전 투명).
+   ambient=true(빈 필드)면 폴리곤의 네 꼭짓점 전부에 아주 약한 cyan 코너 브래킷을 상시 노출하고
+   숨쉬듯 breathing glow를 준다(hover 전에도 "여기가 지금 행동 가능한 자리"라는 신호는 남기되,
+   부지 전체를 사각 카드처럼 덮지는 않는다 — 실제 흙밭 위에 얇은 HUD가 얹힌 느낌을 유지). */
+function plotFxSvg(pts, ambient=false){
   const ptsStr = svgPointsStr(pts);
   const corners = cornerBracketPaths(pts, 8.5).map(d=>`<path class="plot-fx-corner" d="${d}"></path>`).join("");
+  const ambientMark = ambient
+    ? cornerBracketPaths(pts, 6).map(d=>`<path class="plot-fx-corner-ambient" d="${d}"></path>`).join("")
+    : "";
   return `
     <svg class="plot-fx" viewBox="0 0 100 100" preserveAspectRatio="none">
       <polygon class="plot-fx-fill" points="${ptsStr}"></polygon>
       <polygon class="plot-fx-outline" points="${ptsStr}"></polygon>
       ${corners}
+      ${ambientMark}
     </svg>`;
 }
 
@@ -96,6 +179,49 @@ const JOBS = {
   heal:             { label:"치료(회복 아이템)",      produce:"healItem", minMembers:1, installCost:null },
   cure:             { label:"치료(상태이상 치료)",    produce:"cureItem", minMembers:1, installCost:null },
 };
+/* ---- 부지 건설: 빈 필드에 "직무"를 낱개로 배치하는 게 아니라 "건축물"을 짓고, 그 건축물 안에서
+   구체적인 직무를 고르는 2단 구조. BUILDINGS는 JOBS를 용도별로 묶은 상위 카테고리 — 이후 새 직무가
+   추가되면 이 표에만 소속을 추가하면 됨(건설 모달 쪽 로직은 그대로 재사용됨). ---- */
+const BUILDINGS = {
+  farm:       { label:"밭",     icon:"bFarm",   desc:"씨앗을 심고 열매를 거두는 경작지",   jobs:["seed","till","fruit","flatten"] },
+  restaurant: { label:"레스토랑", icon:"bRestaurant", desc:"수확물로 음식을 만들고 저장하는 곳", jobs:["cook","chill"] },
+  dojo:       { label:"훈련소",  icon:"bDojo",   desc:"전투 능력을 단련하고 성장시키는 곳",  jobs:["train","research"] },
+  workshop:   { label:"제작소",  icon:"bWorkshop", desc:"재료를 캐고 가공해 자금·도구로 만드는 곳", jobs:["mine","mint","craft"] },
+  clinic:     { label:"치료소",  icon:"bClinic", desc:"회복·치료 아이템을 만드는 곳",       jobs:["heal","cure"] },
+};
+const BUILDING_ORDER = ["farm","restaurant","dojo","workshop","clinic"];
+function buildingOf(jobId){
+  return BUILDING_ORDER.find(b=> BUILDINGS[b].jobs.includes(jobId));
+}
+/* 건축물 실사 이미지 — 그려진 건축물이 하나씩 늘어날 예정이므로 key가 없는 건축물은 계속
+   ICON_PATHS의 라인 아이콘으로 대체 표시한다(아이콘 → 이미지로 점진적 교체). */
+const BUILDING_ART = {
+  farm: "assets/plot.png",
+  restaurant: "assets/restaurant.png",
+  dojo: "assets/training-center.png",
+  workshop: "assets/factory.png",
+  clinic: "assets/heal-center.png",
+};
+/* 밭(plot.png)만 부지를 위에서 내려다본 구도라 부지의 사다리꼴 기울기(plotArtSkewDeg)를 따라가야
+   자연스럽다 — 나머지는 건물을 정면에서 바라본 구도라 기울이면 오히려 어색해서 skew를 적용하지 않는다.
+   scale/shiftXFrac은 에셋마다 실제로 설치해보며 눈으로 맞춘 값 — 밭은 구도가 좌측으로 쏠려 있어
+   shift가 필요했고, 나머지 정면 구도 건물들은 대체로 중앙 정렬이 자연스럽다. 훈련소만 이미지 안에
+   자체 울타리 마당이 넓게 들어있어 다른 건물보다 살짝 더 키워야 꽉 차 보인다. */
+const BUILDING_ART_TOPDOWN = new Set(["farm"]);
+const BUILDING_ART_TUNE = {
+  farm:       { scale:1.5,  shiftXFrac:0.077 },
+  restaurant: { scale:1.5,  shiftXFrac:0 },
+  dojo:       { scale:1.65, shiftXFrac:0 },
+  workshop:   { scale:1.5,  shiftXFrac:0 },
+  clinic:     { scale:1.5,  shiftXFrac:0 },
+};
+function plotArtLayerHtml(i, buildingKey, label){
+  const art = BUILDING_ART[buildingKey];
+  if(!art) return "";
+  const { scale, shiftXFrac } = BUILDING_ART_TUNE[buildingKey] || { scale:1.5, shiftXFrac:0 };
+  const skewDeg = BUILDING_ART_TOPDOWN.has(buildingKey) ? plotArtSkewDeg(i) : 0;
+  return `<div class="plot-art-layer" style="${boxStyleStr(plotBox(i),scale,shiftXFrac)}; transform:skewX(${skewDeg.toFixed(2)}deg)"><img src="${art}" alt="${label}"></div>`;
+}
 const JOB_BASE_AMT = { seed:3, fruit:2, cook:1, train:1, research:1, mine:3, mint:2, craft:1, heal:1, cure:1 };
 const JOB_ORDER = ["seed","mine","train","research","heal","cure","flatten","chill","till",
                     "fruit","mint","craft","cook",
@@ -157,16 +283,34 @@ let entryCap = ENTRY_CAP_START;
 let turnCount = 0;
 export let energy = ENERGY_PER_TURN;
 let lastLog = null;
+let logFresh = false;   // true인 동안만 dock-activity가 fade-highlight로 강조됨(렌더 1회로 소비되는 1회성 플래그)
 let baseMsg = "";
 
 /* ---- HUD 드롭다운/모달 상태 (재렌더 간 유지) ---- */
-let openPanel = null;      // "bag" | "ball" | "pc" | "log" | "install" | null
+let openPanel = null;      // "bag" | "ball" | "pc" | "log" | "install" | "task" | "site" | null
 let pcSelected = null;     // PC 모달에서 선택된 roster 인덱스
-let installPicks = new Set();  // 설치 모달에서 다중 선택된 roster 인덱스(미배정 개체)
-let installFacility = null;  // 설치 모달에서 선택된 시설 id (JOBS의 key 중 하나)
+/* 건설(빈 부지 → 건축물)과 직무 할당(건축물 → 구체적 직무)을 2단계로 분리한다.
+   1) 건설 모달: 건축물 카테고리만 고르고 개체를 배정 — 이 시점엔 아직 직무(job)가 정해지지 않고
+      개체는 "이 건축물 소속(building)"이라는 상태로만 대기한다(m.job=null, m.building=건축물 id).
+   2) 직무 할당 모달: 이미 지어진(직무 미정) 건축물 부지를 눌렀을 때 열리며, 그 건축물의 직무 목록 중
+      하나를 골라 대기 중인(또는 완전 미배치인) 개체를 실제로 배정한다(이때 m.job이 정해짐). */
+let installPicks = new Set();   // 건설 모달에서 선택된 roster 인덱스(완전 미배치 개체만)
+let installBuilding = null;     // 건설 모달에서 선택된 건축물 카테고리 id (BUILDINGS의 key 중 하나)
+let taskBuilding = null;        // 직무 할당 모달이 다루는, 이미 지어진 건축물 id
+let taskFacility = null;        // 직무 할당 모달에서 선택된 직무 id (JOBS의 key 중 하나)
+let taskPicks = new Set();      // 직무 할당 모달에서 선택된 roster 인덱스
 let siteModalJob = null;   // "site" 패널에서 보고 있는 운영 중 직무 id
 let sitePicks = new Set(); // site 모달에서 추가 배치할 미배정 roster 인덱스
 let itemModalIdx = null;   // "item" 패널에서 도구를 제작/장착 중인 roster 인덱스
+
+/* 건설은 확정 즉시 완성되지 않고 턴이 걸린다 — { [건축물id]: 남은 턴수 }. 기본 3턴에서 시작해서
+   투입 인원 1마리당 1턴씩 줄고 최소 1턴에서 멈춘다(1마리=3턴, 2마리=2턴, 3마리 이상=1턴). 인원을
+   더 투입하면(같은 건축물로 건설 모달을 다시 열어 추가 배정) 그 시점 총 인원 기준으로 다시 계산된다.
+   0턴이 되면 이 표에서 지워지고, 그 즉시 기존 로직대로 "직무 미정 대기(pending)" 상태로 넘어간다. */
+let underConstruction = {};
+function constructionTurns(workerCount){
+  return Math.max(1, 3 - (workerCount - 1));
+}
 
 const SAVE_KEY = "blindpoke-save-v1";
 
@@ -174,7 +318,7 @@ const SAVE_KEY = "blindpoke-save-v1";
    게임 진행에는 지장이 없도록 실패를 조용히 무시한다 */
 function saveState(){
   try{
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ v:1, roster, resources, plotCap, storageCap, entryCap, turnCount }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ v:1, roster, resources, plotCap, storageCap, entryCap, turnCount, underConstruction }));
   }catch(e){ /* 저장 실패는 무시 — 세이브 없이 계속 진행 */ }
 }
 
@@ -193,6 +337,7 @@ export function loadState(){
     storageCap = data.storageCap ?? storageCap;
     entryCap = data.entryCap ?? entryCap;
     turnCount = data.turnCount ?? turnCount;
+    underConstruction = data.underConstruction || {};
     return true;
   }catch(e){ return false; }
 }
@@ -214,23 +359,32 @@ function isMatch(member, jobId){
   return ts.some(t=> JOB_BY_TYPE[t]===jobId);
 }
 function assignedCount(){
-  return roster.filter(m=>m.job).length;
+  return roster.filter(m=>m.job||m.building).length;
 }
 function entryCount(){
   return roster.filter(m=>m.inEntry).length;
 }
-/* ---- 공터(부지) = 직무 "종류"별 작업장 1개. 같은 직무엔 인원 제한 없이 몇 마리든 더 배치 가능하며,
-   많이 배치할수록 산출/효과가 커진다(직무 루프가 인원별로 합산). plotCap은 "동시에 운영 가능한 작업장 개수"다. ---- */
+/* ---- 공터(부지) = "자리" 1개. 자리는 두 종류다: 직무가 정해진 자리(job:직무 하나당 1개, 인원 제한
+   없이 몇 마리든 더 배치 가능)와, 건축은 됐지만 아직 직무가 안 정해진 자리(pending:건축물 하나당 1개).
+   plotCap은 "동시에 존재할 수 있는 자리 개수"다. ---- */
 function activeJobTypes(){
   const set = new Set();
   roster.forEach(m=>{ if(m.job) set.add(m.job); });
   return [...set];
 }
+function pendingBuildingsSet(){
+  const set = new Set();
+  roster.forEach(m=>{ if(!m.job && m.building) set.add(m.building); });
+  return set;
+}
 function jobMembers(jobId){
   return roster.map((m,i)=>({m,i})).filter(x=>x.m.job===jobId);
 }
+function pendingMembers(buildingKey){
+  return roster.map((m,i)=>({m,i})).filter(x=>!x.m.job && x.m.building===buildingKey);
+}
 function usedPlots(){
-  return activeJobTypes().length;
+  return activeJobTypes().length + pendingBuildingsSet().size;
 }
 
 export function spendEnergy(cost){
@@ -243,18 +397,39 @@ export function spendEnergy(cost){
   return true;
 }
 
-function assignJob(idx, jobId){
+/* 건설: 완전 미배치 개체를 건축물 소속으로만 배정(직무는 아직 없음) — 이미 그 건축물에 대기 중인
+   자리가 있으면 거기 합류(자리 추가 소모 없음), 없으면 새 자리를 하나 소모한다. */
+function assignBuilding(idx, buildingKey){
   const m = roster[idx];
   if(!m) return false;
-  if(jobId && !m.job){
-    const isNewSite = !activeJobTypes().includes(jobId);
+  if(buildingKey && !m.job && !m.building){
+    const isNewSite = !pendingBuildingsSet().has(buildingKey);
     if(isNewSite && usedPlots()>=plotCap){
       baseMsg = `공터를 모두 사용 중입니다(${usedPlots()}/${plotCap}). 땅 평탄화로 부지를 늘리세요.`;
       return false;
     }
   }
   baseMsg = "";
-  m.job = jobId || null;
+  m.building = buildingKey || null;
+  return true;
+}
+/* 직무 할당: 이미 건축된(직무 미정) 자리를 그대로 직무 자리로 전환하는 것이므로 새 자리를 소모하지
+   않는다 — 이 모달은 애초에 pendingBuildingsSet()에 해당 건축물이 있을 때만 열릴 수 있어 안전하다. */
+function assignJob(idx, jobId, buildingKey){
+  const m = roster[idx];
+  if(!m) return false;
+  baseMsg = "";
+  if(jobId){ m.building = buildingKey || buildingOf(jobId) || m.building; m.job = jobId; }
+  else { m.job = null; }
+  return true;
+}
+/* 해제: 직무든 건축물 소속이든 전부 풀어서 완전 미배치 상태로 되돌린다(항상 "자리"를 줄이거나
+   유지할 뿐 새 자리를 만들지 않으므로 별도의 정원 체크가 필요 없다). */
+function unassignAll(idx){
+  const m = roster[idx];
+  if(!m) return false;
+  m.job = null;
+  m.building = null;
   return true;
 }
 
@@ -354,6 +529,11 @@ function resolveTurn(){
   plotCap += flattenCount;
   storageCap += chillCount*10;
 
+  Object.keys(underConstruction).forEach(key=>{
+    underConstruction[key]--;
+    if(underConstruction[key]<=0) delete underConstruction[key];
+  });
+
   const gain = {}, used = {};
   JOB_ORDER.forEach(jobId=>{
     const job = JOBS[jobId];
@@ -401,50 +581,90 @@ function resolveTurn(){
   energy = ENERGY_PER_TURN;
   turnCount++;
   lastLog = { gain, used, flattenCount, chillCount, left, raided: mapResult.raided };
+  logFresh = true;
   openPanel = "log";
   saveState();
   renderBase();
 }
 
 /* 본거지 부지: town-bg.png 안에 이미 그려진 흙밭 10칸(5x2) 위에 좌표만 얹는다.
-   공터 상한(plotCap)만큼은 운영 중인 직무 하나당 1칸씩 보여주고(같은 직무는 인원 무관 1칸에 모임),
-   남는 칸은 빈 공터, plotCap을 넘는 영역은 아직 개척되지 않은 미개척지 — 사각 카드가 아니라
-   실제 흙밭의 원근 사다리꼴 폴리곤을 hit-area/시각 반응 영역으로 그대로 사용한다. */
+   공터 상한(plotCap)만큼은 자리 하나당 1칸씩 보여주고(같은 직무/같은 건축물은 인원 무관 1칸에 모임),
+   자리는 "직무가 정해진 자리"와 "건축은 됐지만 직무 미정인 자리" 두 종류다. 남는 칸은 빈 공터(건설
+   가능), plotCap을 넘는 영역은 아직 개척되지 않은 미개척지 — 사각 카드가 아니라 실제 흙밭의 원근
+   사다리꼴 폴리곤을 hit-area/시각 반응 영역으로 그대로 사용한다. */
 function plotScene(){
-  const active = activeJobTypes();
+  const pendingKeys = [...pendingBuildingsSet()];
+  const sites = [
+    ...activeJobTypes().map(id=>({kind:"job", id})),
+    ...pendingKeys.filter(b=> !(underConstruction[b]>0)).map(id=>({kind:"pending", id})),
+    ...pendingKeys.filter(b=> underConstruction[b]>0).map(id=>({kind:"constructing", id})),
+  ];
   const tiles = [];
   for(let i=0;i<TOTAL_PLOT_AREA;i++){
-    const col = i % 5;
-    const pts = plotPolygon(col);
+    const pts = plotPolygon(i);
     const clip = clipPathStr(pts);
-    const fx = plotFxSvg(pts);
+    const posStyle = boxStyleStr(plotBox(i));
+    const [tagXl, tagYl] = plotCentroid(i);
+    const [tagXg, tagYg] = plotLocalToGlobal(i, tagXl, tagYl);
+    const tagStyle = `left:${tagXg.toFixed(2)}%; top:${tagYg.toFixed(2)}%`;
+    const [spriteXl, spriteYl] = plotBottomAnchor(i);
+    const [spriteXg, spriteYg] = plotLocalToGlobal(i, spriteXl, spriteYl);
+    const spriteTagStyle = `left:${spriteXg.toFixed(2)}%; top:${spriteYg.toFixed(2)}%`;
     if(i < plotCap){
-      const jobId = active[i];
-      if(jobId){
+      const site = sites[i];
+      if(site?.kind==="job"){
+        const jobId = site.id;
+        const building = buildingOf(jobId);
+        const art = BUILDING_ART[building];
+        const artLayer = plotArtLayerHtml(i, building, BUILDINGS[building]?.label);
         const members = jobMembers(jobId);
-        const first = members[0].m;
-        const sprite = first.pokemon.details?.sprites?.front_default || ART(first.pokemon.pokemonRowid);
         tiles.push(`
-          <div class="plot filled" style="clip-path:${clip}" data-plot-site="${jobId}" title="${JOBS[jobId]?.label||""} · ${members.length}마리 근무 중">
-            ${fx}
-            <span class="plot-tag"><img class="plot-sprite" src="${sprite}" alt="${first.pokemon.nameKr}"></span>
-            <span class="plot-info"><b>${JOBS[jobId]?.label||""}</b>${members.length}마리 근무 중</span>
-          </div>`);
+          ${artLayer}
+          <div class="plot filled ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" data-plot-site="${jobId}" title="${BUILDINGS[building]?.label||""} · ${JOBS[jobId]?.label||""} · ${members.length}마리 근무 중">
+            ${plotFxSvg(pts)}
+            <span class="plot-info"><b>${BUILDINGS[building]?.label||""} · ${JOBS[jobId]?.label||""}</b>${members.length}마리 근무 중</span>
+          </div>
+          <span class="plot-tag sprite-tag" style="${spriteTagStyle}">${spriteClusterHtml(members, i)}</span>`);
+      }else if(site?.kind==="pending"){
+        const buildingKey = site.id;
+        const art = BUILDING_ART[buildingKey];
+        const artLayer = plotArtLayerHtml(i, buildingKey, BUILDINGS[buildingKey]?.label);
+        const members = pendingMembers(buildingKey);
+        tiles.push(`
+          ${artLayer}
+          <div class="plot pending ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" data-plot-pending="${buildingKey}" title="${BUILDINGS[buildingKey].label} 건설 완료 · 직무 미할당 · ${members.length}마리 대기 중">
+            ${plotFxSvg(pts, true)}
+            <span class="plot-info"><b>직무 미할당</b>눌러서 할 일을 정하세요</span>
+          </div>
+          <span class="plot-tag sprite-tag" style="${spriteTagStyle}">${spriteClusterHtml(members, i)}${art?"":`<span>${BUILDINGS[buildingKey].label}</span>`}</span>`);
+      }else if(site?.kind==="constructing"){
+        const buildingKey = site.id;
+        const art = BUILDING_ART[buildingKey];
+        const artLayer = plotArtLayerHtml(i, buildingKey, BUILDINGS[buildingKey]?.label);
+        const members = pendingMembers(buildingKey);
+        const turnsLeft = underConstruction[buildingKey];
+        tiles.push(`
+          ${artLayer}
+          <div class="plot constructing ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" title="${BUILDINGS[buildingKey].label} 공사 중 · ${turnsLeft}턴 남음 · ${members.length}마리 투입">
+            ${plotFxSvg(pts)}
+            <span class="plot-info"><b>공사 중</b>${members.length}마리 투입 · 인원을 더 투입하면 단축됩니다</span>
+          </div>
+          <span class="plot-tag sprite-tag" style="${spriteTagStyle}">${spriteClusterHtml(members, i)}<span class="plot-turns-badge">${turnsLeft}턴</span></span>`);
       }else{
         tiles.push(`
-          <div class="plot empty" style="clip-path:${clip}" data-plot-install="1">
-            ${fx}
-            <span class="plot-tag">${icon("plus",13)}<span>빈 필드</span></span>
-            <span class="plot-info">포켓몬 배치 가능</span>
-          </div>`);
+          <div class="plot empty" style="${posStyle}; clip-path:${clip}" data-plot-install="1">
+            ${plotFxSvg(pts, true)}
+            <span class="plot-info">건축물을 지을 수 있습니다</span>
+          </div>
+          <span class="plot-tag" style="${tagStyle}">${icon("plus",15)}<span>건설</span></span>`);
       }
     }else{
       tiles.push(`
-        <div class="plot locked" style="clip-path:${clip}" title="땅 평탄화로 개척할 수 있는 미개척지">
-          ${fx}
-          <span class="plot-tag">${icon("lock",12)}<span>미개척지</span></span>
+        <div class="plot locked" style="${posStyle}; clip-path:${clip}" title="땅 평탄화로 개척할 수 있는 미개척지">
+          ${plotFxSvg(pts)}
           <span class="plot-info">개척 조건 미달성</span>
-        </div>`);
+        </div>
+        <span class="plot-tag" style="${tagStyle}">${icon("lock",14)}<span>미개척지</span></span>`);
     }
   }
   return tiles.join("");
@@ -477,8 +697,10 @@ function rosterCard(m, i){
       </div>
       <div class="rc-job">
         ${m.job
-          ? `<span class="rc-job-label">직무: ${JOBS[m.job]?.label||""}</span><button data-unassign="${i}" class="rc-unassign">해제</button>`
-          : `<span class="rc-job-label dim">미배정 · 부지의 빈 공터에서 설치하세요</span>`}
+          ? `<span class="rc-job-label">${BUILDINGS[buildingOf(m.job)]?.label||""} · ${JOBS[m.job]?.label||""}</span><button data-unassign="${i}" class="rc-unassign">해제</button>`
+          : m.building
+            ? `<span class="rc-job-label">${BUILDINGS[m.building]?.label||""} ${underConstruction[m.building]>0?`공사 중(${underConstruction[m.building]}턴 남음)`:"건설 완료 · 직무 미할당"}</span><button data-unassign="${i}" class="rc-unassign">해제</button>`
+            : `<span class="rc-job-label dim">미배정 · 부지의 빈 공터에서 건설하세요</span>`}
       </div>
       <div class="rc-job">
         ${m.heldItem
@@ -553,44 +775,53 @@ function hudTop(){
   return `
     <div class="hud-top">
       <div class="turn-hud" data-hud="log">
-        ${icon("cycle",13)}
-        <span class="turn-hud-num">턴 <b>${turnCount}</b></span>
+        <span class="hud-bracket tr"></span><span class="hud-bracket bl"></span>
+        <span class="th-cycle">${icon("cycle",16)}</span>
+        <div class="th-turn">
+          <span class="th-eyebrow">TURN</span>
+          <span class="th-num">${String(turnCount).padStart(2,"0")}</span>
+        </div>
         <span class="turn-hud-div"></span>
-        ${icon("bolt",11)}
-        <span class="energy-gauge">${segs}</span>
-        <span class="turn-hud-num sub">${energy}/${ENERGY_PER_TURN}</span>
+        <div class="th-energy">
+          <span class="th-eyebrow">${icon("bolt",12)}행동력</span>
+          <div class="th-energy-row">
+            <span class="energy-gauge">${segs}</span>
+            <span class="th-frac">${energy}/${ENERGY_PER_TURN}</span>
+          </div>
+        </div>
       </div>
       <div class="cmdbar">
+        <span class="hud-bracket tr"></span><span class="hud-bracket bl"></span>
         <button class="cmd-item ${openPanel==="pc"?"active":""}" data-hud="pc" title="보유 포켓몬">
-          ${icon("pc",15)}<span class="cmd-label">PC</span>
+          ${icon("pc",19)}<span class="cmd-label">PC</span>
           ${roster.length ? `<span class="cmd-badge">${roster.length}</span>` : ""}
         </button>
         <button class="cmd-item ${openPanel==="ball"?"active":""}" data-hud="ball" title="전투 엔트리">
-          ${icon("entry",15)}<span class="cmd-label">엔트리</span>
+          ${icon("entry",19)}<span class="cmd-label">엔트리</span>
           <span class="cmd-badge">${entryCount()}/${entryCap}</span>
         </button>
         <button class="cmd-item ${openPanel==="shop"?"active":""}" data-hud="shop" title="상점(자금 소비)">
-          ${icon("shop",15)}<span class="cmd-label">상점</span>
+          ${icon("shop",19)}<span class="cmd-label">상점</span>
         </button>
         <button class="cmd-item ${openPanel==="bag"?"active":""}" data-hud="bag" title="자원 현황">
-          ${icon("gauge",15)}<span class="cmd-label">자원</span>
+          ${icon("gauge",19)}<span class="cmd-label">자원</span>
         </button>
         <button class="cmd-item" data-action="map" title="세력전 지도">
-          ${icon("map",15)}<span class="cmd-label">지도</span>
+          ${icon("map",19)}<span class="cmd-label">지도</span>
         </button>
         <button class="cmd-item" data-action="hunt" title="사냥하러 나가기 (에너지 ${HUNT_ENERGY_COST})" ${energy<HUNT_ENERGY_COST?"disabled":""}>
-          ${icon("explore",15)}<span class="cmd-label">탐험</span>
+          ${icon("explore",19)}<span class="cmd-label">탐험</span>
         </button>
       </div>
     </div>`;
 }
 
 function activitySummaryText(){
-  if(!lastLog) return "아직 진행한 턴이 없습니다.";
+  if(!lastLog) return "이번 턴에 발생한 변화 없음";
   const parts = [];
   Object.entries(lastLog.gain).forEach(([k,v])=>{ if(v>0) parts.push(`${RES_META[k]} +${v}`); });
   Object.entries(lastLog.used).forEach(([k,v])=>{ if(v>0) parts.push(`${RES_META[k]} -${v}`); });
-  let text = parts.length ? parts.join(" · ") : "이번 턴은 산출이 없었습니다.";
+  let text = parts.length ? parts.join(" · ") : "이번 턴에 발생한 변화 없음";
   if(lastLog.left && lastLog.left.length) text += ` · ${lastLog.left.join(", ")} 이탈`;
   if(lastLog.raided && lastLog.raided.length) text += ` · ${lastLog.raided.join(", ")} 피습`;
   return text;
@@ -600,22 +831,29 @@ function activitySummaryText(){
    타이포그래피와 얇은 구분선만으로 나눈다 ---- */
 function bottomDock(){
   const pct = Math.round(plotCap/TOTAL_PLOT_AREA*100);
+  const activityFresh = logFresh;
+  logFresh = false;   // 이 렌더로 소비 — 같은 lastLog로 다시 렌더될 때는 더 이상 강조하지 않음
   return `
     <div class="hud-dock">
       <div class="dock-zone dock-village">
-        <span class="dock-stat">배치 <b>${assignedCount()}/${roster.length}</b></span>
+        <span class="dock-stat">${icon("slot",11,"dock-stat-ic")}배치 <b>${assignedCount()}/${roster.length}</b></span>
         <span class="dock-sep">·</span>
-        <span class="dock-stat">개척 <b>${plotCap}/${TOTAL_PLOT_AREA}</b></span>
+        <span class="dock-stat">${icon("parcel",11,"dock-stat-ic")}개척 <b>${plotCap}/${TOTAL_PLOT_AREA}</b></span>
         <span class="dock-mini-bar"><span style="width:${pct}%"></span></span>
       </div>
       <div class="dock-divider"></div>
       <button class="dock-zone dock-activity" data-hud="log">
         <span class="dock-label">최근 활동</span>
-        <span class="dock-activity-text">${activitySummaryText()}</span>
+        <span class="dock-activity-text${activityFresh?" just-changed":""}">${activitySummaryText()}</span>
       </button>
       <div class="dock-divider"></div>
       <button class="dock-zone dock-nextturn" id="nextTurn">
-        <span>다음 턴</span>${icon("chevron",13)}
+        <span class="hud-bracket tr"></span><span class="hud-bracket bl"></span>
+        <span class="dn-text">
+          <span class="dn-eyebrow">TURN END</span>
+          <span class="dn-main">다음 턴</span>
+        </span>
+        ${icon("chevron",16)}
       </button>
     </div>`;
 }
@@ -712,11 +950,6 @@ function pcModal(){
     </div>`;
 }
 
-/* 빈 공터 클릭 시: 아직 가동 중이 아닌 시설 중 하나를 새로 짓는다. 시설별로 필요한 최소 인원과
-   설치 비용(자원)이 다르며(JOBS[id].minMembers/installCost), 자원이 부족하면 설치할 수 없다.
-   이미 가동 중인 시설에 인원을 더 넣으려면 부지의 해당 칸(공터가 아닌 운영 중 시설)을 클릭한다 */
-const INSTALLABLE_FACILITIES = Object.keys(JOBS).filter(j=> !JOBS[j].stub);
-
 function canAfford(cost){
   return !cost || Object.entries(cost).every(([k,v])=> resources[k]>=v);
 }
@@ -740,28 +973,30 @@ function jobDescription(jobId){
   return bits.join(" ");
 }
 
+/* 건설 모달(1단계): 빈 부지에서 건축물 카테고리만 고르고 개체를 배정한다. 여기서는 아직 구체적인
+   직무를 정하지 않는다 — 그래서 자원 비용도 없고, 필요한 최소 인원도 "1마리 이상"뿐이다. 건축물이
+   세워지면(부지에 pending 칸으로 나타나면) 그 칸을 눌러야 taskModal()에서 실제 직무를 고르게 된다. */
 function installModal(){
   const active = activeJobTypes();
-  const facilities = INSTALLABLE_FACILITIES.filter(j=> !active.includes(j));
-  if(!facilities.includes(installFacility)) installFacility = facilities[0] || null;
-  if(!facilities.length){
+  const buildableBuildings = BUILDING_ORDER.filter(b=> BUILDINGS[b].jobs.some(j=>!active.includes(j)));
+  if(!buildableBuildings.length){
     return `
       <div class="modal-overlay" data-modal="install">
         <div class="modal-box">
-          <div class="modal-head"><span>부지에 설치</span><button class="dd-close" data-hud-close>✕</button></div>
+          <div class="modal-head"><span>건설</span><button class="dd-close" data-hud-close>✕</button></div>
           <div class="modal-body">
-            <div class="logempty">지금 새로 지을 수 있는 시설이 없습니다. 이미 모든 시설을 가동 중입니다.</div>
+            <div class="logempty">지금 새로 지을 수 있는 건축물이 없습니다. 이미 모든 시설을 가동 중입니다.</div>
           </div>
         </div>
       </div>`;
   }
-  const job = JOBS[installFacility];
-  const unassigned = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job);
-  const validPicks = [...installPicks].filter(i=> roster[i] && !roster[i].job);
+  if(!buildableBuildings.includes(installBuilding)) installBuilding = buildableBuildings[0];
+
+  const pending = pendingMembers(installBuilding);
+  const unassigned = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job && !x.m.building);
+  const validPicks = [...installPicks].filter(i=> roster[i] && !roster[i].job && !roster[i].building);
   if(validPicks.length !== installPicks.size) installPicks = new Set(validPicks);
-  const remain = Math.max(0, plotCap - active.length);
-  const minNeeded = job.minMembers;
-  const afford = canAfford(job.installCost);
+  const enough = installPicks.size>=1 && energy>=INSTALL_ENERGY_COST;
   const grid = unassigned.map(({m,i})=>{
     const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
     return `
@@ -771,23 +1006,86 @@ function installModal(){
         <span class="pc-cell-name">${m.pokemon.nameKr}</span>
       </div>`;
   }).join("");
-  const enough = installPicks.size >= minNeeded && energy>=INSTALL_ENERGY_COST && afford;
   return `
     <div class="modal-overlay" data-modal="install">
       <div class="modal-box">
-        <div class="modal-head"><span>부지에 설치 · 배정 가능 ${remain}칸</span><button class="dd-close" data-hud-close>✕</button></div>
+        <div class="modal-head"><span>건설 · 배정 가능 ${Math.max(0, plotCap-usedPlots())}칸</span><button class="dd-close" data-hud-close>✕</button></div>
         <div class="modal-body">
-          <div class="install-tabs">
-            ${facilities.map(j=>`<button class="install-tab ${installFacility===j?"active":""}" data-install-facility="${j}">${JOBS[j].label}</button>`).join("")}
+          <div class="install-buildings">
+            ${BUILDING_ORDER.map(b=>{
+              const buildable = BUILDINGS[b].jobs.some(j=>!active.includes(j));
+              return `
+                <button class="install-building ${installBuilding===b?"active":""} ${BUILDING_ART[b]?"has-art":""}" data-install-building="${b}"
+                  ${buildable?"":"disabled"} title="${BUILDINGS[b].desc}${buildable?"":" · 이미 모두 가동 중"}">
+                  ${BUILDING_ART[b] ? `<img class="install-building-art" src="${BUILDING_ART[b]}" alt="">` : icon(BUILDINGS[b].icon,20)}<span>${BUILDINGS[b].label}</span>
+                </button>`;
+            }).join("")}
           </div>
-          <div class="install-note">${jobDescription(installFacility)} 최소 인원 ${minNeeded}마리 · 설치 비용: ${describeCost(job.installCost)} · 에너지 ${INSTALL_ENERGY_COST}</div>
-          ${!afford ? `<div class="install-note" style="color:var(--bad)">자원이 부족하여 설치할 수 없습니다. (필요: ${describeCost(job.installCost)})</div>` : ""}
-          ${energy<INSTALL_ENERGY_COST ? `<div class="install-note" style="color:var(--bad)">에너지가 부족하여 설치할 수 없습니다. (${energy}/${ENERGY_PER_TURN})</div>` : ""}
+          <div class="install-note install-building-desc">${BUILDINGS[installBuilding].desc}</div>
+          ${pending.length ? `<div class="install-note">이미 ${pending.length}마리가 이 건축물에 배정되어 ${underConstruction[installBuilding]>0?`공사 중입니다(${underConstruction[installBuilding]}턴 남음)`:"대기 중입니다"}. 더 투입하면 공사가 단축됩니다.</div>` : ""}
+          <div class="install-note">건축 기간은 기본 3턴, 투입 인원 1마리당 1턴씩 줄어 최소 1턴까지 단축됩니다 · 최소 1마리 · 에너지 ${INSTALL_ENERGY_COST}(자원 소모 없음)</div>
+          ${energy<INSTALL_ENERGY_COST ? `<div class="install-note" style="color:var(--bad)">에너지가 부족하여 건설할 수 없습니다. (${energy}/${ENERGY_PER_TURN})</div>` : ""}
           ${unassigned.length
             ? `<div class="pc-grid">${grid}</div>`
-            : `<div class="logempty">배정할 수 있는 개체가 없습니다. 모든 개체가 이미 직무를 수행 중입니다.</div>`}
-          <button class="btn wide install-confirm" data-install-confirm ${enough?"":"disabled"}>
-            ${job.label} 설치 (${installPicks.size}/${minNeeded}+ 선택됨)
+            : `<div class="logempty">배정할 수 있는 개체가 없습니다. 모든 개체가 이미 배치되어 있습니다.</div>`}
+          <button class="btn wide install-confirm" data-build-confirm ${enough?"":"disabled"}>
+            ${BUILDINGS[installBuilding].label} 건설 (${installPicks.size}마리 선택됨)
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* 직무 할당 모달(2단계): 이미 건설된(직무 미정) 건축물 부지를 눌렀을 때 연다. 그 건축물이 만들 수
+   있는 직무 중 하나를 고르고, 이미 대기 중인 개체 + 아직 완전히 미배치인 개체 중에서 인원을 배정한다.
+   이 시점에 비로소 자원 비용(installCost)이 든다. 새 부지를 소모하지 않으므로(이미 건설 때 자리를
+   확보해둔 상태라) 정원 체크가 필요 없다. */
+function taskModal(){
+  const active = activeJobTypes();
+  const availableJobs = BUILDINGS[taskBuilding].jobs.filter(j=>!active.includes(j));
+  if(!availableJobs.length){
+    return `
+      <div class="modal-overlay" data-modal="task">
+        <div class="modal-box">
+          <div class="modal-head"><span>${BUILDINGS[taskBuilding].label} · 직무 할당</span><button class="dd-close" data-hud-close>✕</button></div>
+          <div class="modal-body">
+            <div class="logempty">이 건축물이 만들 수 있는 직무가 이미 전부 가동 중입니다.</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if(!availableJobs.includes(taskFacility)) taskFacility = availableJobs[0];
+  const job = JOBS[taskFacility];
+  const eligible = roster.map((m,i)=>({m,i})).filter(x=> !x.m.job && (x.m.building===taskBuilding || !x.m.building));
+  const validPicks = [...taskPicks].filter(i=> eligible.some(x=>x.i===i));
+  if(validPicks.length !== taskPicks.size) taskPicks = new Set(validPicks);
+  const afford = canAfford(job.installCost);
+  const grid = eligible.map(({m,i})=>{
+    const sprite = m.pokemon.details?.sprites?.front_default || ART(m.pokemon.pokemonRowid);
+    return `
+      <div class="pc-cell ${taskPicks.has(i)?"selected":""}" data-task-pick="${i}">
+        ${entryBadge(m)}
+        <img src="${sprite}" alt="${m.pokemon.nameKr}">
+        <span class="pc-cell-name">${m.pokemon.nameKr}</span>
+      </div>`;
+  }).join("");
+  const enough = taskPicks.size >= job.minMembers && energy>=INSTALL_ENERGY_COST && afford;
+  return `
+    <div class="modal-overlay" data-modal="task">
+      <div class="modal-box">
+        <div class="modal-head"><span>${BUILDINGS[taskBuilding].label} · 직무 할당</span><button class="dd-close" data-hud-close>✕</button></div>
+        <div class="modal-body">
+          <div class="install-tabs">
+            ${availableJobs.map(j=>`<button class="install-tab ${taskFacility===j?"active":""}" data-task-facility="${j}">${JOBS[j].label}</button>`).join("")}
+          </div>
+          <div class="install-note">${jobDescription(taskFacility)} 최소 인원 ${job.minMembers}마리 · 설치 비용: ${describeCost(job.installCost)} · 에너지 ${INSTALL_ENERGY_COST}</div>
+          ${!afford ? `<div class="install-note" style="color:var(--bad)">자원이 부족하여 배정할 수 없습니다. (필요: ${describeCost(job.installCost)})</div>` : ""}
+          ${energy<INSTALL_ENERGY_COST ? `<div class="install-note" style="color:var(--bad)">에너지가 부족하여 배정할 수 없습니다. (${energy}/${ENERGY_PER_TURN})</div>` : ""}
+          ${eligible.length
+            ? `<div class="pc-grid">${grid}</div>`
+            : `<div class="logempty">배정할 수 있는 개체가 없습니다.</div>`}
+          <button class="btn wide install-confirm" data-task-confirm ${enough?"":"disabled"}>
+            ${job.label} 배정 (${taskPicks.size}/${job.minMembers}+ 선택됨)
           </button>
         </div>
       </div>
@@ -798,9 +1096,12 @@ function installModal(){
 function siteModal(){
   const jobId = siteModalJob;
   const job = JOBS[jobId];
+  const building = buildingOf(jobId);
   const members = jobMembers(jobId);
-  const unassigned = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job);
-  const validPicks = [...sitePicks].filter(i=> roster[i] && !roster[i].job);
+  // 추가 배치 후보 = 완전 미배치 개체 + 같은 건축물에 이미 배정 대기 중인(직무 미정) 개체
+  // (다른 건축물에 대기 중인 개체는 그 건축물의 직무 할당 모달에서만 배정할 수 있다)
+  const unassigned = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job && (!x.m.building || x.m.building===building));
+  const validPicks = [...sitePicks].filter(i=> unassigned.some(x=>x.i===i));
   if(validPicks.length !== sitePicks.size) sitePicks = new Set(validPicks);
   const memberRows = members.map(({m,i})=>`
       <div class="entry-row">
@@ -821,7 +1122,7 @@ function siteModal(){
   return `
     <div class="modal-overlay" data-modal="site">
       <div class="modal-box">
-        <div class="modal-head"><span>${job?.label||""} · ${members.length}마리 근무 중</span><button class="dd-close" data-hud-close>✕</button></div>
+        <div class="modal-head"><span>${BUILDINGS[buildingOf(jobId)]?.label||""} · ${job?.label||""} · ${members.length}마리 근무 중</span><button class="dd-close" data-hud-close>✕</button></div>
         <div class="modal-body">
           <div class="install-note">같은 직무에 인원을 더 배치할수록 산출/효과가 커집니다.</div>
           <div class="entry-list">${memberRows || `<div class="logempty">근무 중인 개체가 없습니다.</div>`}</div>
@@ -856,6 +1157,7 @@ export function renderBase(){
 
     ${openPanel==="pc" ? pcModal() : ""}
     ${openPanel==="install" ? installModal() : ""}
+    ${openPanel==="task" ? taskModal() : ""}
     ${openPanel==="site" ? siteModal() : ""}
     ${openPanel==="item" ? itemModal() : ""}
   `;
@@ -866,16 +1168,21 @@ export function renderBase(){
     openPanel = "site";
     renderBase();
   });
+  app.querySelectorAll("[data-plot-pending]").forEach(el=> el.onclick = ()=>{
+    taskBuilding = el.dataset.plotPending;
+    taskFacility = null;   // taskModal()이 열리면서 아직 가동 중이 아닌 첫 직무로 자동 선택됨
+    taskPicks = new Set();
+    openPanel = "task";
+    renderBase();
+  });
   app.querySelectorAll("[data-plot-install]").forEach(el=> el.onclick = ()=>{
-    const active = activeJobTypes();
-    const facilities = INSTALLABLE_FACILITIES.filter(j=> !active.includes(j));
-    installFacility = facilities[0] || null;
+    installBuilding = null;   // installModal()이 열리면서 지을 수 있는 첫 건축물로 자동 선택됨
     installPicks = new Set();
     openPanel = "install";
     renderBase();
   });
-  app.querySelectorAll("[data-install-facility]").forEach(b=> b.onclick = ()=>{
-    installFacility = b.dataset.installFacility;
+  app.querySelectorAll("[data-install-building]").forEach(b=> b.onclick = ()=>{
+    installBuilding = b.dataset.installBuilding;
     installPicks = new Set();
     renderBase();
   });
@@ -884,20 +1191,47 @@ export function renderBase(){
     if(installPicks.has(idx)) installPicks.delete(idx); else installPicks.add(idx);
     renderBase();
   });
-  app.querySelector("[data-install-confirm]")?.addEventListener("click", ()=>{
-    if(!installFacility) return;
-    const job = JOBS[installFacility];
+  app.querySelector("[data-build-confirm]")?.addEventListener("click", ()=>{
+    if(!installBuilding) return;
     const picks = [...installPicks];
+    if(!picks.length) return;
+    const isNewSite = !pendingBuildingsSet().has(installBuilding);
+    if(isNewSite && usedPlots()>=plotCap){
+      baseMsg = `공터를 모두 사용 중입니다(${usedPlots()}/${plotCap}). 땅 평탄화로 부지를 늘리세요.`;
+      renderBase();
+      return;
+    }
+    if(!spendEnergy(INSTALL_ENERGY_COST)){ renderBase(); return; }
+    picks.forEach(idx=> assignBuilding(idx, installBuilding));
+    underConstruction[installBuilding] = constructionTurns(pendingMembers(installBuilding).length);
+    installPicks = new Set();
+    openPanel = null;
+    renderBase();
+  });
+  app.querySelectorAll("[data-task-facility]").forEach(b=> b.onclick = ()=>{
+    taskFacility = b.dataset.taskFacility;
+    taskPicks = new Set();
+    renderBase();
+  });
+  app.querySelectorAll("[data-task-pick]").forEach(el=> el.onclick = ()=>{
+    const idx = +el.dataset.taskPick;
+    if(taskPicks.has(idx)) taskPicks.delete(idx); else taskPicks.add(idx);
+    renderBase();
+  });
+  app.querySelector("[data-task-confirm]")?.addEventListener("click", ()=>{
+    if(!taskFacility) return;
+    const job = JOBS[taskFacility];
+    const picks = [...taskPicks];
     if(picks.length < job.minMembers) return;
     if(!canAfford(job.installCost)){
-      baseMsg = `자원이 부족하여 설치할 수 없습니다. (필요: ${describeCost(job.installCost)})`;
+      baseMsg = `자원이 부족하여 배정할 수 없습니다. (필요: ${describeCost(job.installCost)})`;
       renderBase();
       return;
     }
     if(!spendEnergy(INSTALL_ENERGY_COST)){ renderBase(); return; }
     if(job.installCost) Object.entries(job.installCost).forEach(([k,v])=> resources[k]-=v);
-    picks.forEach(idx=> assignJob(idx, installFacility));
-    installPicks = new Set();
+    picks.forEach(idx=> assignJob(idx, taskFacility, taskBuilding));
+    taskPicks = new Set();
     openPanel = null;
     renderBase();
   });
@@ -917,7 +1251,7 @@ export function renderBase(){
   });
   app.querySelectorAll("[data-unassign]").forEach(b=> b.onclick = ()=>{
     if(!spendEnergy(UNASSIGN_ENERGY_COST)){ renderBase(); return; }
-    assignJob(+b.dataset.unassign, null);
+    unassignAll(+b.dataset.unassign);
     renderBase();
   });
   app.querySelectorAll("[data-feed]").forEach(b=> b.onclick = ()=> feedHeal(+b.dataset.feed));
@@ -950,13 +1284,16 @@ export function renderBase(){
     newCase();
   });
   app.querySelectorAll("[data-hud-close]").forEach(b=> b.onclick = ()=>{
-    openPanel = null; installPicks = new Set(); sitePicks = new Set(); renderBase();
+    openPanel = null; installPicks = new Set(); taskPicks = new Set(); sitePicks = new Set(); renderBase();
   });
   app.querySelector('[data-modal="pc"]')?.addEventListener("click", (e)=>{
     if(e.target.dataset.modal==="pc"){ openPanel = null; renderBase(); }
   });
   app.querySelector('[data-modal="install"]')?.addEventListener("click", (e)=>{
     if(e.target.dataset.modal==="install"){ openPanel = null; installPicks = new Set(); renderBase(); }
+  });
+  app.querySelector('[data-modal="task"]')?.addEventListener("click", (e)=>{
+    if(e.target.dataset.modal==="task"){ openPanel = null; taskPicks = new Set(); renderBase(); }
   });
   app.querySelector('[data-modal="site"]')?.addEventListener("click", (e)=>{
     if(e.target.dataset.modal==="site"){ openPanel = null; sitePicks = new Set(); renderBase(); }

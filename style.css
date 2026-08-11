@@ -22,6 +22,11 @@ body{
 @media (min-width:960px){
   .term{max-width:880px; padding:36px 28px 80px}
 }
+/* 모바일 대상이 아니라고 확인됨 — 넓은 데스크톱 화면에서는 부지/건축물 디테일이 더 잘 보이도록
+   한 단계 더 키운다. 기존 좁은 breakpoint들은 창을 작게 줄였을 때를 위해 그대로 둔다. */
+@media (min-width:1300px){
+  .term{max-width:1200px; padding:40px 34px 90px}
+}
 .boot{color:var(--scan); font-family:var(--mono); padding:80px 8px; text-align:center; letter-spacing:.5px}
 .dots::after{content:""; animation:dots 1.2s steps(4,end) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
@@ -347,12 +352,20 @@ body{
   box-shadow:0 4px 14px rgba(0,0,0,.4)}
 
 /* 부지 칸: 배경 속 실제 흙밭 자리에 좌표만 얹는 투명 interaction area.
-   기본 상태는 완전히 투명 — 사각 카드가 아니라 그림 속 흙밭 그 자체가 UI가 되어야 한다. */
-.plot-grid{position:absolute; left:11%; right:8.2%; top:38%; bottom:12%;
-  display:grid; grid-template-columns:repeat(5, 1fr); grid-template-rows:repeat(2, 1fr); gap:3.2% 1.6%}
-.plot{position:relative; width:100%; height:100%; text-align:center; cursor:pointer;
+   기본 상태는 완전히 투명 — 사각 카드가 아니라 그림 속 흙밭 그 자체가 UI가 되어야 한다.
+   칸마다 원근/폭이 달라 균일한 grid로는 흙밭 테두리에 안 맞으므로, 각 .plot은 base.js의
+   PLOT_LAYOUT(실측 픽셀 좌표)에서 나온 자기만의 바운딩 박스를 인라인 style로 받는다. */
+.plot-grid{position:absolute; inset:0}
+.plot{position:absolute; text-align:center; cursor:pointer;
   background:none; border:none; padding:0; -webkit-tap-highlight-color:transparent}
-.plot.locked{cursor:default}
+.plot.locked, .plot.constructing{cursor:default}
+
+/* 건축물 실사 이미지 — .plot과 별개의 형제 레이어라 .plot의 clip-path(실측 폴리곤)에 잘리지 않는다.
+   부지 바운딩 박스보다 일부러 크게(scale은 base.js의 boxStyleStr 두 번째 인자) 얹어서 울타리 밖으로
+   살짝 넘치게 하고, object-fit:contain으로 원본 비율은 그대로 유지한 채 표시한다(클릭은 통과시켜
+   .plot이 그대로 hit-area를 담당하게 함) */
+.plot-art-layer{position:absolute; pointer-events:none; z-index:0; transform-origin:50% 100%}
+.plot-art-layer img{width:100%; height:100%; object-fit:contain}
 
 /* 실제 부지 폴리곤을 따라 그려지는 hover 전용 반응 레이어 — 평상시 opacity:0 (완전 투명) */
 .plot-fx{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible}
@@ -362,20 +375,59 @@ body{
 .plot:hover .plot-fx-fill, .plot:hover .plot-fx-outline, .plot:hover .plot-fx-corner{opacity:1}
 .plot.locked .plot-fx-fill{fill:rgba(180,190,195,.1)}
 .plot.locked .plot-fx-outline, .plot.locked .plot-fx-corner{stroke:rgba(190,200,205,.55)}
+/* 빈 필드는 hover 전에도 네 꼭짓점 코너 브래킷 + polygon fill/outline이 아주 약하게 숨쉬듯 pulse해서
+   "지금 행동 가능한 자리"라는 신호를 상시 남긴다 — hover하면 breathing을 멈추고 완전히 밝아진다 */
+.plot-fx-corner-ambient{fill:none; stroke:rgba(var(--teal-rgb),.75); stroke-width:1.3; stroke-linecap:round;
+  opacity:.38; animation:plotAmbientCorner 3.6s ease-in-out infinite}
+.plot.empty .plot-fx-outline, .plot.pending .plot-fx-outline{opacity:.16; animation:plotAmbientOutline 3.6s ease-in-out infinite}
+.plot.empty .plot-fx-fill, .plot.pending .plot-fx-fill{opacity:.04; animation:plotAmbientFill 3.6s ease-in-out infinite}
+@keyframes plotAmbientCorner{0%,100%{opacity:.35}50%{opacity:.58}}
+@keyframes plotAmbientOutline{0%,100%{opacity:.16}50%{opacity:.3}}
+@keyframes plotAmbientFill{0%,100%{opacity:.04}50%{opacity:.08}}
+.plot.empty:hover .plot-fx-outline, .plot.empty:hover .plot-fx-fill,
+.plot.pending:hover .plot-fx-outline, .plot.pending:hover .plot-fx-fill{opacity:1; animation:none}
+.plot.empty:hover .plot-fx-corner-ambient, .plot.pending:hover .plot-fx-corner-ambient{opacity:0}
 
 /* 평상시 보이는 것은 작은 아이콘 + 한 줄 라벨뿐 — 보조 설명은 hover 시에만 등장.
-   tag는 칸 위쪽(38%)에, info는 칸 맨 아래(4%)에 각각 절대 위치시켜 hover 시 겹치지 않게 한다. */
-.plot-tag{position:absolute; left:0; right:0; top:36%; transform:translateY(-50%); z-index:1;
-  display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none}
+   tag의 left/top(%)은 base.js가 각 부지 폴리곤의 실측 centroid/아랫변을 .base-art 기준 전역
+   퍼센트로 변환해 인라인 style로 넣어준다 — .plot-tag는 이제 .plot의 자식이 아니라 형제 요소다
+   (.plot의 clip-path에 잘리지 않기 위해, 특히 스프라이트 여러 마리를 가로로 늘어놓을 때 필요).
+   그래서 상태별 스타일은 descendant(" ") 대신 인접 형제(+) 결합자로 " .plot.STATE + .plot-tag"
+   형태로 건다 — .plot-tag가 항상 해당 .plot 바로 다음 형제로 렌더링되기 때문에 성립한다. */
+.plot-tag{position:absolute; transform:translate(-50%,-50%); z-index:1;
+  display:flex; flex-direction:column; align-items:center; gap:3px; pointer-events:none}
 .plot-tag svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
-.plot-tag span{font-size:8.5px; font-weight:700; letter-spacing:.2px;
-  text-shadow:0 1px 2px rgba(0,0,0,.9), 0 0 5px rgba(0,0,0,.55)}
-.plot.empty .plot-tag span{color:#d8f5f8}
-.plot.empty .plot-tag svg{color:#d8f5f8}
-.plot.locked .plot-tag span{color:rgba(222,232,234,.7); font-weight:600}
-.plot.locked .plot-tag svg{color:rgba(222,232,234,.7)}
-.plot-sprite{width:60%; max-width:32px; object-fit:contain; image-rendering:pixelated;
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.plot-tag span{font-size:10px; font-weight:700; letter-spacing:.2px;
+  text-shadow:0 1px 2px rgba(0,0,0,.9), 0 0 5px rgba(0,0,0,.65); transition:opacity .16s ease}
+/* 빈 필드(유일하게 지금 행동 가능한 부지)는 primary tier — 크고 확실하게, +는 스케일 변화 없이 아주
+   느리고 미세한 밝기 변화만으로 존재감을 준다(모바일게임식 반짝임 금지) — hover하면 멈추고 완전히 밝아짐 */
+.plot.empty + .plot-tag span{color:#d8f5f8; font-size:11.5px}
+.plot.empty + .plot-tag svg{color:#d8f5f8; animation:plotPlusPulse 3.6s ease-in-out infinite}
+@keyframes plotPlusPulse{0%,100%{opacity:.82}50%{opacity:1}}
+.plot.empty:hover + .plot-tag svg{animation:none; opacity:1; color:#fff}
+/* 건설은 됐지만 직무가 아직 안 정해진 자리 — 배치된 개체의 스프라이트 + 건축물명을 보여줘서
+   "빈 땅"이 아니라 "일손은 있는데 할 일이 아직 없다"는 상태임을 알린다 */
+.plot.pending + .plot-tag span{color:#d8f5f8; font-size:10.5px; font-weight:700}
+/* 미개척지는 평상시 존재감을 최소화하되, 화면의 얼룩처럼 안 보일 만큼의 최소 contrast는 유지 —
+   lock glyph만 보이고 "미개척지" 텍스트는 완전히 숨기고 hover 시에만 드러남 */
+.plot.locked + .plot-tag svg{color:rgba(216,228,230,.52); opacity:.85; transition:color .18s ease, opacity .18s ease}
+.plot.locked + .plot-tag span{opacity:0; color:rgba(230,240,242,.92); font-weight:700; font-size:9.5px}
+.plot.locked:hover + .plot-tag svg{color:rgba(225,238,240,.95); opacity:1}
+.plot.locked:hover + .plot-tag span{opacity:1}
+/* sprite-tag(근무/대기 중 스프라이트)만 가로로 나란히 겹쳐 보여준다 — plus/lock 아이콘 tag는
+   기존처럼 세로 배치(아이콘 위, 라벨 아래) 유지 */
+.plot-tag.sprite-tag{flex-direction:row; align-items:flex-end}
+.plot-sprite{width:64px; height:64px; object-fit:contain; image-rendering:pixelated; flex:0 0 auto;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));
+  animation:plotSpriteIdle 2.3s ease-in-out infinite; animation-delay:calc(var(--idle-offset, 0) * 1s)}
+.plot-sprite ~ .plot-sprite{margin-left:-24px}
+.plot-sprite-more{align-self:center; margin-left:4px; font-size:12px; font-weight:800; color:#fff;
+  background:rgba(10,16,15,.75); border:1px solid rgba(var(--teal-rgb),.6); border-radius:10px;
+  padding:3px 7px; text-shadow:none; white-space:nowrap}
+@keyframes plotSpriteIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+/* 공사 중 남은 턴수 — 빈 필드의 "+ 건설"처럼 hover 없이도 항상 보여야 하는 핵심 정보라 배지로 상시 노출 */
+.plot-turns-badge{align-self:center; margin-left:6px; font-size:13px; font-weight:800; color:#1a1206;
+  background:var(--amber); border-radius:10px; padding:3px 8px; text-shadow:none; white-space:nowrap}
 
 /* 개척 조건/근무 인원 같은 보조 정보 — hover 시에만 짧게 노출, tag와 겹치지 않도록 칸 맨 아래에 고정 */
 .plot-info{position:absolute; left:4%; right:4%; bottom:3%; z-index:1; font-size:6.5px; line-height:1.25;
@@ -422,68 +474,139 @@ body{
 .rc-actions button:disabled{opacity:.35; cursor:default}
 .rc-actions button.on{border-color:var(--ok); color:var(--ok); background:rgba(47,163,96,.18)}
 
-/* ---- 본거지 HUD: 좌상단 턴/행동력 모듈 + 우상단 Command Bar (아이콘 하나하나를 박스로 만들지 않음) ---- */
-.hud-top{position:absolute; z-index:5; left:2%; right:2%; top:3%; display:flex; justify-content:space-between; align-items:flex-start; gap:6px}
+/* ---- 본거지 HUD: 좌상단 턴/행동력 모듈 + 우상단 Command Bar (아이콘 하나하나를 박스로 만들지 않음).
+   Turn HUD·Command Bar·Bottom Dock이 전부 같은 "스캐너 장치" 언어(두 모서리를 잘라낸 프레임 +
+   나머지 두 모서리의 작은 bracket + cyan/teal accent)를 공유해 하나의 시스템처럼 보이게 한다. ---- */
+.hud-top{position:absolute; z-index:5; left:2%; right:2%; top:3%; display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
 
-.turn-hud{position:relative; display:flex; align-items:center; gap:5px; cursor:pointer;
-  background:rgba(6,14,15,.72); border:1px solid rgba(var(--teal-rgb),.35); border-radius:7px; padding:5px 8px;
-  backdrop-filter:blur(2px); color:#d7e7e9; transition:border-color .15s}
-.turn-hud:hover{border-color:rgba(var(--teal-rgb),.6)}
-.turn-hud svg{flex:0 0 auto; opacity:.9}
-.turn-hud-num{font-family:var(--disp); font-size:9.5px; font-weight:700; letter-spacing:.2px; white-space:nowrap}
-.turn-hud-num b{font-size:11px; color:#fff}
-.turn-hud-num.sub{font-size:7.5px; font-weight:600; color:rgba(200,225,228,.8)}
-.turn-hud-div{width:1px; align-self:stretch; background:rgba(255,255,255,.14)}
-.energy-gauge{display:flex; align-items:flex-end; gap:1.5px}
-.eg-seg{width:3px; height:8px; border-radius:1px; background:rgba(255,255,255,.16)}
-.eg-seg.on{background:rgba(var(--teal-rgb),1); box-shadow:0 0 4px rgba(var(--teal-rgb),.7)}
+/* ---- Day HUD variation: 탐색 화면(scan-panel/.scanner)의 deep-black·고대비 표면을 마을에 그대로
+   가져오지 않고, 같은 프레임 언어(clip-path 코너컷 + bracket + teal accent)는 유지한 채 표면만
+   charcoal blue-green·더 투명하게·backdrop-blur를 얹어 "밝은 마을 위에 붙은 현대적 장치"로 보이게 함 ---- */
+.base-scene{
+  --hud-bg1:rgba(34,50,47,.76); --hud-bg2:rgba(19,29,27,.7); --hud-border:rgba(var(--teal-rgb),.55);
+}
 
-.cmdbar{display:flex; align-items:stretch; background:rgba(6,14,15,.72); border:1px solid rgba(var(--teal-rgb),.35);
-  border-radius:7px; backdrop-filter:blur(2px)}
-.cmd-item{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-  width:31px; padding:5px 1px 4px; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer;
-  color:rgba(205,222,225,.62); transition:color .15s ease, border-color .15s ease}
-.cmd-item svg{width:14px; height:14px}
-.cmd-item:hover{color:rgba(230,245,247,.92); border-bottom-color:rgba(var(--teal-rgb),.5)}
-.cmd-item.active{color:#bdfaff; border-bottom-color:rgba(var(--teal-rgb),.9)}
+/* 잘린 모서리(우상단·좌하단)를 공유하는 얇은 기술 프레임 — 나머지 두 모서리엔 .hud-bracket을 얹는다 */
+.turn-hud, .cmdbar{
+  clip-path:polygon(11px 0, 100% 0, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0 100%, 0 11px);
+  background:linear-gradient(155deg, var(--hud-bg1), var(--hud-bg2));
+  border:1px solid var(--hud-border);
+  backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+  box-shadow:0 10px 20px -14px rgba(0,0,0,.55);
+  transition:border-color .15s, box-shadow .15s;
+}
+.turn-hud:hover, .cmdbar:hover{border-color:rgba(var(--teal-rgb),.8)}
+.hud-bracket{position:absolute; width:9px; height:9px; border:1.2px solid rgba(var(--teal-rgb),.7); pointer-events:none; z-index:2}
+.hud-bracket.tr{top:2px; right:2px; border-left:none; border-bottom:none}
+.hud-bracket.bl{bottom:2px; left:2px; border-right:none; border-top:none}
+/* SCAN DATA 패널의 눈금 장식(.sp-ticks)과 같은 발상의 작은 technical tick — 장치 상단 여백에 아주 옅게 */
+.turn-hud::before, .cmdbar::before{
+  content:""; position:absolute; top:4px; left:15px; width:15px; height:5px; opacity:.4; pointer-events:none; z-index:2;
+  background:repeating-linear-gradient(90deg, rgba(var(--teal-rgb),1) 0 1px, transparent 1px 3px);
+}
+.cmdbar::before{left:auto; right:15px}
+
+.turn-hud{position:relative; display:flex; align-items:center; gap:10px; cursor:pointer;
+  padding:9px 15px 8px 12px; color:#d7e7e9}
+.th-cycle{display:flex; align-items:center; opacity:.9}
+.th-cycle svg{color:rgba(var(--teal-rgb),1)}
+.th-turn{display:flex; flex-direction:column; gap:1px; line-height:1}
+.th-eyebrow{display:inline-flex; align-items:center; gap:4px; font-size:8px; letter-spacing:1.6px;
+  text-transform:uppercase; color:rgba(155,212,222,.85); font-weight:700; white-space:nowrap}
+.th-eyebrow svg{width:11px; height:11px; color:rgba(var(--teal-rgb),1)}
+.th-num{font-family:var(--disp); font-size:21px; font-weight:700; color:#fff; letter-spacing:.5px; line-height:1.1}
+.turn-hud-div{width:1px; align-self:stretch; background:rgba(255,255,255,.16)}
+.th-energy{display:flex; flex-direction:column; gap:4px}
+.th-energy-row{display:flex; align-items:center; gap:7px}
+.energy-gauge{display:flex; align-items:flex-end; gap:2.5px}
+.eg-seg{width:6px; height:14px; border-radius:1.5px; background:rgba(255,255,255,.16); transition:background .15s, box-shadow .15s}
+.eg-seg.on{background:rgba(var(--teal-rgb),1); box-shadow:0 0 5px rgba(var(--teal-rgb),.75)}
+.th-frac{font-family:var(--disp); font-size:11.5px; font-weight:700; color:rgba(222,238,240,.9); white-space:nowrap}
+
+.cmdbar{position:relative; display:flex; align-items:stretch}
+.cmd-item{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  width:44px; padding:9px 2px 8px; background:none; border:none; border-bottom:2.5px solid transparent; cursor:pointer;
+  color:rgba(205,222,225,.62); transition:color .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease}
+.cmd-item + .cmd-item{border-left:1px solid rgba(255,255,255,.09)}
+.cmd-item svg{width:19px; height:19px}
+.cmd-item:hover{color:rgba(230,245,247,.95); border-bottom-color:rgba(var(--teal-rgb),.55);
+  background:linear-gradient(180deg, rgba(var(--teal-rgb),.12), transparent);
+  box-shadow:inset 0 0 14px -5px rgba(var(--teal-rgb),.5)}
+.cmd-item.active{color:#bdfaff; border-bottom-color:rgba(var(--teal-rgb),.95);
+  background:linear-gradient(180deg, rgba(var(--teal-rgb),.18), transparent);
+  box-shadow:inset 0 0 10px -4px rgba(var(--teal-rgb),.55)}
+.cmd-item.active:hover{box-shadow:inset 0 0 15px -5px rgba(var(--teal-rgb),.7)}
 .cmd-item:disabled{opacity:.32; cursor:default}
-.cmd-item:disabled:hover{color:rgba(205,222,225,.62); border-bottom-color:transparent}
-.cmd-label{font-size:6.5px; letter-spacing:.1px; white-space:nowrap}
-.cmd-badge{position:absolute; top:1px; right:2px; background:var(--amber); color:#1a1206; font-size:6px; font-weight:700;
-  border-radius:6px; padding:1px 3px; line-height:1.2; white-space:nowrap}
+.cmd-item:disabled:hover{color:rgba(205,222,225,.62); border-bottom-color:transparent; background:none; box-shadow:none}
+.cmd-label{font-size:8.5px; letter-spacing:.15px; white-space:nowrap; font-weight:600}
+.cmd-badge{position:absolute; top:3px; right:4px; background:var(--amber); color:#1a1206; font-size:7px; font-weight:700;
+  border-radius:7px; padding:1.5px 4px; line-height:1.2; white-space:nowrap}
 
-/* ---- 본거지 HUD 하단: 마을 정보 · 최근 활동 · 다음 턴을 하나의 얇은 Dock으로 통합 (base-art 아래 일반 흐름) ---- */
+@media (max-width:480px){
+  .turn-hud{padding:7px 11px 6px 9px; gap:7px}
+  .th-num{font-size:16px}
+  .eg-seg{width:5px; height:11px}
+  .cmd-item{width:35px; padding:7px 1px 6px}
+  .cmd-item svg{width:16px; height:16px}
+  .cmd-label{font-size:7px}
+}
+
+/* ---- 본거지 HUD 하단: 마을 정보 · 최근 활동 · 다음 턴을 하나의 Dock으로 통합 (base-art 아래 일반 흐름) ---- */
 .hud-dock{position:relative; z-index:5; display:flex; align-items:stretch;
-  background:rgba(6,14,15,.68); border:1px solid rgba(var(--teal-rgb),.28); border-radius:8px; overflow:hidden}
-.dock-zone{display:flex; align-items:center; gap:6px; padding:7px 10px; font-size:10px; color:#d7e7e9}
-.dock-divider{width:1px; align-self:stretch; margin:7px 0; background:rgba(255,255,255,.1)}
+  background:linear-gradient(155deg, var(--hud-bg1), var(--hud-bg2));
+  border:1px solid var(--hud-border); border-radius:9px; overflow:hidden;
+  backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+  box-shadow:0 10px 20px -16px rgba(0,0,0,.55)}
+.dock-zone{display:flex; align-items:center; gap:7px; padding:10px 13px; font-size:10.5px; color:#d7e7e9}
+.dock-divider{width:1px; align-self:stretch; margin:9px 0; background:rgba(255,255,255,.1)}
 .dock-village{flex:0 0 auto; white-space:nowrap}
-.dock-stat{font-size:9.5px; color:rgba(205,225,228,.85)}
-.dock-stat b{font-family:var(--disp); color:#fff; font-weight:700}
+.dock-stat{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; color:rgba(205,225,228,.85)}
+.dock-stat b{font-family:var(--disp); color:#fff; font-weight:700; font-size:12px}
+.dock-stat-ic{width:11px; height:11px; color:rgba(140,205,212,.75); flex:0 0 auto}
 .dock-sep{color:rgba(255,255,255,.25); font-size:9px}
-.dock-mini-bar{width:32px; height:4px; border-radius:2px; background:rgba(255,255,255,.14); overflow:hidden; margin-left:2px}
+.dock-mini-bar{width:36px; height:5px; border-radius:2.5px; background:rgba(255,255,255,.14); overflow:hidden; margin-left:2px}
 .dock-mini-bar span{display:block; height:100%; background:rgba(var(--teal-rgb),.95)}
 .dock-activity{flex:1 1 auto; min-width:0; cursor:pointer; background:none; border:none; text-align:left; font-family:var(--mono);
   transition:background .15s}
 .dock-activity:hover{background:rgba(var(--teal-rgb),.08)}
-.dock-label{flex:0 0 auto; font-size:7.5px; letter-spacing:.5px; text-transform:uppercase; color:rgba(160,210,218,.75)}
-.dock-activity-text{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9.5px; color:rgba(220,235,236,.85)}
-.dock-nextturn{flex:0 0 auto; display:flex; align-items:center; gap:5px; cursor:pointer; color:#bdfaff;
-  background:none; border:none; font-family:var(--disp); font-weight:700; font-size:10px; letter-spacing:.3px;
-  transition:background .15s, color .15s}
-.dock-nextturn:hover{background:rgba(var(--teal-rgb),.16); color:#eafffd}
-.dock-nextturn svg{transition:transform .15s}
+.dock-label{flex:0 0 auto; font-size:8px; letter-spacing:.6px; text-transform:uppercase; color:rgba(160,210,218,.8); font-weight:700}
+/* tertiary tier — 배치/개척(secondary, .dock-stat)보다 한 단계 더 조용하게. 변화가 없을 때는 존재감을
+   최소화하고, 턴 결과가 막 갱신된 순간에만 잠깐 밝아졌다가(.just-changed) 다시 이 톤으로 가라앉는다 */
+.dock-activity-text{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:9.5px; color:rgba(185,205,208,.6)}
+.dock-activity-text.just-changed{animation:dockActivityFlash 2.6s ease-out}
+@keyframes dockActivityFlash{
+  0%{color:#d8fbff; text-shadow:0 0 10px rgba(var(--teal-rgb),.7)}
+  100%{color:rgba(185,205,208,.6); text-shadow:none}
+}
+
+/* Next Turn: 링크가 아니라 "여기를 누르면 턴이 넘어간다"가 즉시 읽히는 Turn Command Zone —
+   별도 카드로 감싸지 않되, 살짝 밝은 배경 + 코너 bracket + hover glow로 다른 zone과 구분한다.
+   TURN END(작은 technical label) 위에 "다음 턴"(primary)을 얹는 것으로 Turn HUD와 같은 타이포 위계를 재사용 */
+.dock-nextturn{position:relative; flex:0 0 auto; display:flex; align-items:center; gap:8px; cursor:pointer; color:#bdfaff;
+  background:linear-gradient(180deg, rgba(var(--teal-rgb),.15), rgba(var(--teal-rgb),.05));
+  border:none; padding:9px 17px; transition:background .15s, color .15s, box-shadow .15s;
+  clip-path:polygon(11px 0, 100% 0, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0 100%, 0 11px)}
+.dock-nextturn:hover{background:linear-gradient(180deg, rgba(var(--teal-rgb),.28), rgba(var(--teal-rgb),.09));
+  color:#eafffd; box-shadow:inset 0 0 18px -6px rgba(var(--teal-rgb),.65)}
+.dn-text{display:flex; flex-direction:column; gap:1px; line-height:1; text-align:left}
+.dn-eyebrow{font-size:7.5px; letter-spacing:1.4px; text-transform:uppercase; color:rgba(155,212,222,.8); font-weight:700}
+.dn-main{font-family:var(--disp); font-weight:700; font-size:13.5px; color:inherit; letter-spacing:.2px}
+.dock-nextturn svg{transition:transform .15s; width:15px; height:15px}
 .dock-nextturn:hover svg{transform:translateX(2px)}
+.dock-nextturn .hud-bracket{width:7px; height:7px}
+.dock-nextturn .hud-bracket.tr{top:3px; right:3px}
+.dock-nextturn .hud-bracket.bl{bottom:3px; left:3px}
 
 .basemsg-toast{position:relative; z-index:6; text-align:center;
   font-size:10.5px; font-weight:700; color:#ffe9c7; background:rgba(24,17,8,.9); border:1px solid rgba(193,122,31,.55); border-radius:8px;
   padding:7px 9px; box-shadow:0 6px 16px rgba(0,0,0,.4); animation:pop .25s ease}
 
 /* ---- 드롭다운 패널 (자원/엔트리/로그) — HUD 아이콘 아래로 펼쳐짐, 한 번에 하나만 노출. 어두운 유리 패널(HUD 아이콘과 동일 톤) ---- */
-.dd{position:absolute; top:52px; right:8px; z-index:20; width:min(280px, calc(100% - 16px));
-  max-height:min(58vh, 420px); background:rgba(9,17,18,.94);
-  border:1px solid rgba(120,200,210,.35); border-radius:12px;
-  box-shadow:0 16px 32px -10px rgba(0,0,0,.6); backdrop-filter:blur(3px);
+.dd{position:absolute; top:72px; right:8px; z-index:20; width:min(280px, calc(100% - 16px));
+  max-height:min(58vh, 420px); background:linear-gradient(155deg, rgba(26,38,36,.93), rgba(15,22,21,.9));
+  border:1px solid rgba(var(--teal-rgb),.5); border-radius:12px;
+  box-shadow:0 16px 32px -10px rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   overflow:hidden; display:flex; flex-direction:column; animation:ddopen .15s ease}
 @keyframes ddopen{0%{opacity:0; transform:translateY(-6px)}100%{opacity:1; transform:none}}
 .dd-head{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 12px;
@@ -533,7 +656,21 @@ body{
 .pc-cell-name{font-size:8.5px; margin-top:2px; color:var(--mut); max-width:100%; overflow:hidden;
   text-overflow:ellipsis; white-space:nowrap}
 
-/* ---- 설치 모달 (빈 공터에 개체 배치) ---- */
+/* ---- 건설 모달 (빈 공터에 건축물을 짓고, 그 안의 직무에 개체 배치) ----
+   1단계: 건축물 카테고리(밭/레스토랑/훈련소/제작소/치료소) 선택 → 2단계: 그 건축물 안의 구체 직무 탭 */
+.install-buildings{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px}
+.install-building{flex:1 1 18%; display:flex; flex-direction:column; align-items:center; gap:5px;
+  font-family:var(--mono); font-size:10px; font-weight:700; color:var(--mut);
+  background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 4px 8px; cursor:pointer;
+  transition:border-color .15s, background .15s, opacity .15s}
+.install-building svg{width:20px; height:20px}
+.install-building:hover:not(:disabled){border-color:var(--scan)}
+.install-building.active{border-color:var(--scan); color:var(--ink); background:rgba(47,111,237,.16)}
+.install-building.has-art{padding-top:6px}
+.install-building-art{width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px}
+.install-building:disabled{opacity:.38; cursor:default}
+.install-building-desc{font-size:10.5px; color:var(--mut); opacity:.85; margin:-1px 0 10px}
+
 .install-tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px}
 .install-tab{flex:1 1 30%; font-family:var(--mono); font-size:11.5px; font-weight:700; color:var(--mut);
   background:var(--panel2); border:1px solid var(--line); border-radius:9px; padding:8px 6px; cursor:pointer}
