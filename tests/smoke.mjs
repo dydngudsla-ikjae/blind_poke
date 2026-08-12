@@ -16,6 +16,7 @@ try {
     executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
   });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.addInitScript(() => { Math.random = () => 0.1; });
   page.on("pageerror", error => errors.push(error.message));
   page.on("console", message => {
     if (message.type() === "error") errors.push(message.text());
@@ -56,6 +57,7 @@ try {
   await page.locator('[data-action="hunt"]').click();
   await page.locator(".enc-mon").first().waitFor({ state: "visible" });
   await page.locator(".enc-mon").first().click();
+  await page.getByRole("button", { name: /본인확인서 대조/ }).click();
   const artwork = await page.locator(".scn-view img").getAttribute("src");
   const pokemonId = Number(artwork.match(/(\d+)\.png/)?.[1]);
   const pokemonName = await page.evaluate(async id => {

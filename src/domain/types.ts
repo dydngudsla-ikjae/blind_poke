@@ -49,10 +49,14 @@ export interface ResourceState {
 
 export interface GameDataBundle {
   pokemon: PokemonRecord[];
-  types: Array<Record<string, unknown>>;
-  moves: Array<Record<string, unknown>>;
-  abilities: Array<Record<string, unknown>>;
+  types: TypeRecord[];
+  moves: MoveRecord[];
+  abilities: AbilityRecord[];
 }
+
+export interface MoveRecord { moveRowid:number; typeRowid:number; nameKr:string; descriptionKr?:string; details:{accuracy:number|null;power:number|null;pp:number;damageClass:number} }
+export interface TypeRecord { typeRowid:number; nameKr:string; relation?:{relationMap:Record<string,{damageFrom:number;damageTo:number}>} }
+export interface AbilityRecord { abilityRowid:number; nameKr:string; descriptionKr?:string }
 
 export interface SaveEnvelope {
   v: number;

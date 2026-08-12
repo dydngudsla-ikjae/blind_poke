@@ -1,5 +1,6 @@
 import type { BuildingState, ResourceState, RosterMember } from "../domain/types";
 import type { GameAction, GameState } from "./gameTypes";
+import { decayFavor } from "../domain/economy";
 
 export const ENERGY_PER_TURN = 5;
 
@@ -18,7 +19,7 @@ export function createInitialState(): GameState {
     screen:"draft", roster:[], buildings:[], resources:{...initialResources}, plotCap:1,
     storageCap:50, entryCap:6, turnCount:0, energy:ENERGY_PER_TURN,
     nextMemberId:1, nextBuildingId:1, draftRound:0, selectedPokemonId:null,
-    territories:{...defaultTerritories}, battle:null, message:"",
+    territories:{...defaultTerritories}, battle:null, message:"",lastLog:[],
   };
 }
 
@@ -62,7 +63,7 @@ export function restoreGameState(raw: any, mapRaw: any): GameState {
   if(Array.isArray(mapRaw)) mapRaw.forEach((t:any)=>{if(t?.id&&t?.owner) territories[t.id]=t.owner;});
   return {...base,...raw,roster:migrated.roster,nextMemberId:migrated.nextMemberId,
     buildings,nextBuildingId:Math.max(raw.nextBuildingId||1,buildings.length+1),resources:{...base.resources,...raw.resources,items:raw.resources?.items||{}},
-    territories,screen:"base",draftRound:3,selectedPokemonId:null,battle:null,message:""};
+    territories,screen:"base",draftRound:3,selectedPokemonId:null,battle:null,message:"",lastLog:[]};
 }
 
 export function gameReducer(state:GameState, action:GameAction):GameState {
@@ -78,14 +79,14 @@ export function gameReducer(state:GameState, action:GameAction):GameState {
     case "REMOVE_BUILDER": return {...state,roster:state.roster.map(m=>m.id===action.memberId&&m.buildingId===action.buildingId?{...m,buildingId:null}:m)};
     case "CANCEL_BUILDING": return {...state,buildings:state.buildings.filter(b=>b.id!==action.buildingId),
       roster:state.roster.map(m=>m.buildingId===action.buildingId?{...m,buildingId:null,job:null}:m)};
-    case "NEXT_TURN": return {...state,turnCount:state.turnCount+1,energy:ENERGY_PER_TURN,
+    case "NEXT_TURN": {const owned=Object.entries(state.territories).filter(([id,owner])=>id!=="grasslands"&&owner==="player").length;const gold=Math.min(state.storageCap,state.resources.gold+owned*3);return {...state,turnCount:state.turnCount+1,energy:ENERGY_PER_TURN,resources:{...state.resources,gold},roster:state.roster.map(decayFavor),lastLog:[...(owned?[`확보 지역 수입: 자금 +${owned*3}`]:[]),"모든 공사의 남은 시간이 진행되었습니다."],
       buildings:state.buildings.map(b=>{
         if(b.status!=="constructing") return b;
         const workers=state.roster.filter(m=>m.buildingId===b.id&&!m.job).length;
         if(!workers) return b;
         const remaining=Math.max(0,b.remainingTurns-1);
         return {...b,remainingTurns:remaining,status:remaining===0?"active":"constructing"};
-      })};
+      })};}
     case "CLAIM_TERRITORY": return {...state,territories:{...state.territories,[action.territoryId]:"player"},screen:"map",battle:null};
   }
 }

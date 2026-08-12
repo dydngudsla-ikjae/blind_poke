@@ -1,0 +1,6 @@
+import { describe,expect,it } from "vitest";
+import type { GameDataBundle, PokemonRecord } from "./types";
+import { buildCombatant,calculateDamage,effectiveness,pickMoveset } from "./battle";
+const p:PokemonRecord={pokemonRowid:1,nameKr:"테스트몬",type1Rowid:10,type2Rowid:10,hp:50,atk:60,def:50,satk:70,sdef:50,spd:60,details:{moveRowids:[1,2]}};
+const data:GameDataBundle={pokemon:[p],moves:[{moveRowid:1,typeRowid:10,nameKr:"불꽃기술",details:{accuracy:100,power:60,pp:15,damageClass:3}},{moveRowid:2,typeRowid:1,nameKr:"사용불가",descriptionKr:"사용할 수 없는 기술입니다.",details:{accuracy:100,power:100,pp:5,damageClass:2}}],types:[{typeRowid:10,nameKr:"불꽃",relation:{relationMap:{"12":{damageFrom:.5,damageTo:2}}}},{typeRowid:12,nameKr:"풀"}],abilities:[]};
+describe("battle engine",()=>{it("filters unusable moves",()=>expect(pickMoveset(p,data).map(m=>m.name)).toEqual(["불꽃기술"]));it("applies type effectiveness",()=>expect(effectiveness(10,[12],data)).toBe(2));it("calculates positive STAB damage",()=>{const a=buildCombatant({pokemon:p,level:10},data,"a"),target=buildCombatant({pokemon:{...p,type1Rowid:12,type2Rowid:12},level:10},data,"b");expect(calculateDamage(a,target,a.moves[0],data,1)).toBeGreaterThan(5)})});

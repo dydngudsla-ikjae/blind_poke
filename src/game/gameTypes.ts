@@ -5,8 +5,7 @@ export type Screen = "draft" | "base" | "hunt" | "identify" | "map" | "battle";
 export interface BattleSetup {
   territoryId: string;
   enemyName: string;
-  enemyPokemonId: number;
-  enemyLevel: number;
+  enemyTeam: Array<{pokemonId:number;level:number}>;
 }
 
 export interface GameState {
@@ -26,6 +25,7 @@ export interface GameState {
   territories: Record<string, "player" | "wild">;
   battle: BattleSetup | null;
   message: string;
+  lastLog: string[];
 }
 
 export type GameAction =
