@@ -685,8 +685,8 @@ body{
   background:
     radial-gradient(70% 55% at 30% 10%, rgba(255,255,255,.10), transparent 60%),
     linear-gradient(180deg, rgba(8,14,9,.25), rgba(5,10,7,.55)),
-    url("assets/grass-tile.png");
-  background-repeat:no-repeat, no-repeat, repeat; background-size:cover, cover, auto}
+    url("assets/forest-bg.png");
+  background-repeat:no-repeat; background-size:cover; background-position:center}
 .map-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;
   font-size:11px; font-weight:700; color:#eaf3ff; text-shadow:0 1px 3px rgba(0,0,0,.6); margin-bottom:10px}
 .map-head-sub{font-weight:400; color:rgba(255,255,255,.75); font-size:10.5px}

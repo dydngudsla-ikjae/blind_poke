@@ -1,4 +1,5 @@
 // ===== 공용 데이터 로드 + 유틸 =====
+import { loadGameData } from "./src/services/dataService.ts";
 
 export const TYPE_COLORS = {
   노말:"#9aa2ab",격투:"#d1425b",비행:"#8fb7ff",독:"#a24bd6",땅:"#d6a94b",바위:"#b8a05c",
@@ -13,12 +14,7 @@ export const rnd = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 export let POKE=[], TYPE={}, MOVE={}, ABILITY={}, MOVE_DATA={}, TYPE_CHART={};
 
 export async function loadData(){
-  const [pk,tp,mv,ab] = await Promise.all([
-    fetch("./data/pokemon.json").then(r=>r.json()),
-    fetch("./data/type.json").then(r=>r.json()),
-    fetch("./data/move.json").then(r=>r.json()),
-    fetch("./data/ability.json").then(r=>r.json()),
-  ]);
+  const { pokemon:pk, types:tp, moves:mv, abilities:ab } = await loadGameData();
   tp.forEach(t=>{ TYPE[t.typeRowid]=t.nameKr; TYPE_CHART[t.typeRowid]=t.relation?.relationMap||{}; });
   mv.forEach(m=>{ MOVE[m.moveRowid]=m.nameKr; MOVE_DATA[m.moveRowid]=m; });
   ab.forEach(a=> ABILITY[a.abilityRowid]=a.nameKr);

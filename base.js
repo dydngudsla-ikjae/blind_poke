@@ -2,6 +2,8 @@
 import { TYPE_COLORS, ART, $, types } from "./data.js";
 import { newCase } from "./identify.js";
 import { renderMap, resolveMapTurn } from "./map.js";
+import { constructionTurns, projectedConstructionTurns } from "./src/domain/construction.ts";
+import { GAME_SAVE_KEY, readStorage, writeStorage } from "./src/services/storageService.ts";
 
 /* ---- 본거지 전용 UI 아이콘 시스템: emoji를 섞지 않고 하나의 line-icon 세트로 통일.
    전부 24x24 viewBox · stroke-width 1.7 · round cap/join, 색상은 currentColor로 상속받아
@@ -277,6 +279,9 @@ const TM_APTITUDE_GAIN = 5;   // 특수능력치 증가폭(최대 100)
 export let roster = [];
 export let resources = { seed:0, fruit:0, food:0, material:0, gold:0, tool:0,
                           tm:0, candy:0, healItem:0, cureItem:0, items:{} };
+export let buildings = [];
+let nextMemberId = 1;
+let nextBuildingId = 1;
 let plotCap = PLOT_CAP_START;
 let storageCap = 50;
 let entryCap = ENTRY_CAP_START;
@@ -296,6 +301,9 @@ let pcSelected = null;     // PC 모달에서 선택된 roster 인덱스
       하나를 골라 대기 중인(또는 완전 미배치인) 개체를 실제로 배정한다(이때 m.job이 정해짐). */
 let installPicks = new Set();   // 건설 모달에서 선택된 roster 인덱스(완전 미배치 개체만)
 let installBuilding = null;     // 건설 모달에서 선택된 건축물 카테고리 id (BUILDINGS의 key 중 하나)
+let installPlotIndex = null;
+let constructionBuildingId = null;
+let constructionPicks = new Set();
 let taskBuilding = null;        // 직무 할당 모달이 다루는, 이미 지어진 건축물 id
 let taskFacility = null;        // 직무 할당 모달에서 선택된 직무 id (JOBS의 key 중 하나)
 let taskPicks = new Set();      // 직무 할당 모달에서 선택된 roster 인덱스
@@ -307,42 +315,77 @@ let itemModalIdx = null;   // "item" 패널에서 도구를 제작/장착 중인
    투입 인원 1마리당 1턴씩 줄고 최소 1턴에서 멈춘다(1마리=3턴, 2마리=2턴, 3마리 이상=1턴). 인원을
    더 투입하면(같은 건축물로 건설 모달을 다시 열어 추가 배정) 그 시점 총 인원 기준으로 다시 계산된다.
    0턴이 되면 이 표에서 지워지고, 그 즉시 기존 로직대로 "직무 미정 대기(pending)" 상태로 넘어간다. */
-let underConstruction = {};
-function constructionTurns(workerCount){
-  return Math.max(1, 3 - (workerCount - 1));
-}
-
-const SAVE_KEY = "blindpoke-save-v1";
 
 /* 자동 저장: 턴 진행 직후 · 포획(로스터 합류) 직후에 호출. localStorage를 못 쓰는 환경(시크릿 모드 등)이어도
    게임 진행에는 지장이 없도록 실패를 조용히 무시한다 */
 function saveState(){
-  try{
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ v:1, roster, resources, plotCap, storageCap, entryCap, turnCount, underConstruction }));
-  }catch(e){ /* 저장 실패는 무시 — 세이브 없이 계속 진행 */ }
+  writeStorage(GAME_SAVE_KEY, { v:2, roster, resources, buildings, nextMemberId, nextBuildingId,
+    plotCap, storageCap, entryCap, turnCount, energy });
+}
+
+function ensureMemberId(member){
+  if(!member.id) member.id = `mon-${nextMemberId++}`;
+  const n = Number(String(member.id).split("-").pop());
+  if(Number.isFinite(n)) nextMemberId = Math.max(nextMemberId, n+1);
+  return member.id;
+}
+function buildingById(id){ return buildings.find(b=>b.id===id); }
+function buildingMembers(id){ return roster.map((m,i)=>({m,i})).filter(x=>x.m.buildingId===id); }
+function constructionWorkers(id){ return buildingMembers(id).filter(x=>!x.m.job); }
+function firstFreePlot(){
+  const used = new Set(buildings.map(b=>b.plotIndex));
+  for(let i=0;i<plotCap;i++) if(!used.has(i)) return i;
+  return -1;
+}
+function migrateLegacyBuildings(data){
+  const legacyTurns = data.underConstruction || {};
+  const byType = new Map();
+  roster.forEach(m=>{
+    const type = m.building || (m.job ? buildingOf(m.job) : null);
+    if(!type) return;
+    let b = byType.get(type);
+    if(!b){
+      b = { id:`building-${nextBuildingId++}`, type, plotIndex:byType.size,
+        status:legacyTurns[type]>0?"constructing":"active", remainingTurns:legacyTurns[type]||0 };
+      byType.set(type,b);
+    }
+    m.buildingId = b.id;
+    delete m.building;
+  });
+  buildings = [...byType.values()];
 }
 
 /* 부팅 시 호출: 저장된 진행이 있으면 복원하고 true를 반환(있으면 드래프트를 건너뛰고 본거지로 바로 진입) */
 export function loadState(){
-  let raw;
-  try{ raw = localStorage.getItem(SAVE_KEY); }catch(e){ return false; }
-  if(!raw) return false;
+  const data = readStorage(GAME_SAVE_KEY);
+  if(!data) return false;
   try{
-    const data = JSON.parse(raw);
     if(!data || !Array.isArray(data.roster) || !data.roster.length) return false;
     roster.length = 0;
     data.roster.forEach(m=> roster.push(m));
+    nextMemberId = data.nextMemberId || 1;
+    roster.forEach(ensureMemberId);
     Object.assign(resources, data.resources||{});
     plotCap = data.plotCap ?? plotCap;
     storageCap = data.storageCap ?? storageCap;
     entryCap = data.entryCap ?? entryCap;
     turnCount = data.turnCount ?? turnCount;
-    underConstruction = data.underConstruction || {};
+    nextBuildingId = data.nextBuildingId || 1;
+    if(Array.isArray(data.buildings)){
+      buildings = data.buildings.map(b=>({...b}));
+      buildings.forEach(b=>{
+        const n=Number(String(b.id).split("-").pop());
+        if(Number.isFinite(n)) nextBuildingId=Math.max(nextBuildingId,n+1);
+      });
+    }else migrateLegacyBuildings(data);
+    energy = data.energy ?? ENERGY_PER_TURN;
+    saveState();
     return true;
   }catch(e){ return false; }
 }
 
 export function addToRoster(entry){
+  ensureMemberId(entry);
   entry.inEntry = false;
   roster.push(entry);
   saveState();
@@ -359,7 +402,7 @@ function isMatch(member, jobId){
   return ts.some(t=> JOB_BY_TYPE[t]===jobId);
 }
 function assignedCount(){
-  return roster.filter(m=>m.job||m.building).length;
+  return roster.filter(m=>m.job||m.buildingId).length;
 }
 function entryCount(){
   return roster.filter(m=>m.inEntry).length;
@@ -372,19 +415,11 @@ function activeJobTypes(){
   roster.forEach(m=>{ if(m.job) set.add(m.job); });
   return [...set];
 }
-function pendingBuildingsSet(){
-  const set = new Set();
-  roster.forEach(m=>{ if(!m.job && m.building) set.add(m.building); });
-  return set;
-}
 function jobMembers(jobId){
   return roster.map((m,i)=>({m,i})).filter(x=>x.m.job===jobId);
 }
-function pendingMembers(buildingKey){
-  return roster.map((m,i)=>({m,i})).filter(x=>!x.m.job && x.m.building===buildingKey);
-}
 function usedPlots(){
-  return activeJobTypes().length + pendingBuildingsSet().size;
+  return buildings.length;
 }
 
 export function spendEnergy(cost){
@@ -399,27 +434,20 @@ export function spendEnergy(cost){
 
 /* 건설: 완전 미배치 개체를 건축물 소속으로만 배정(직무는 아직 없음) — 이미 그 건축물에 대기 중인
    자리가 있으면 거기 합류(자리 추가 소모 없음), 없으면 새 자리를 하나 소모한다. */
-function assignBuilding(idx, buildingKey){
+function assignBuilding(idx, buildingId){
   const m = roster[idx];
-  if(!m) return false;
-  if(buildingKey && !m.job && !m.building){
-    const isNewSite = !pendingBuildingsSet().has(buildingKey);
-    if(isNewSite && usedPlots()>=plotCap){
-      baseMsg = `공터를 모두 사용 중입니다(${usedPlots()}/${plotCap}). 땅 평탄화로 부지를 늘리세요.`;
-      return false;
-    }
-  }
+  if(!m || !buildingById(buildingId) || m.job || m.buildingId) return false;
   baseMsg = "";
-  m.building = buildingKey || null;
+  m.buildingId = buildingId;
   return true;
 }
 /* 직무 할당: 이미 건축된(직무 미정) 자리를 그대로 직무 자리로 전환하는 것이므로 새 자리를 소모하지
    않는다 — 이 모달은 애초에 pendingBuildingsSet()에 해당 건축물이 있을 때만 열릴 수 있어 안전하다. */
-function assignJob(idx, jobId, buildingKey){
+function assignJob(idx, jobId, buildingId){
   const m = roster[idx];
   if(!m) return false;
   baseMsg = "";
-  if(jobId){ m.building = buildingKey || buildingOf(jobId) || m.building; m.job = jobId; }
+  if(jobId){ m.buildingId = buildingId || m.buildingId; m.job = jobId; }
   else { m.job = null; }
   return true;
 }
@@ -429,7 +457,7 @@ function unassignAll(idx){
   const m = roster[idx];
   if(!m) return false;
   m.job = null;
-  m.building = null;
+  m.buildingId = null;
   return true;
 }
 
@@ -529,9 +557,10 @@ function resolveTurn(){
   plotCap += flattenCount;
   storageCap += chillCount*10;
 
-  Object.keys(underConstruction).forEach(key=>{
-    underConstruction[key]--;
-    if(underConstruction[key]<=0) delete underConstruction[key];
+  buildings.filter(b=>b.status==="constructing").forEach(b=>{
+    if(!constructionWorkers(b.id).length) return;
+    b.remainingTurns--;
+    if(b.remainingTurns<=0){ b.remainingTurns=0; b.status="active"; }
   });
 
   const gain = {}, used = {};
@@ -593,12 +622,6 @@ function resolveTurn(){
    가능), plotCap을 넘는 영역은 아직 개척되지 않은 미개척지 — 사각 카드가 아니라 실제 흙밭의 원근
    사다리꼴 폴리곤을 hit-area/시각 반응 영역으로 그대로 사용한다. */
 function plotScene(){
-  const pendingKeys = [...pendingBuildingsSet()];
-  const sites = [
-    ...activeJobTypes().map(id=>({kind:"job", id})),
-    ...pendingKeys.filter(b=> !(underConstruction[b]>0)).map(id=>({kind:"pending", id})),
-    ...pendingKeys.filter(b=> underConstruction[b]>0).map(id=>({kind:"constructing", id})),
-  ];
   const tiles = [];
   for(let i=0;i<TOTAL_PLOT_AREA;i++){
     const pts = plotPolygon(i);
@@ -611,48 +634,37 @@ function plotScene(){
     const [spriteXg, spriteYg] = plotLocalToGlobal(i, spriteXl, spriteYl);
     const spriteTagStyle = `left:${spriteXg.toFixed(2)}%; top:${spriteYg.toFixed(2)}%`;
     if(i < plotCap){
-      const site = sites[i];
-      if(site?.kind==="job"){
-        const jobId = site.id;
-        const building = buildingOf(jobId);
+      const site = buildings.find(b=>b.plotIndex===i);
+      if(site?.status==="active"){
+        const building = site.type;
         const art = BUILDING_ART[building];
         const artLayer = plotArtLayerHtml(i, building, BUILDINGS[building]?.label);
-        const members = jobMembers(jobId);
+        const members = buildingMembers(site.id);
+        const jobs = [...new Set(members.map(x=>x.m.job).filter(Boolean))];
+        const jobLabel = jobs.length ? jobs.map(j=>JOBS[j]?.label).join(" · ") : "직무 미할당";
         tiles.push(`
           ${artLayer}
-          <div class="plot filled ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" data-plot-site="${jobId}" title="${BUILDINGS[building]?.label||""} · ${JOBS[jobId]?.label||""} · ${members.length}마리 근무 중">
-            ${plotFxSvg(pts)}
-            <span class="plot-info"><b>${BUILDINGS[building]?.label||""} · ${JOBS[jobId]?.label||""}</b>${members.length}마리 근무 중</span>
+          <div class="plot ${jobs.length?"filled":"pending"} ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" data-plot-pending="${site.id}" title="${BUILDINGS[building]?.label||""} · ${jobLabel} · ${members.length}마리 배치">
+            ${plotFxSvg(pts, !jobs.length)}
+            <span class="plot-info"><b>${BUILDINGS[building]?.label||""} · ${jobLabel}</b>${members.length}마리 배치</span>
           </div>
           <span class="plot-tag sprite-tag" style="${spriteTagStyle}">${spriteClusterHtml(members, i)}</span>`);
-      }else if(site?.kind==="pending"){
-        const buildingKey = site.id;
+      }else if(site?.status==="constructing"){
+        const buildingKey = site.type;
         const art = BUILDING_ART[buildingKey];
         const artLayer = plotArtLayerHtml(i, buildingKey, BUILDINGS[buildingKey]?.label);
-        const members = pendingMembers(buildingKey);
+        const members = constructionWorkers(site.id);
+        const turnsLeft = site.remainingTurns;
         tiles.push(`
           ${artLayer}
-          <div class="plot pending ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" data-plot-pending="${buildingKey}" title="${BUILDINGS[buildingKey].label} 건설 완료 · 직무 미할당 · ${members.length}마리 대기 중">
-            ${plotFxSvg(pts, true)}
-            <span class="plot-info"><b>직무 미할당</b>눌러서 할 일을 정하세요</span>
-          </div>
-          <span class="plot-tag sprite-tag" style="${spriteTagStyle}">${spriteClusterHtml(members, i)}${art?"":`<span>${BUILDINGS[buildingKey].label}</span>`}</span>`);
-      }else if(site?.kind==="constructing"){
-        const buildingKey = site.id;
-        const art = BUILDING_ART[buildingKey];
-        const artLayer = plotArtLayerHtml(i, buildingKey, BUILDINGS[buildingKey]?.label);
-        const members = pendingMembers(buildingKey);
-        const turnsLeft = underConstruction[buildingKey];
-        tiles.push(`
-          ${artLayer}
-          <div class="plot constructing ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" title="${BUILDINGS[buildingKey].label} 공사 중 · ${turnsLeft}턴 남음 · ${members.length}마리 투입">
+          <div class="plot constructing ${art?"has-art":""}" style="${posStyle}; clip-path:${clip}" data-plot-construction="${site.id}" title="${BUILDINGS[buildingKey].label} 공사 ${members.length?"중":"일시정지"} · ${turnsLeft}턴 남음 · ${members.length}마리 투입">
             ${plotFxSvg(pts)}
-            <span class="plot-info"><b>공사 중</b>${members.length}마리 투입 · 인원을 더 투입하면 단축됩니다</span>
+            <span class="plot-info"><b>${members.length?"공사 중":"공사 일시정지"}</b>${members.length}마리 투입 · 눌러서 인력을 관리하세요</span>
           </div>
           <span class="plot-tag sprite-tag" style="${spriteTagStyle}">${spriteClusterHtml(members, i)}<span class="plot-turns-badge">${turnsLeft}턴</span></span>`);
       }else{
         tiles.push(`
-          <div class="plot empty" style="${posStyle}; clip-path:${clip}" data-plot-install="1">
+          <div class="plot empty" style="${posStyle}; clip-path:${clip}" data-plot-install="${i}">
             ${plotFxSvg(pts, true)}
             <span class="plot-info">건축물을 지을 수 있습니다</span>
           </div>
@@ -680,6 +692,7 @@ function entryBadge(m){
 function rosterCard(m, i){
   const ts = types(m.pokemon);
   const pct = Math.round((m.favor/FAVOR_CAP)*100);
+  const assignedBuilding = buildingById(m.buildingId);
   return `
     <div class="roster-card" id="roster-${i}">
       <div class="rc-head">
@@ -698,8 +711,8 @@ function rosterCard(m, i){
       <div class="rc-job">
         ${m.job
           ? `<span class="rc-job-label">${BUILDINGS[buildingOf(m.job)]?.label||""} · ${JOBS[m.job]?.label||""}</span><button data-unassign="${i}" class="rc-unassign">해제</button>`
-          : m.building
-            ? `<span class="rc-job-label">${BUILDINGS[m.building]?.label||""} ${underConstruction[m.building]>0?`공사 중(${underConstruction[m.building]}턴 남음)`:"건설 완료 · 직무 미할당"}</span><button data-unassign="${i}" class="rc-unassign">해제</button>`
+          : assignedBuilding
+            ? `<span class="rc-job-label">${BUILDINGS[assignedBuilding.type]?.label||""} ${assignedBuilding.status==="constructing"?`공사 ${constructionWorkers(assignedBuilding.id).length?"중":"일시정지"}(${assignedBuilding.remainingTurns}턴 남음)`:"건설 완료 · 직무 미할당"}</span><button data-unassign="${i}" class="rc-unassign">해제</button>`
             : `<span class="rc-job-label dim">미배정 · 부지의 빈 공터에서 건설하세요</span>`}
       </div>
       <div class="rc-job">
@@ -977,24 +990,9 @@ function jobDescription(jobId){
    직무를 정하지 않는다 — 그래서 자원 비용도 없고, 필요한 최소 인원도 "1마리 이상"뿐이다. 건축물이
    세워지면(부지에 pending 칸으로 나타나면) 그 칸을 눌러야 taskModal()에서 실제 직무를 고르게 된다. */
 function installModal(){
-  const active = activeJobTypes();
-  const buildableBuildings = BUILDING_ORDER.filter(b=> BUILDINGS[b].jobs.some(j=>!active.includes(j)));
-  if(!buildableBuildings.length){
-    return `
-      <div class="modal-overlay" data-modal="install">
-        <div class="modal-box">
-          <div class="modal-head"><span>건설</span><button class="dd-close" data-hud-close>✕</button></div>
-          <div class="modal-body">
-            <div class="logempty">지금 새로 지을 수 있는 건축물이 없습니다. 이미 모든 시설을 가동 중입니다.</div>
-          </div>
-        </div>
-      </div>`;
-  }
-  if(!buildableBuildings.includes(installBuilding)) installBuilding = buildableBuildings[0];
-
-  const pending = pendingMembers(installBuilding);
-  const unassigned = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job && !x.m.building);
-  const validPicks = [...installPicks].filter(i=> roster[i] && !roster[i].job && !roster[i].building);
+  if(!BUILDING_ORDER.includes(installBuilding)) installBuilding = BUILDING_ORDER[0];
+  const unassigned = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job && !x.m.buildingId);
+  const validPicks = [...installPicks].filter(i=> roster[i] && !roster[i].job && !roster[i].buildingId);
   if(validPicks.length !== installPicks.size) installPicks = new Set(validPicks);
   const enough = installPicks.size>=1 && energy>=INSTALL_ENERGY_COST;
   const grid = unassigned.map(({m,i})=>{
@@ -1013,17 +1011,14 @@ function installModal(){
         <div class="modal-body">
           <div class="install-buildings">
             ${BUILDING_ORDER.map(b=>{
-              const buildable = BUILDINGS[b].jobs.some(j=>!active.includes(j));
               return `
-                <button class="install-building ${installBuilding===b?"active":""} ${BUILDING_ART[b]?"has-art":""}" data-install-building="${b}"
-                  ${buildable?"":"disabled"} title="${BUILDINGS[b].desc}${buildable?"":" · 이미 모두 가동 중"}">
+                <button class="install-building ${installBuilding===b?"active":""} ${BUILDING_ART[b]?"has-art":""}" data-install-building="${b}" title="${BUILDINGS[b].desc}">
                   ${BUILDING_ART[b] ? `<img class="install-building-art" src="${BUILDING_ART[b]}" alt="">` : icon(BUILDINGS[b].icon,20)}<span>${BUILDINGS[b].label}</span>
                 </button>`;
             }).join("")}
           </div>
           <div class="install-note install-building-desc">${BUILDINGS[installBuilding].desc}</div>
-          ${pending.length ? `<div class="install-note">이미 ${pending.length}마리가 이 건축물에 배정되어 ${underConstruction[installBuilding]>0?`공사 중입니다(${underConstruction[installBuilding]}턴 남음)`:"대기 중입니다"}. 더 투입하면 공사가 단축됩니다.</div>` : ""}
-          <div class="install-note">건축 기간은 기본 3턴, 투입 인원 1마리당 1턴씩 줄어 최소 1턴까지 단축됩니다 · 최소 1마리 · 에너지 ${INSTALL_ENERGY_COST}(자원 소모 없음)</div>
+          <div class="install-note">부지 ${Number(installPlotIndex)+1} · 기본 3턴 · 현재 선택 ${installPicks.size}마리 → <b>${installPicks.size?constructionTurns(installPicks.size):"-"}턴</b> · 3마리부터 최대 단축 · 에너지 ${INSTALL_ENERGY_COST}</div>
           ${energy<INSTALL_ENERGY_COST ? `<div class="install-note" style="color:var(--bad)">에너지가 부족하여 건설할 수 없습니다. (${energy}/${ENERGY_PER_TURN})</div>` : ""}
           ${unassigned.length
             ? `<div class="pc-grid">${grid}</div>`
@@ -1036,18 +1031,47 @@ function installModal(){
     </div>`;
 }
 
+function constructionModal(){
+  const b = buildingById(constructionBuildingId);
+  if(!b) return "";
+  const workers = constructionWorkers(b.id);
+  const available = roster.map((m,i)=>({m,i})).filter(x=>!x.m.job && !x.m.buildingId);
+  const valid = [...constructionPicks].filter(i=>available.some(x=>x.i===i));
+  if(valid.length!==constructionPicks.size) constructionPicks=new Set(valid);
+  const grid = available.map(({m,i})=>{
+    const sprite=m.pokemon.details?.sprites?.front_default||ART(m.pokemon.pokemonRowid);
+    return `<div class="pc-cell ${constructionPicks.has(i)?"selected":""}" data-construction-pick="${i}">
+      ${entryBadge(m)}<img src="${sprite}" alt="${m.pokemon.nameKr}"><span class="pc-cell-name">${m.pokemon.nameKr}</span></div>`;
+  }).join("");
+  const projected = constructionPicks.size
+    ? Math.min(b.remainingTurns, constructionTurns(workers.length+constructionPicks.size))
+    : b.remainingTurns;
+  return `<div class="modal-overlay" data-modal="construction"><div class="modal-box">
+    <div class="modal-head"><span>${BUILDINGS[b.type].label} · 공사 관리</span><button class="dd-close" data-hud-close>✕</button></div>
+    <div class="modal-body">
+      <div class="install-note">현재 ${workers.length}마리 · ${b.remainingTurns}턴 남음${workers.length?"":" · 인력이 없어 일시정지"}</div>
+      <div class="entry-list">${workers.map(({m,i})=>`<div class="entry-row"><span>${m.pokemon.nameKr}</span><button data-construction-remove="${i}" class="rc-unassign">회수</button></div>`).join("")||`<div class="logempty">배정된 건설 인력이 없습니다.</div>`}</div>
+      <div class="install-note" style="margin-top:12px">추가 인력 · 선택 후 ${projected}턴 남음 · 한 번에 추가하면 에너지 ${INSTALL_ENERGY_COST}</div>
+      ${available.length?`<div class="pc-grid">${grid}</div>`:`<div class="logempty">추가할 수 있는 미배치 포켓몬이 없습니다.</div>`}
+      <button class="btn wide install-confirm" data-construction-add ${constructionPicks.size&&energy>=INSTALL_ENERGY_COST?"":"disabled"}>추가 배치 (${constructionPicks.size}마리)</button>
+      <button class="btn wide" data-construction-cancel>공사 취소</button>
+    </div></div></div>`;
+}
+
 /* 직무 할당 모달(2단계): 이미 건설된(직무 미정) 건축물 부지를 눌렀을 때 연다. 그 건축물이 만들 수
    있는 직무 중 하나를 고르고, 이미 대기 중인 개체 + 아직 완전히 미배치인 개체 중에서 인원을 배정한다.
    이 시점에 비로소 자원 비용(installCost)이 든다. 새 부지를 소모하지 않으므로(이미 건설 때 자리를
    확보해둔 상태라) 정원 체크가 필요 없다. */
 function taskModal(){
-  const active = activeJobTypes();
-  const availableJobs = BUILDINGS[taskBuilding].jobs.filter(j=>!active.includes(j));
+  const targetBuilding = buildingById(taskBuilding);
+  if(!targetBuilding) return "";
+  const buildingJobs = new Set(buildingMembers(targetBuilding.id).map(x=>x.m.job).filter(Boolean));
+  const availableJobs = BUILDINGS[targetBuilding.type].jobs.filter(j=>!buildingJobs.has(j));
   if(!availableJobs.length){
     return `
       <div class="modal-overlay" data-modal="task">
         <div class="modal-box">
-          <div class="modal-head"><span>${BUILDINGS[taskBuilding].label} · 직무 할당</span><button class="dd-close" data-hud-close>✕</button></div>
+          <div class="modal-head"><span>${BUILDINGS[targetBuilding.type].label} · 직무 할당</span><button class="dd-close" data-hud-close>✕</button></div>
           <div class="modal-body">
             <div class="logempty">이 건축물이 만들 수 있는 직무가 이미 전부 가동 중입니다.</div>
           </div>
@@ -1056,7 +1080,7 @@ function taskModal(){
   }
   if(!availableJobs.includes(taskFacility)) taskFacility = availableJobs[0];
   const job = JOBS[taskFacility];
-  const eligible = roster.map((m,i)=>({m,i})).filter(x=> !x.m.job && (x.m.building===taskBuilding || !x.m.building));
+  const eligible = roster.map((m,i)=>({m,i})).filter(x=> !x.m.job && (x.m.buildingId===targetBuilding.id || !x.m.buildingId));
   const validPicks = [...taskPicks].filter(i=> eligible.some(x=>x.i===i));
   if(validPicks.length !== taskPicks.size) taskPicks = new Set(validPicks);
   const afford = canAfford(job.installCost);
@@ -1073,7 +1097,7 @@ function taskModal(){
   return `
     <div class="modal-overlay" data-modal="task">
       <div class="modal-box">
-        <div class="modal-head"><span>${BUILDINGS[taskBuilding].label} · 직무 할당</span><button class="dd-close" data-hud-close>✕</button></div>
+        <div class="modal-head"><span>${BUILDINGS[targetBuilding.type].label} · 직무 할당</span><button class="dd-close" data-hud-close>✕</button></div>
         <div class="modal-body">
           <div class="install-tabs">
             ${availableJobs.map(j=>`<button class="install-tab ${taskFacility===j?"active":""}" data-task-facility="${j}">${JOBS[j].label}</button>`).join("")}
@@ -1157,6 +1181,7 @@ export function renderBase(){
 
     ${openPanel==="pc" ? pcModal() : ""}
     ${openPanel==="install" ? installModal() : ""}
+    ${openPanel==="construction" ? constructionModal() : ""}
     ${openPanel==="task" ? taskModal() : ""}
     ${openPanel==="site" ? siteModal() : ""}
     ${openPanel==="item" ? itemModal() : ""}
@@ -1175,9 +1200,16 @@ export function renderBase(){
     openPanel = "task";
     renderBase();
   });
+  app.querySelectorAll("[data-plot-construction]").forEach(el=> el.onclick = ()=>{
+    constructionBuildingId = el.dataset.plotConstruction;
+    constructionPicks = new Set();
+    openPanel = "construction";
+    renderBase();
+  });
   app.querySelectorAll("[data-plot-install]").forEach(el=> el.onclick = ()=>{
     installBuilding = null;   // installModal()이 열리면서 지을 수 있는 첫 건축물로 자동 선택됨
     installPicks = new Set();
+    installPlotIndex = +el.dataset.plotInstall;
     openPanel = "install";
     renderBase();
   });
@@ -1195,18 +1227,43 @@ export function renderBase(){
     if(!installBuilding) return;
     const picks = [...installPicks];
     if(!picks.length) return;
-    const isNewSite = !pendingBuildingsSet().has(installBuilding);
-    if(isNewSite && usedPlots()>=plotCap){
+    if(usedPlots()>=plotCap || buildings.some(b=>b.plotIndex===installPlotIndex)){
       baseMsg = `공터를 모두 사용 중입니다(${usedPlots()}/${plotCap}). 땅 평탄화로 부지를 늘리세요.`;
       renderBase();
       return;
     }
     if(!spendEnergy(INSTALL_ENERGY_COST)){ renderBase(); return; }
-    picks.forEach(idx=> assignBuilding(idx, installBuilding));
-    underConstruction[installBuilding] = constructionTurns(pendingMembers(installBuilding).length);
+    const b={ id:`building-${nextBuildingId++}`, type:installBuilding, plotIndex:installPlotIndex,
+      status:"constructing", remainingTurns:constructionTurns(picks.length) };
+    buildings.push(b);
+    picks.forEach(idx=> assignBuilding(idx, b.id));
+    saveState();
     installPicks = new Set();
     openPanel = null;
     renderBase();
+  });
+  app.querySelectorAll("[data-construction-pick]").forEach(el=>el.onclick=()=>{
+    const idx=+el.dataset.constructionPick;
+    if(constructionPicks.has(idx)) constructionPicks.delete(idx); else constructionPicks.add(idx);
+    renderBase();
+  });
+  app.querySelector("[data-construction-add]")?.addEventListener("click",()=>{
+    const b=buildingById(constructionBuildingId);
+    const picks=[...constructionPicks];
+    if(!b||!picks.length||!spendEnergy(INSTALL_ENERGY_COST)){ renderBase(); return; }
+    picks.forEach(idx=>assignBuilding(idx,b.id));
+    b.remainingTurns=projectedConstructionTurns(b.remainingTurns,constructionWorkers(b.id).length);
+    constructionPicks=new Set(); saveState(); renderBase();
+  });
+  app.querySelectorAll("[data-construction-remove]").forEach(el=>el.onclick=()=>{
+    const m=roster[+el.dataset.constructionRemove];
+    if(m?.buildingId===constructionBuildingId&&!m.job){ m.buildingId=null; saveState(); renderBase(); }
+  });
+  app.querySelector("[data-construction-cancel]")?.addEventListener("click",()=>{
+    const b=buildingById(constructionBuildingId); if(!b) return;
+    buildingMembers(b.id).forEach(({m})=>{m.buildingId=null;m.job=null;});
+    buildings=buildings.filter(x=>x.id!==b.id);
+    constructionBuildingId=null; openPanel=null; saveState(); renderBase();
   });
   app.querySelectorAll("[data-task-facility]").forEach(b=> b.onclick = ()=>{
     taskFacility = b.dataset.taskFacility;
@@ -1231,6 +1288,7 @@ export function renderBase(){
     if(!spendEnergy(INSTALL_ENERGY_COST)){ renderBase(); return; }
     if(job.installCost) Object.entries(job.installCost).forEach(([k,v])=> resources[k]-=v);
     picks.forEach(idx=> assignJob(idx, taskFacility, taskBuilding));
+    saveState();
     taskPicks = new Set();
     openPanel = null;
     renderBase();
@@ -1245,6 +1303,7 @@ export function renderBase(){
     if(!picks.length) return;
     if(!spendEnergy(INSTALL_ENERGY_COST)){ renderBase(); return; }
     picks.forEach(idx=> assignJob(idx, siteModalJob));
+    saveState();
     sitePicks = new Set();
     openPanel = null;
     renderBase();
@@ -1252,6 +1311,7 @@ export function renderBase(){
   app.querySelectorAll("[data-unassign]").forEach(b=> b.onclick = ()=>{
     if(!spendEnergy(UNASSIGN_ENERGY_COST)){ renderBase(); return; }
     unassignAll(+b.dataset.unassign);
+    saveState();
     renderBase();
   });
   app.querySelectorAll("[data-feed]").forEach(b=> b.onclick = ()=> feedHeal(+b.dataset.feed));
@@ -1284,13 +1344,16 @@ export function renderBase(){
     newCase();
   });
   app.querySelectorAll("[data-hud-close]").forEach(b=> b.onclick = ()=>{
-    openPanel = null; installPicks = new Set(); taskPicks = new Set(); sitePicks = new Set(); renderBase();
+    openPanel = null; installPicks = new Set(); taskPicks = new Set(); sitePicks = new Set(); constructionPicks = new Set(); renderBase();
   });
   app.querySelector('[data-modal="pc"]')?.addEventListener("click", (e)=>{
     if(e.target.dataset.modal==="pc"){ openPanel = null; renderBase(); }
   });
   app.querySelector('[data-modal="install"]')?.addEventListener("click", (e)=>{
     if(e.target.dataset.modal==="install"){ openPanel = null; installPicks = new Set(); renderBase(); }
+  });
+  app.querySelector('[data-modal="construction"]')?.addEventListener("click", (e)=>{
+    if(e.target.dataset.modal==="construction"){ openPanel=null; constructionPicks=new Set(); renderBase(); }
   });
   app.querySelector('[data-modal="task"]')?.addEventListener("click", (e)=>{
     if(e.target.dataset.modal==="task"){ openPanel = null; taskPicks = new Set(); renderBase(); }

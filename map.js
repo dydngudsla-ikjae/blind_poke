@@ -3,6 +3,7 @@ import { POKE, ART, rnd, $ } from "./data.js";
 import { rollIV } from "./identify.js";
 import { roster, spendEnergy, energy, ENERGY_PER_TURN, addResource, renderBase } from "./base.js";
 import { startBattle } from "./battle.js";
+import { MAP_SAVE_KEY, readStorage, writeStorage } from "./src/services/storageService.ts";
 
 const ATTACK_ENERGY_COST = 2;
 const TERRITORY_GOLD_PER_TURN = 3;   // 소유 구역 1개당 턴마다 지급되는 자금(시작 구역 제외)
@@ -37,18 +38,13 @@ function withEul(word){
 let territories = TERRITORY_DEFS.map(t=> ({ ...t, owner: t.tier===0 ? "player" : "wild" }));
 let mapMsg = "";
 
-const MAP_SAVE_KEY = "blindpoke-map-v1";
 function saveMapState(){
-  try{
-    localStorage.setItem(MAP_SAVE_KEY, JSON.stringify(territories.map(t=>({ id:t.id, owner:t.owner }))));
-  }catch(e){ /* 저장 실패는 무시 */ }
+  writeStorage(MAP_SAVE_KEY, territories.map(t=>({ id:t.id, owner:t.owner })));
 }
 export function loadMapState(){
-  let raw;
-  try{ raw = localStorage.getItem(MAP_SAVE_KEY); }catch(e){ return; }
-  if(!raw) return;
+  const saved = readStorage(MAP_SAVE_KEY);
+  if(!saved) return;
   try{
-    const saved = JSON.parse(raw);
     saved.forEach(s=>{
       const t = territories.find(x=>x.id===s.id);
       if(t && s.owner) t.owner = s.owner;
