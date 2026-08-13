@@ -31,6 +31,7 @@ export interface GameState {
   nextBuildingId: number;
   draftRound: number;
   selectedPokemonId: number | null;
+  selectedTypeName: string | null;
   territories: Record<string, TerritoryState>;
   battle: BattleSetup | null;
   message: string;

@@ -16,7 +16,7 @@ export function GameProvider({data,children}:{data:GameDataBundle;children:React
   });
   useEffect(()=>{
     if(!state.roster.length) return;
-    const {screen,draftRound,selectedPokemonId,territories,battle,message,...save}=state;
+    const {screen,draftRound,selectedPokemonId,selectedTypeName,territories,battle,message,...save}=state;
     writeStorage(GAME_SAVE_KEY,{...save,v:3});
     writeStorage(MAP_SAVE_KEY,Object.entries(territories).map(([id,territory])=>({id,...territory})));
   },[state]);

@@ -26,7 +26,7 @@ export function createInitialState(trainerId:string|null=null, opponentTrainerId
   return {
     screen:"draft", roster:[], buildings:[], resources:{...initialResources}, plotCap:1,
     storageCap:50, entryCap:6, entryOrder:[], turnCount:0, energy:ENERGY_PER_TURN,
-    nextMemberId:1, nextBuildingId:1, draftRound:0, selectedPokemonId:null,
+    nextMemberId:1, nextBuildingId:1, draftRound:0, selectedPokemonId:null, selectedTypeName:null,
     territories:createTerritories(opponentTrainerIds), battle:null, message:"",lastLog:[],trainerId,
   };
 }
@@ -79,7 +79,7 @@ export function restoreGameState(raw: any, mapRaw: any, fallbackTrainerId:string
   });
   return {...base,...raw,roster:migrated.roster,nextMemberId:migrated.nextMemberId,
     buildings,nextBuildingId:Math.max(raw.nextBuildingId||1,buildings.length+1),resources:{...base.resources,...raw.resources,items:raw.resources?.items||{}},
-    territories,entryCap:6,entryOrder,trainerId:raw.trainerId??fallbackTrainerId,screen:"base",draftRound:3,selectedPokemonId:null,battle:null,message:"",lastLog:[]};
+    territories,entryCap:6,entryOrder,trainerId:raw.trainerId??fallbackTrainerId,screen:"base",draftRound:3,selectedPokemonId:null,selectedTypeName:null,battle:null,message:"",lastLog:[]};
 }
 
 export function gameReducer(state:GameState, action:GameAction):GameState {
