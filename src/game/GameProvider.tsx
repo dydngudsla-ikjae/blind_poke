@@ -10,13 +10,15 @@ const GameContext=createContext<GameContextValue|null>(null);
 export function GameProvider({data,children}:{data:GameDataBundle;children:ReactNode}){
   const [state,dispatch]=useReducer(gameReducer,undefined,()=>{
     const save=readGameSave(); const map=readMapSave();
-    return save?restoreGameState(save,map):createInitialState();
+    const trainerId=data.trainers[Math.floor(Math.random()*data.trainers.length)]?.id??null;
+    const opponents=data.trainers.filter(trainer=>trainer.id!==trainerId).map(trainer=>trainer.id);
+    return save?restoreGameState(save,map,trainerId,opponents):createInitialState(trainerId,opponents);
   });
   useEffect(()=>{
     if(!state.roster.length) return;
     const {screen,draftRound,selectedPokemonId,territories,battle,message,...save}=state;
     writeStorage(GAME_SAVE_KEY,{...save,v:3});
-    writeStorage(MAP_SAVE_KEY,Object.entries(territories).map(([id,owner])=>({id,owner})));
+    writeStorage(MAP_SAVE_KEY,Object.entries(territories).map(([id,territory])=>({id,...territory})));
   },[state]);
   const value=useMemo(()=>({state,dispatch,data}),[state,data]);
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

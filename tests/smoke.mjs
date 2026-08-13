@@ -30,6 +30,7 @@ try {
     await page.locator(".enc-mon").first().waitFor({ state: "visible" });
     await page.locator(".enc-mon").first().click();
   }
+  await page.getByRole("button", { name: "본거지로 이동" }).click();
 
   await page.locator('[data-plot-install="0"]').click();
   await page.locator("[data-install-pick]").first().click();
@@ -66,15 +67,26 @@ try {
   }, pokemonId);
   await page.locator(".scn-dock input").fill(pokemonName);
   await page.locator(".scn-id").click();
+  await page.locator(".result .eyebrow",{hasText:"포획 성공"}).waitFor({state:"visible"});
+  const capturedSave=await page.evaluate(()=>JSON.parse(localStorage.getItem("blindpoke-save-v1")));
+  if(capturedSave.roster.length!==4) throw new Error("포획한 포켓몬이 로스터와 저장 데이터에 추가되지 않았습니다.");
   await page.getByRole("button", { name: "본거지로" }).last().click();
+  await page.getByRole("button", {name:"엔트리"}).click();
+  await page.locator('[data-pc-member="mon-1"]').dragTo(page.locator('[data-entry-slot="0"]'));
+  await page.locator('[data-pc-member="mon-2"]').dragTo(page.locator('[data-entry-slot="0"]'));
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem("blindpoke-save-v1"))?.entryOrder?.join(",")==="mon-2,mon-1");
+  await page.locator(".entry-editor .dd-close").click();
   await page.locator('[data-action="map"]').click();
-  await page.locator("[data-node]:not([disabled])").first().click();
-  for (let turn = 0; turn < 30 && !await page.locator("#battleContinue").count(); turn++) {
-    await page.locator("[data-move]").first().click();
+  if (await page.locator("[data-node]").count() !== 40) throw new Error("월드맵 거점이 40개가 아닙니다.");
+  if (await page.locator("[data-node]:disabled").count() !== 30) throw new Error("준비 중인 거점이 30개가 아닙니다.");
+  const scoutButton=page.locator("[data-scout]").first();
+  for (const id of ["southwest","south","southeast"]) {
+    await page.locator(`[data-node="${id}"]`).click();
+    if (await scoutButton.count()) break;
   }
-  if (!await page.locator("#battleContinue").count()) throw new Error("React 배틀이 30턴 안에 끝나지 않았습니다.");
-  await page.locator("#battleContinue").click();
-  await page.locator(".map-scene").waitFor({ state: "visible" });
+  await scoutButton.click();
+  const mapSave=await page.evaluate(()=>JSON.parse(localStorage.getItem("blindpoke-map-v1")));
+  if (mapSave.length!==40||!mapSave.some(entry=>entry.id!=="home"&&entry.scouted)) throw new Error("정찰 결과가 저장되지 않았습니다.");
 
   const legacy = await page.evaluate(() => {
     const value = JSON.parse(localStorage.getItem("blindpoke-save-v1"));
@@ -96,7 +108,7 @@ try {
   }
 
   if (errors.length) throw new Error(`브라우저 오류:\n${errors.join("\n")}`);
-  console.log("Smoke test passed: draft → base → construction → save/reload → hunt/identify → map/battle");
+  console.log("Smoke test passed: draft → base → construction → save/reload → hunt/identify → town map/scouting");
 } finally {
   await browser?.close();
   await server.close();

@@ -1,0 +1,8681 @@
+{
+  "schemaVersion": 1,
+  "scope": "Major named NPC trainers with battle roles from main-series Pokémon games, Generations I-IX. Duplicate characters are merged.",
+  "notes": [
+    "PokéAPI does not provide a trainer endpoint, so this is project-owned curated data.",
+    "Characters whose only role is a player-controlled protagonist are excluded because they have no fixed NPC battle party.",
+    "pokemon is a deduplicated species union from available representative game-inspired preset teams; it is not a single level-accurate party.",
+    "An empty pokemon array means no reliable party was available in the imported source and should not be interpreted as having no Pokémon.",
+    "specialtyTypes is empty when a character has no canonical type specialty; game-specific affinity may be assigned later.",
+    "pokemon sources: species union of every documented party in each trainer's core-series game section; version differences and rematches are included, while spin-off, animation, and manga parties are excluded.",
+    "pokemon exclusions: the Black 2/White 2 downloadable 'The Battle Between Legendary Pokémon' tournament is excluded from Sabrina, Falkner, Winona, and Fantina.",
+    "pokemon normalization: every species is stored as the earliest evolution stage from pokemon.json baseRowid links, with duplicate evolution families removed per trainer.",
+    "specialtyTypes: stored as { id, nameKr }; game rules compare the stable type ID while the Korean name keeps the JSON readable."
+  ],
+  "trainerCount": 177,
+  "trainers": [
+    {
+      "id": "red",
+      "nameKr": "레드",
+      "nameEn": "Red",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "protagonist",
+        "legendary-trainer"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 1,
+          "nameKr": "이상해씨"
+        },
+        {
+          "id": 4,
+          "nameKr": "파이리"
+        },
+        {
+          "id": 7,
+          "nameKr": "꼬부기"
+        },
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 131,
+          "nameKr": "라프라스"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 446,
+          "nameKr": "먹고자"
+        }
+      ]
+    },
+    {
+      "id": "green",
+      "nameKr": "그린",
+      "nameEn": "Green",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "rival",
+        "gym-leader",
+        "champion"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 1,
+          "nameKr": "이상해씨"
+        },
+        {
+          "id": 4,
+          "nameKr": "파이리"
+        },
+        {
+          "id": 7,
+          "nameKr": "꼬부기"
+        },
+        {
+          "id": 16,
+          "nameKr": "구구"
+        },
+        {
+          "id": 27,
+          "nameKr": "모래두지"
+        },
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 63,
+          "nameKr": "캐이시"
+        },
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 102,
+          "nameKr": "아라리"
+        },
+        {
+          "id": 111,
+          "nameKr": "뿔카노"
+        },
+        {
+          "id": 128,
+          "nameKr": "켄타로스"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 246,
+          "nameKr": "애버라스"
+        }
+      ]
+    },
+    {
+      "id": "brock",
+      "nameKr": "웅",
+      "nameEn": "Brock",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 6,
+          "nameKr": "바위"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 111,
+          "nameKr": "뿔카노"
+        },
+        {
+          "id": 138,
+          "nameKr": "암나이트"
+        },
+        {
+          "id": 140,
+          "nameKr": "투구"
+        },
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 246,
+          "nameKr": "애버라스"
+        },
+        {
+          "id": 369,
+          "nameKr": "시라칸"
+        },
+        {
+          "id": 408,
+          "nameKr": "두개도스"
+        }
+      ]
+    },
+    {
+      "id": "misty",
+      "nameKr": "이슬",
+      "nameEn": "Misty",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 7,
+          "nameKr": "꼬부기"
+        },
+        {
+          "id": 54,
+          "nameKr": "고라파덕"
+        },
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 86,
+          "nameKr": "쥬쥬"
+        },
+        {
+          "id": 118,
+          "nameKr": "콘치"
+        },
+        {
+          "id": 120,
+          "nameKr": "별가사리"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 131,
+          "nameKr": "라프라스"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 170,
+          "nameKr": "초라기"
+        },
+        {
+          "id": 194,
+          "nameKr": "우파"
+        },
+        {
+          "id": 349,
+          "nameKr": "빈티나"
+        },
+        {
+          "id": 418,
+          "nameKr": "브이젤"
+        },
+        {
+          "id": 564,
+          "nameKr": "프로토가"
+        },
+        {
+          "id": 580,
+          "nameKr": "꼬지보리"
+        },
+        {
+          "id": 592,
+          "nameKr": "탱그릴"
+        }
+      ]
+    },
+    {
+      "id": "lt-surge",
+      "nameKr": "마티스",
+      "nameEn": "Lt. Surge",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 13,
+          "nameKr": "전기"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 100,
+          "nameKr": "찌리리공"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 170,
+          "nameKr": "초라기"
+        },
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 179,
+          "nameKr": "메리프"
+        },
+        {
+          "id": 239,
+          "nameKr": "에레키드"
+        },
+        {
+          "id": 309,
+          "nameKr": "썬더라이"
+        },
+        {
+          "id": 417,
+          "nameKr": "파치리스"
+        }
+      ]
+    },
+    {
+      "id": "erika",
+      "nameKr": "민화",
+      "nameEn": "Erika",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 12,
+          "nameKr": "풀"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 1,
+          "nameKr": "이상해씨"
+        },
+        {
+          "id": 43,
+          "nameKr": "뚜벅쵸"
+        },
+        {
+          "id": 46,
+          "nameKr": "파라스"
+        },
+        {
+          "id": 69,
+          "nameKr": "모다피"
+        },
+        {
+          "id": 102,
+          "nameKr": "아라리"
+        },
+        {
+          "id": 114,
+          "nameKr": "덩쿠리"
+        },
+        {
+          "id": 187,
+          "nameKr": "통통코"
+        },
+        {
+          "id": 273,
+          "nameKr": "도토링"
+        },
+        {
+          "id": 345,
+          "nameKr": "릴링"
+        },
+        {
+          "id": 406,
+          "nameKr": "꼬몽울"
+        },
+        {
+          "id": 459,
+          "nameKr": "눈쓰개"
+        },
+        {
+          "id": 546,
+          "nameKr": "소미안"
+        },
+        {
+          "id": 548,
+          "nameKr": "치릴리"
+        }
+      ]
+    },
+    {
+      "id": "koga",
+      "nameKr": "독수",
+      "nameEn": "Koga",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader",
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 4,
+          "nameKr": "독"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 48,
+          "nameKr": "콘팡"
+        },
+        {
+          "id": 72,
+          "nameKr": "왕눈해"
+        },
+        {
+          "id": 88,
+          "nameKr": "질퍽이"
+        },
+        {
+          "id": 109,
+          "nameKr": "또가스"
+        },
+        {
+          "id": 167,
+          "nameKr": "페이검"
+        },
+        {
+          "id": 204,
+          "nameKr": "피콘"
+        },
+        {
+          "id": 316,
+          "nameKr": "꼴깍몬"
+        },
+        {
+          "id": 434,
+          "nameKr": "스컹뿡"
+        },
+        {
+          "id": 453,
+          "nameKr": "삐딱구리"
+        }
+      ]
+    },
+    {
+      "id": "sabrina",
+      "nameKr": "초련",
+      "nameEn": "Sabrina",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 48,
+          "nameKr": "콘팡"
+        },
+        {
+          "id": 63,
+          "nameKr": "캐이시"
+        },
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 96,
+          "nameKr": "슬리프"
+        },
+        {
+          "id": 102,
+          "nameKr": "아라리"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 238,
+          "nameKr": "뽀뽀라"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 360,
+          "nameKr": "마자"
+        },
+        {
+          "id": 374,
+          "nameKr": "메탕"
+        },
+        {
+          "id": 439,
+          "nameKr": "흉내내"
+        },
+        {
+          "id": 527,
+          "nameKr": "또르박쥐"
+        },
+        {
+          "id": 561,
+          "nameKr": "심보러"
+        }
+      ]
+    },
+    {
+      "id": "blaine",
+      "nameKr": "강연",
+      "nameEn": "Blaine",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 4,
+          "nameKr": "파이리"
+        },
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 77,
+          "nameKr": "포니타"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 218,
+          "nameKr": "마그마그"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 240,
+          "nameKr": "마그비"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 479,
+          "nameKr": "로토무"
+        }
+      ]
+    },
+    {
+      "id": "giovanni",
+      "nameKr": "비주기",
+      "nameEn": "Giovanni",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "gym-leader",
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 5,
+          "nameKr": "땅"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 27,
+          "nameKr": "모래두지"
+        },
+        {
+          "id": 29,
+          "nameKr": "니드런♀"
+        },
+        {
+          "id": 32,
+          "nameKr": "니드런♂"
+        },
+        {
+          "id": 50,
+          "nameKr": "디그다"
+        },
+        {
+          "id": 52,
+          "nameKr": "나옹"
+        },
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 104,
+          "nameKr": "탕구리"
+        },
+        {
+          "id": 111,
+          "nameKr": "뿔카노"
+        },
+        {
+          "id": 115,
+          "nameKr": "캥카"
+        },
+        {
+          "id": 150,
+          "nameKr": "뮤츠"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 207,
+          "nameKr": "글라이거"
+        },
+        {
+          "id": 443,
+          "nameKr": "딥상어동"
+        },
+        {
+          "id": 449,
+          "nameKr": "히포포타스"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        }
+      ]
+    },
+    {
+      "id": "lorelei",
+      "nameKr": "칸나",
+      "nameEn": "Lorelei",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 27,
+          "nameKr": "모래두지"
+        },
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 86,
+          "nameKr": "쥬쥬"
+        },
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 131,
+          "nameKr": "라프라스"
+        },
+        {
+          "id": 220,
+          "nameKr": "꾸꾸리"
+        },
+        {
+          "id": 238,
+          "nameKr": "뽀뽀라"
+        }
+      ]
+    },
+    {
+      "id": "bruno",
+      "nameKr": "시바",
+      "nameEn": "Bruno",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 60,
+          "nameKr": "발챙이"
+        },
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 236,
+          "nameKr": "배루키"
+        },
+        {
+          "id": 296,
+          "nameKr": "마크탕"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        }
+      ]
+    },
+    {
+      "id": "agatha",
+      "nameKr": "국화",
+      "nameEn": "Agatha",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 23,
+          "nameKr": "아보"
+        },
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 104,
+          "nameKr": "탕구리"
+        },
+        {
+          "id": 109,
+          "nameKr": "또가스"
+        },
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        }
+      ]
+    },
+    {
+      "id": "lance",
+      "nameKr": "목호",
+      "nameEn": "Lance",
+      "generation": 1,
+      "region": "Kanto",
+      "roles": [
+        "elite-four",
+        "champion"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 4,
+          "nameKr": "파이리"
+        },
+        {
+          "id": 102,
+          "nameKr": "아라리"
+        },
+        {
+          "id": 116,
+          "nameKr": "쏘드라"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 147,
+          "nameKr": "미뇽"
+        },
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 371,
+          "nameKr": "아공이"
+        },
+        {
+          "id": 443,
+          "nameKr": "딥상어동"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 633,
+          "nameKr": "모노두"
+        }
+      ]
+    },
+    {
+      "id": "silver",
+      "nameKr": "실버",
+      "nameEn": "Silver",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 63,
+          "nameKr": "캐이시"
+        },
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 152,
+          "nameKr": "치코리타"
+        },
+        {
+          "id": 155,
+          "nameKr": "브케인"
+        },
+        {
+          "id": 158,
+          "nameKr": "리아코"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        }
+      ]
+    },
+    {
+      "id": "falkner",
+      "nameKr": "비상",
+      "nameEn": "Falkner",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 3,
+          "nameKr": "비행"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 16,
+          "nameKr": "구구"
+        },
+        {
+          "id": 21,
+          "nameKr": "깨비참"
+        },
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 84,
+          "nameKr": "두두"
+        },
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 163,
+          "nameKr": "부우부"
+        },
+        {
+          "id": 177,
+          "nameKr": "네이티"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 276,
+          "nameKr": "테일로"
+        },
+        {
+          "id": 278,
+          "nameKr": "갈모매"
+        },
+        {
+          "id": 396,
+          "nameKr": "찌르꼬"
+        }
+      ]
+    },
+    {
+      "id": "bugsy",
+      "nameKr": "호일",
+      "nameEn": "Bugsy",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 7,
+          "nameKr": "벌레"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 10,
+          "nameKr": "캐터피"
+        },
+        {
+          "id": 13,
+          "nameKr": "뿔충이"
+        },
+        {
+          "id": 123,
+          "nameKr": "스라크"
+        },
+        {
+          "id": 127,
+          "nameKr": "쁘사이저"
+        },
+        {
+          "id": 193,
+          "nameKr": "왕자리"
+        },
+        {
+          "id": 204,
+          "nameKr": "피콘"
+        },
+        {
+          "id": 213,
+          "nameKr": "단단지"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 290,
+          "nameKr": "토중몬"
+        },
+        {
+          "id": 347,
+          "nameKr": "아노딥스"
+        },
+        {
+          "id": 415,
+          "nameKr": "세꿀버리"
+        }
+      ]
+    },
+    {
+      "id": "whitney",
+      "nameKr": "꼭두",
+      "nameEn": "Whitney",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 1,
+          "nameKr": "노말"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 108,
+          "nameKr": "내루미"
+        },
+        {
+          "id": 128,
+          "nameKr": "켄타로스"
+        },
+        {
+          "id": 173,
+          "nameKr": "삐"
+        },
+        {
+          "id": 174,
+          "nameKr": "푸푸린"
+        },
+        {
+          "id": 190,
+          "nameKr": "에이팜"
+        },
+        {
+          "id": 203,
+          "nameKr": "키링키"
+        },
+        {
+          "id": 216,
+          "nameKr": "깜지곰"
+        },
+        {
+          "id": 241,
+          "nameKr": "밀탱크"
+        },
+        {
+          "id": 300,
+          "nameKr": "에나비"
+        },
+        {
+          "id": 399,
+          "nameKr": "비버니"
+        },
+        {
+          "id": 427,
+          "nameKr": "이어롤"
+        },
+        {
+          "id": 440,
+          "nameKr": "핑복"
+        },
+        {
+          "id": 504,
+          "nameKr": "보르쥐"
+        },
+        {
+          "id": 572,
+          "nameKr": "치라미"
+        }
+      ]
+    },
+    {
+      "id": "morty",
+      "nameKr": "유빈",
+      "nameEn": "Morty",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        },
+        {
+          "id": 302,
+          "nameKr": "깜까미"
+        },
+        {
+          "id": 353,
+          "nameKr": "어둠대신"
+        },
+        {
+          "id": 355,
+          "nameKr": "해골몽"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 425,
+          "nameKr": "흔들풍손"
+        },
+        {
+          "id": 562,
+          "nameKr": "데스마스"
+        },
+        {
+          "id": 592,
+          "nameKr": "탱그릴"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        }
+      ]
+    },
+    {
+      "id": "chuck",
+      "nameKr": "사도",
+      "nameEn": "Chuck",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 56,
+          "nameKr": "망키"
+        },
+        {
+          "id": 60,
+          "nameKr": "발챙이"
+        },
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 236,
+          "nameKr": "배루키"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 307,
+          "nameKr": "요가랑"
+        },
+        {
+          "id": 532,
+          "nameKr": "으랏차"
+        }
+      ]
+    },
+    {
+      "id": "jasmine",
+      "nameKr": "규리",
+      "nameEn": "Jasmine",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 204,
+          "nameKr": "피콘"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 303,
+          "nameKr": "입치트"
+        },
+        {
+          "id": 374,
+          "nameKr": "메탕"
+        },
+        {
+          "id": 393,
+          "nameKr": "팽도리"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        },
+        {
+          "id": 529,
+          "nameKr": "두더류"
+        },
+        {
+          "id": 597,
+          "nameKr": "철시드"
+        },
+        {
+          "id": 599,
+          "nameKr": "기어르"
+        }
+      ]
+    },
+    {
+      "id": "pryce",
+      "nameKr": "류옹",
+      "nameEn": "Pryce",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 86,
+          "nameKr": "쥬쥬"
+        },
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 131,
+          "nameKr": "라프라스"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 220,
+          "nameKr": "꾸꾸리"
+        },
+        {
+          "id": 238,
+          "nameKr": "뽀뽀라"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 363,
+          "nameKr": "대굴레오"
+        },
+        {
+          "id": 459,
+          "nameKr": "눈쓰개"
+        }
+      ]
+    },
+    {
+      "id": "clair",
+      "nameKr": "이향",
+      "nameEn": "Clair",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 4,
+          "nameKr": "파이리"
+        },
+        {
+          "id": 116,
+          "nameKr": "쏘드라"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 147,
+          "nameKr": "미뇽"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 371,
+          "nameKr": "아공이"
+        },
+        {
+          "id": 443,
+          "nameKr": "딥상어동"
+        },
+        {
+          "id": 621,
+          "nameKr": "크리만"
+        }
+      ]
+    },
+    {
+      "id": "will",
+      "nameKr": "일목",
+      "nameEn": "Will",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 102,
+          "nameKr": "아라리"
+        },
+        {
+          "id": 177,
+          "nameKr": "네이티"
+        },
+        {
+          "id": 238,
+          "nameKr": "뽀뽀라"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 325,
+          "nameKr": "피그점프"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        }
+      ]
+    },
+    {
+      "id": "karen",
+      "nameKr": "카렌",
+      "nameEn": "Karen",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 43,
+          "nameKr": "뚜벅쵸"
+        },
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 359,
+          "nameKr": "앱솔"
+        },
+        {
+          "id": 442,
+          "nameKr": "화강돌"
+        }
+      ]
+    },
+    {
+      "id": "archer",
+      "nameKr": "아폴로",
+      "nameEn": "Archer",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "villain-admin"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 19,
+          "nameKr": "꼬렛"
+        },
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 88,
+          "nameKr": "질퍽이"
+        },
+        {
+          "id": 100,
+          "nameKr": "찌리리공"
+        },
+        {
+          "id": 109,
+          "nameKr": "또가스"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 240,
+          "nameKr": "마그비"
+        }
+      ]
+    },
+    {
+      "id": "ariana",
+      "nameKr": "아테나",
+      "nameEn": "Ariana",
+      "generation": 2,
+      "region": "Johto",
+      "roles": [
+        "villain-admin"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 23,
+          "nameKr": "아보"
+        },
+        {
+          "id": 43,
+          "nameKr": "뚜벅쵸"
+        },
+        {
+          "id": 88,
+          "nameKr": "질퍽이"
+        },
+        {
+          "id": 96,
+          "nameKr": "슬리프"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        }
+      ]
+    },
+    {
+      "id": "brendan",
+      "nameKr": "휘웅",
+      "nameEn": "Brendan",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "protagonist",
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 218,
+          "nameKr": "마그마그"
+        },
+        {
+          "id": 252,
+          "nameKr": "나무지기"
+        },
+        {
+          "id": 255,
+          "nameKr": "아차모"
+        },
+        {
+          "id": 258,
+          "nameKr": "물짱이"
+        },
+        {
+          "id": 270,
+          "nameKr": "연꽃몬"
+        },
+        {
+          "id": 276,
+          "nameKr": "테일로"
+        },
+        {
+          "id": 278,
+          "nameKr": "갈모매"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 293,
+          "nameKr": "소곤룡"
+        },
+        {
+          "id": 320,
+          "nameKr": "고래왕자"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 343,
+          "nameKr": "오뚝군"
+        },
+        {
+          "id": 357,
+          "nameKr": "트로피우스"
+        }
+      ]
+    },
+    {
+      "id": "may",
+      "nameKr": "봄이",
+      "nameEn": "May",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "protagonist",
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 218,
+          "nameKr": "마그마그"
+        },
+        {
+          "id": 252,
+          "nameKr": "나무지기"
+        },
+        {
+          "id": 255,
+          "nameKr": "아차모"
+        },
+        {
+          "id": 258,
+          "nameKr": "물짱이"
+        },
+        {
+          "id": 270,
+          "nameKr": "연꽃몬"
+        },
+        {
+          "id": 276,
+          "nameKr": "테일로"
+        },
+        {
+          "id": 278,
+          "nameKr": "갈모매"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 293,
+          "nameKr": "소곤룡"
+        },
+        {
+          "id": 320,
+          "nameKr": "고래왕자"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 343,
+          "nameKr": "오뚝군"
+        },
+        {
+          "id": 357,
+          "nameKr": "트로피우스"
+        }
+      ]
+    },
+    {
+      "id": "wally",
+      "nameKr": "민진",
+      "nameEn": "Wally",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 263,
+          "nameKr": "지그제구리"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 298,
+          "nameKr": "루리리"
+        },
+        {
+          "id": 300,
+          "nameKr": "에나비"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 406,
+          "nameKr": "꼬몽울"
+        },
+        {
+          "id": 443,
+          "nameKr": "딥상어동"
+        },
+        {
+          "id": 661,
+          "nameKr": "화살꼬빈"
+        }
+      ]
+    },
+    {
+      "id": "roxanne",
+      "nameKr": "원규",
+      "nameEn": "Roxanne",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 6,
+          "nameKr": "바위"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 138,
+          "nameKr": "암나이트"
+        },
+        {
+          "id": 140,
+          "nameKr": "투구"
+        },
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 299,
+          "nameKr": "코코파스"
+        },
+        {
+          "id": 304,
+          "nameKr": "가보리"
+        },
+        {
+          "id": 345,
+          "nameKr": "릴링"
+        },
+        {
+          "id": 347,
+          "nameKr": "아노딥스"
+        },
+        {
+          "id": 369,
+          "nameKr": "시라칸"
+        },
+        {
+          "id": 564,
+          "nameKr": "프로토가"
+        }
+      ]
+    },
+    {
+      "id": "brawly",
+      "nameKr": "철구",
+      "nameEn": "Brawly",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 236,
+          "nameKr": "배루키"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 296,
+          "nameKr": "마크탕"
+        },
+        {
+          "id": 307,
+          "nameKr": "요가랑"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 619,
+          "nameKr": "비조푸"
+        }
+      ]
+    },
+    {
+      "id": "wattson",
+      "nameKr": "암페어",
+      "nameEn": "Wattson",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 13,
+          "nameKr": "전기"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 100,
+          "nameKr": "찌리리공"
+        },
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 179,
+          "nameKr": "메리프"
+        },
+        {
+          "id": 239,
+          "nameKr": "에레키드"
+        },
+        {
+          "id": 309,
+          "nameKr": "썬더라이"
+        },
+        {
+          "id": 311,
+          "nameKr": "플러시"
+        },
+        {
+          "id": 312,
+          "nameKr": "마이농"
+        },
+        {
+          "id": 479,
+          "nameKr": "로토무"
+        }
+      ]
+    },
+    {
+      "id": "flannery",
+      "nameKr": "민지",
+      "nameEn": "Flannery",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 77,
+          "nameKr": "포니타"
+        },
+        {
+          "id": 218,
+          "nameKr": "마그마그"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 240,
+          "nameKr": "마그비"
+        },
+        {
+          "id": 255,
+          "nameKr": "아차모"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        }
+      ]
+    },
+    {
+      "id": "norman",
+      "nameKr": "종길",
+      "nameEn": "Norman",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 1,
+          "nameKr": "노말"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 115,
+          "nameKr": "캥카"
+        },
+        {
+          "id": 128,
+          "nameKr": "켄타로스"
+        },
+        {
+          "id": 190,
+          "nameKr": "에이팜"
+        },
+        {
+          "id": 263,
+          "nameKr": "지그제구리"
+        },
+        {
+          "id": 287,
+          "nameKr": "게을로"
+        },
+        {
+          "id": 293,
+          "nameKr": "소곤룡"
+        },
+        {
+          "id": 327,
+          "nameKr": "얼루기"
+        },
+        {
+          "id": 335,
+          "nameKr": "쟝고"
+        },
+        {
+          "id": 351,
+          "nameKr": "캐스퐁"
+        },
+        {
+          "id": 352,
+          "nameKr": "켈리몬"
+        },
+        {
+          "id": 396,
+          "nameKr": "찌르꼬"
+        },
+        {
+          "id": 440,
+          "nameKr": "핑복"
+        },
+        {
+          "id": 506,
+          "nameKr": "요테리"
+        },
+        {
+          "id": 585,
+          "nameKr": "사철록"
+        },
+        {
+          "id": 626,
+          "nameKr": "버프론"
+        }
+      ]
+    },
+    {
+      "id": "winona",
+      "nameKr": "은송",
+      "nameEn": "Winona",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 3,
+          "nameKr": "비행"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 147,
+          "nameKr": "미뇽"
+        },
+        {
+          "id": 163,
+          "nameKr": "부우부"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 276,
+          "nameKr": "테일로"
+        },
+        {
+          "id": 278,
+          "nameKr": "갈모매"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 357,
+          "nameKr": "트로피우스"
+        },
+        {
+          "id": 561,
+          "nameKr": "심보러"
+        }
+      ]
+    },
+    {
+      "id": "tate",
+      "nameKr": "풍",
+      "nameEn": "Tate",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 96,
+          "nameKr": "슬리프"
+        },
+        {
+          "id": 177,
+          "nameKr": "네이티"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 325,
+          "nameKr": "피그점프"
+        },
+        {
+          "id": 337,
+          "nameKr": "루나톤"
+        },
+        {
+          "id": 338,
+          "nameKr": "솔록"
+        },
+        {
+          "id": 343,
+          "nameKr": "오뚝군"
+        },
+        {
+          "id": 433,
+          "nameKr": "랑딸랑"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 574,
+          "nameKr": "고디탱"
+        },
+        {
+          "id": 577,
+          "nameKr": "유니란"
+        }
+      ]
+    },
+    {
+      "id": "liza",
+      "nameKr": "란",
+      "nameEn": "Liza",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 96,
+          "nameKr": "슬리프"
+        },
+        {
+          "id": 177,
+          "nameKr": "네이티"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 325,
+          "nameKr": "피그점프"
+        },
+        {
+          "id": 337,
+          "nameKr": "루나톤"
+        },
+        {
+          "id": 338,
+          "nameKr": "솔록"
+        },
+        {
+          "id": 343,
+          "nameKr": "오뚝군"
+        },
+        {
+          "id": 433,
+          "nameKr": "랑딸랑"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 574,
+          "nameKr": "고디탱"
+        },
+        {
+          "id": 577,
+          "nameKr": "유니란"
+        }
+      ]
+    },
+    {
+      "id": "wallace",
+      "nameKr": "윤진",
+      "nameEn": "Wallace",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader",
+        "champion"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 72,
+          "nameKr": "왕눈해"
+        },
+        {
+          "id": 118,
+          "nameKr": "콘치"
+        },
+        {
+          "id": 120,
+          "nameKr": "별가사리"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 258,
+          "nameKr": "물짱이"
+        },
+        {
+          "id": 270,
+          "nameKr": "연꽃몬"
+        },
+        {
+          "id": 318,
+          "nameKr": "샤프니아"
+        },
+        {
+          "id": 320,
+          "nameKr": "고래왕자"
+        },
+        {
+          "id": 339,
+          "nameKr": "미꾸리"
+        },
+        {
+          "id": 349,
+          "nameKr": "빈티나"
+        },
+        {
+          "id": 363,
+          "nameKr": "대굴레오"
+        },
+        {
+          "id": 370,
+          "nameKr": "사랑동이"
+        }
+      ]
+    },
+    {
+      "id": "juan",
+      "nameKr": "아단",
+      "nameEn": "Juan",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 60,
+          "nameKr": "발챙이"
+        },
+        {
+          "id": 116,
+          "nameKr": "쏘드라"
+        },
+        {
+          "id": 131,
+          "nameKr": "라프라스"
+        },
+        {
+          "id": 339,
+          "nameKr": "미꾸리"
+        },
+        {
+          "id": 341,
+          "nameKr": "가재군"
+        },
+        {
+          "id": 363,
+          "nameKr": "대굴레오"
+        },
+        {
+          "id": 366,
+          "nameKr": "진주몽"
+        },
+        {
+          "id": 369,
+          "nameKr": "시라칸"
+        },
+        {
+          "id": 370,
+          "nameKr": "사랑동이"
+        }
+      ]
+    },
+    {
+      "id": "sidney",
+      "nameKr": "혁진",
+      "nameEn": "Sidney",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 261,
+          "nameKr": "포챠나"
+        },
+        {
+          "id": 273,
+          "nameKr": "도토링"
+        },
+        {
+          "id": 318,
+          "nameKr": "샤프니아"
+        },
+        {
+          "id": 331,
+          "nameKr": "선인왕"
+        },
+        {
+          "id": 341,
+          "nameKr": "가재군"
+        },
+        {
+          "id": 359,
+          "nameKr": "앱솔"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 570,
+          "nameKr": "조로아"
+        },
+        {
+          "id": 629,
+          "nameKr": "벌차이"
+        }
+      ]
+    },
+    {
+      "id": "phoebe",
+      "nameKr": "회연",
+      "nameEn": "Phoebe",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        },
+        {
+          "id": 302,
+          "nameKr": "깜까미"
+        },
+        {
+          "id": 353,
+          "nameKr": "어둠대신"
+        },
+        {
+          "id": 355,
+          "nameKr": "해골몽"
+        },
+        {
+          "id": 425,
+          "nameKr": "흔들풍손"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        }
+      ]
+    },
+    {
+      "id": "glacia",
+      "nameKr": "미혜",
+      "nameEn": "Glacia",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 363,
+          "nameKr": "대굴레오"
+        },
+        {
+          "id": 459,
+          "nameKr": "눈쓰개"
+        },
+        {
+          "id": 582,
+          "nameKr": "바닐프티"
+        },
+        {
+          "id": 613,
+          "nameKr": "코고미"
+        }
+      ]
+    },
+    {
+      "id": "drake",
+      "nameKr": "권수",
+      "nameEn": "Drake",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 116,
+          "nameKr": "쏘드라"
+        },
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 371,
+          "nameKr": "아공이"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 690,
+          "nameKr": "수레기"
+        }
+      ]
+    },
+    {
+      "id": "steven",
+      "nameKr": "성호",
+      "nameEn": "Steven",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "champion"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 304,
+          "nameKr": "가보리"
+        },
+        {
+          "id": 343,
+          "nameKr": "오뚝군"
+        },
+        {
+          "id": 345,
+          "nameKr": "릴링"
+        },
+        {
+          "id": 347,
+          "nameKr": "아노딥스"
+        },
+        {
+          "id": 374,
+          "nameKr": "메탕"
+        },
+        {
+          "id": 529,
+          "nameKr": "두더류"
+        },
+        {
+          "id": 566,
+          "nameKr": "아켄"
+        },
+        {
+          "id": 703,
+          "nameKr": "멜리시"
+        }
+      ]
+    },
+    {
+      "id": "archie",
+      "nameKr": "아강",
+      "nameEn": "Archie",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 88,
+          "nameKr": "질퍽이"
+        },
+        {
+          "id": 261,
+          "nameKr": "포챠나"
+        },
+        {
+          "id": 318,
+          "nameKr": "샤프니아"
+        },
+        {
+          "id": 382,
+          "nameKr": "가이오가"
+        }
+      ]
+    },
+    {
+      "id": "maxie",
+      "nameKr": "마적",
+      "nameEn": "Maxie",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 5,
+          "nameKr": "땅"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 109,
+          "nameKr": "또가스"
+        },
+        {
+          "id": 261,
+          "nameKr": "포챠나"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 383,
+          "nameKr": "그란돈"
+        }
+      ]
+    },
+    {
+      "id": "anabel",
+      "nameKr": "리라",
+      "nameEn": "Anabel",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "frontier-brain"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 63,
+          "nameKr": "캐이시"
+        },
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 371,
+          "nameKr": "아공이"
+        },
+        {
+          "id": 446,
+          "nameKr": "먹고자"
+        }
+      ]
+    },
+    {
+      "id": "brandon",
+      "nameKr": "기선",
+      "nameEn": "Brandon",
+      "generation": 3,
+      "region": "Hoenn",
+      "roles": [
+        "frontier-brain"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 144,
+          "nameKr": "프리져"
+        },
+        {
+          "id": 145,
+          "nameKr": "썬더"
+        },
+        {
+          "id": 146,
+          "nameKr": "파이어"
+        },
+        {
+          "id": 377,
+          "nameKr": "레지락"
+        },
+        {
+          "id": 378,
+          "nameKr": "레지아이스"
+        },
+        {
+          "id": 379,
+          "nameKr": "레지스틸"
+        }
+      ]
+    },
+    {
+      "id": "barry",
+      "nameKr": "용식",
+      "nameEn": "Barry",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 77,
+          "nameKr": "포니타"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 387,
+          "nameKr": "모부기"
+        },
+        {
+          "id": 390,
+          "nameKr": "불꽃숭이"
+        },
+        {
+          "id": 393,
+          "nameKr": "팽도리"
+        },
+        {
+          "id": 396,
+          "nameKr": "찌르꼬"
+        },
+        {
+          "id": 406,
+          "nameKr": "꼬몽울"
+        },
+        {
+          "id": 418,
+          "nameKr": "브이젤"
+        },
+        {
+          "id": 446,
+          "nameKr": "먹고자"
+        }
+      ]
+    },
+    {
+      "id": "roark",
+      "nameKr": "강석",
+      "nameEn": "Roark",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 6,
+          "nameKr": "바위"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 246,
+          "nameKr": "애버라스"
+        },
+        {
+          "id": 299,
+          "nameKr": "코코파스"
+        },
+        {
+          "id": 347,
+          "nameKr": "아노딥스"
+        },
+        {
+          "id": 369,
+          "nameKr": "시라칸"
+        },
+        {
+          "id": 408,
+          "nameKr": "두개도스"
+        },
+        {
+          "id": 438,
+          "nameKr": "꼬지지"
+        },
+        {
+          "id": 557,
+          "nameKr": "돌살이"
+        },
+        {
+          "id": 566,
+          "nameKr": "아켄"
+        }
+      ]
+    },
+    {
+      "id": "gardenia",
+      "nameKr": "유채",
+      "nameEn": "Gardenia",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 12,
+          "nameKr": "풀"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 43,
+          "nameKr": "뚜벅쵸"
+        },
+        {
+          "id": 114,
+          "nameKr": "덩쿠리"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 187,
+          "nameKr": "통통코"
+        },
+        {
+          "id": 191,
+          "nameKr": "해너츠"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 357,
+          "nameKr": "트로피우스"
+        },
+        {
+          "id": 387,
+          "nameKr": "모부기"
+        },
+        {
+          "id": 406,
+          "nameKr": "꼬몽울"
+        },
+        {
+          "id": 420,
+          "nameKr": "체리버"
+        },
+        {
+          "id": 455,
+          "nameKr": "무스틈니"
+        }
+      ]
+    },
+    {
+      "id": "maylene",
+      "nameKr": "자두",
+      "nameEn": "Maylene",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 236,
+          "nameKr": "배루키"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 307,
+          "nameKr": "요가랑"
+        },
+        {
+          "id": 390,
+          "nameKr": "불꽃숭이"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        },
+        {
+          "id": 453,
+          "nameKr": "삐딱구리"
+        }
+      ]
+    },
+    {
+      "id": "crasher-wake",
+      "nameKr": "맥실러",
+      "nameEn": "Crasher Wake",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 60,
+          "nameKr": "발챙이"
+        },
+        {
+          "id": 116,
+          "nameKr": "쏘드라"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 194,
+          "nameKr": "우파"
+        },
+        {
+          "id": 270,
+          "nameKr": "연꽃몬"
+        },
+        {
+          "id": 318,
+          "nameKr": "샤프니아"
+        },
+        {
+          "id": 366,
+          "nameKr": "진주몽"
+        },
+        {
+          "id": 393,
+          "nameKr": "팽도리"
+        },
+        {
+          "id": 418,
+          "nameKr": "브이젤"
+        },
+        {
+          "id": 422,
+          "nameKr": "깝질무"
+        },
+        {
+          "id": 456,
+          "nameKr": "형광어"
+        }
+      ]
+    },
+    {
+      "id": "fantina",
+      "nameKr": "멜리사",
+      "nameEn": "Fantina",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        },
+        {
+          "id": 353,
+          "nameKr": "어둠대신"
+        },
+        {
+          "id": 355,
+          "nameKr": "해골몽"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 425,
+          "nameKr": "흔들풍손"
+        },
+        {
+          "id": 442,
+          "nameKr": "화강돌"
+        },
+        {
+          "id": 479,
+          "nameKr": "로토무"
+        },
+        {
+          "id": 592,
+          "nameKr": "탱그릴"
+        }
+      ]
+    },
+    {
+      "id": "byron",
+      "nameKr": "동관",
+      "nameEn": "Byron",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 204,
+          "nameKr": "피콘"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 304,
+          "nameKr": "가보리"
+        },
+        {
+          "id": 393,
+          "nameKr": "팽도리"
+        },
+        {
+          "id": 410,
+          "nameKr": "방패톱스"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 529,
+          "nameKr": "두더류"
+        }
+      ]
+    },
+    {
+      "id": "candice",
+      "nameKr": "무청",
+      "nameEn": "Candice",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 220,
+          "nameKr": "꾸꾸리"
+        },
+        {
+          "id": 238,
+          "nameKr": "뽀뽀라"
+        },
+        {
+          "id": 307,
+          "nameKr": "요가랑"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 459,
+          "nameKr": "눈쓰개"
+        }
+      ]
+    },
+    {
+      "id": "volkner",
+      "nameKr": "전진",
+      "nameEn": "Volkner",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 13,
+          "nameKr": "전기"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 100,
+          "nameKr": "찌리리공"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 170,
+          "nameKr": "초라기"
+        },
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 190,
+          "nameKr": "에이팜"
+        },
+        {
+          "id": 223,
+          "nameKr": "총어"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 239,
+          "nameKr": "에레키드"
+        },
+        {
+          "id": 240,
+          "nameKr": "마그비"
+        },
+        {
+          "id": 278,
+          "nameKr": "갈모매"
+        },
+        {
+          "id": 403,
+          "nameKr": "꼬링크"
+        },
+        {
+          "id": 479,
+          "nameKr": "로토무"
+        },
+        {
+          "id": 522,
+          "nameKr": "줄뮤마"
+        },
+        {
+          "id": 595,
+          "nameKr": "파쪼옥"
+        },
+        {
+          "id": 602,
+          "nameKr": "저리어"
+        }
+      ]
+    },
+    {
+      "id": "aaron",
+      "nameKr": "충호",
+      "nameEn": "Aaron",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 7,
+          "nameKr": "벌레"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 123,
+          "nameKr": "스라크"
+        },
+        {
+          "id": 193,
+          "nameKr": "왕자리"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 265,
+          "nameKr": "개무소"
+        },
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 415,
+          "nameKr": "세꿀버리"
+        },
+        {
+          "id": 451,
+          "nameKr": "스콜피"
+        }
+      ]
+    },
+    {
+      "id": "bertha",
+      "nameKr": "들국화",
+      "nameEn": "Bertha",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 5,
+          "nameKr": "땅"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 32,
+          "nameKr": "니드런♂"
+        },
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 111,
+          "nameKr": "뿔카노"
+        },
+        {
+          "id": 194,
+          "nameKr": "우파"
+        },
+        {
+          "id": 207,
+          "nameKr": "글라이거"
+        },
+        {
+          "id": 220,
+          "nameKr": "꾸꾸리"
+        },
+        {
+          "id": 339,
+          "nameKr": "미꾸리"
+        },
+        {
+          "id": 438,
+          "nameKr": "꼬지지"
+        },
+        {
+          "id": 449,
+          "nameKr": "히포포타스"
+        }
+      ]
+    },
+    {
+      "id": "flint",
+      "nameKr": "대엽",
+      "nameEn": "Flint",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 77,
+          "nameKr": "포니타"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 239,
+          "nameKr": "에레키드"
+        },
+        {
+          "id": 240,
+          "nameKr": "마그비"
+        },
+        {
+          "id": 390,
+          "nameKr": "불꽃숭이"
+        },
+        {
+          "id": 403,
+          "nameKr": "꼬링크"
+        },
+        {
+          "id": 425,
+          "nameKr": "흔들풍손"
+        },
+        {
+          "id": 427,
+          "nameKr": "이어롤"
+        }
+      ]
+    },
+    {
+      "id": "lucian",
+      "nameKr": "오엽",
+      "nameEn": "Lucian",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 63,
+          "nameKr": "캐이시"
+        },
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 203,
+          "nameKr": "키링키"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 307,
+          "nameKr": "요가랑"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 439,
+          "nameKr": "흉내내"
+        }
+      ]
+    },
+    {
+      "id": "cynthia",
+      "nameKr": "난천",
+      "nameEn": "Cynthia",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "champion"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 137,
+          "nameKr": "폴리곤"
+        },
+        {
+          "id": 175,
+          "nameKr": "토게피"
+        },
+        {
+          "id": 349,
+          "nameKr": "빈티나"
+        },
+        {
+          "id": 406,
+          "nameKr": "꼬몽울"
+        },
+        {
+          "id": 422,
+          "nameKr": "깝질무"
+        },
+        {
+          "id": 442,
+          "nameKr": "화강돌"
+        },
+        {
+          "id": 443,
+          "nameKr": "딥상어동"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        },
+        {
+          "id": 602,
+          "nameKr": "저리어"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        }
+      ]
+    },
+    {
+      "id": "cyrus",
+      "nameKr": "태홍",
+      "nameEn": "Cyrus",
+      "generation": 4,
+      "region": "Sinnoh",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 483,
+          "nameKr": "디아루가"
+        },
+        {
+          "id": 484,
+          "nameKr": "펄기아"
+        }
+      ]
+    },
+    {
+      "id": "cheren",
+      "nameKr": "체렌",
+      "nameEn": "Cheren",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "rival",
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 1,
+          "nameKr": "노말"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 108,
+          "nameKr": "내루미"
+        },
+        {
+          "id": 137,
+          "nameKr": "폴리곤"
+        },
+        {
+          "id": 335,
+          "nameKr": "쟝고"
+        },
+        {
+          "id": 351,
+          "nameKr": "캐스퐁"
+        },
+        {
+          "id": 427,
+          "nameKr": "이어롤"
+        },
+        {
+          "id": 495,
+          "nameKr": "주리비얀"
+        },
+        {
+          "id": 498,
+          "nameKr": "뚜꾸리"
+        },
+        {
+          "id": 501,
+          "nameKr": "수댕이"
+        },
+        {
+          "id": 504,
+          "nameKr": "보르쥐"
+        },
+        {
+          "id": 506,
+          "nameKr": "요테리"
+        },
+        {
+          "id": 509,
+          "nameKr": "쌔비냥"
+        },
+        {
+          "id": 511,
+          "nameKr": "야나프"
+        },
+        {
+          "id": 513,
+          "nameKr": "바오프"
+        },
+        {
+          "id": 515,
+          "nameKr": "앗차프"
+        },
+        {
+          "id": 519,
+          "nameKr": "콩둘기"
+        },
+        {
+          "id": 524,
+          "nameKr": "단굴"
+        },
+        {
+          "id": 572,
+          "nameKr": "치라미"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 626,
+          "nameKr": "버프론"
+        }
+      ]
+    },
+    {
+      "id": "bianca",
+      "nameKr": "벨",
+      "nameEn": "Bianca",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 495,
+          "nameKr": "주리비얀"
+        },
+        {
+          "id": 498,
+          "nameKr": "뚜꾸리"
+        },
+        {
+          "id": 501,
+          "nameKr": "수댕이"
+        },
+        {
+          "id": 506,
+          "nameKr": "요테리"
+        },
+        {
+          "id": 511,
+          "nameKr": "야나프"
+        },
+        {
+          "id": 513,
+          "nameKr": "바오프"
+        },
+        {
+          "id": 515,
+          "nameKr": "앗차프"
+        },
+        {
+          "id": 517,
+          "nameKr": "몽나"
+        },
+        {
+          "id": 531,
+          "nameKr": "다부니"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 619,
+          "nameKr": "비조푸"
+        }
+      ]
+    },
+    {
+      "id": "hugh",
+      "nameKr": "휴이",
+      "nameEn": "Hugh",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 495,
+          "nameKr": "주리비얀"
+        },
+        {
+          "id": 498,
+          "nameKr": "뚜꾸리"
+        },
+        {
+          "id": 501,
+          "nameKr": "수댕이"
+        },
+        {
+          "id": 511,
+          "nameKr": "야나프"
+        },
+        {
+          "id": 513,
+          "nameKr": "바오프"
+        },
+        {
+          "id": 515,
+          "nameKr": "앗차프"
+        },
+        {
+          "id": 519,
+          "nameKr": "콩둘기"
+        },
+        {
+          "id": 602,
+          "nameKr": "저리어"
+        },
+        {
+          "id": 626,
+          "nameKr": "버프론"
+        }
+      ]
+    },
+    {
+      "id": "cilan",
+      "nameKr": "덴트",
+      "nameEn": "Cilan",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 12,
+          "nameKr": "풀"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 187,
+          "nameKr": "통통코"
+        },
+        {
+          "id": 495,
+          "nameKr": "주리비얀"
+        },
+        {
+          "id": 506,
+          "nameKr": "요테리"
+        },
+        {
+          "id": 511,
+          "nameKr": "야나프"
+        },
+        {
+          "id": 546,
+          "nameKr": "소미안"
+        },
+        {
+          "id": 548,
+          "nameKr": "치릴리"
+        },
+        {
+          "id": 556,
+          "nameKr": "마라카치"
+        },
+        {
+          "id": 597,
+          "nameKr": "철시드"
+        }
+      ]
+    },
+    {
+      "id": "chili",
+      "nameKr": "팟",
+      "nameEn": "Chili",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 240,
+          "nameKr": "마그비"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 498,
+          "nameKr": "뚜꾸리"
+        },
+        {
+          "id": 506,
+          "nameKr": "요테리"
+        },
+        {
+          "id": 513,
+          "nameKr": "바오프"
+        },
+        {
+          "id": 554,
+          "nameKr": "달막화"
+        },
+        {
+          "id": 631,
+          "nameKr": "앤티골"
+        }
+      ]
+    },
+    {
+      "id": "cress",
+      "nameKr": "콘",
+      "nameEn": "Cress",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 54,
+          "nameKr": "고라파덕"
+        },
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 298,
+          "nameKr": "루리리"
+        },
+        {
+          "id": 341,
+          "nameKr": "가재군"
+        },
+        {
+          "id": 418,
+          "nameKr": "브이젤"
+        },
+        {
+          "id": 501,
+          "nameKr": "수댕이"
+        },
+        {
+          "id": 506,
+          "nameKr": "요테리"
+        },
+        {
+          "id": 515,
+          "nameKr": "앗차프"
+        },
+        {
+          "id": 535,
+          "nameKr": "동챙이"
+        },
+        {
+          "id": 550,
+          "nameKr": "배쓰나이"
+        }
+      ]
+    },
+    {
+      "id": "lenora",
+      "nameKr": "알로에",
+      "nameEn": "Lenora",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 1,
+          "nameKr": "노말"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 108,
+          "nameKr": "내루미"
+        },
+        {
+          "id": 115,
+          "nameKr": "캥카"
+        },
+        {
+          "id": 173,
+          "nameKr": "삐"
+        },
+        {
+          "id": 206,
+          "nameKr": "노고치"
+        },
+        {
+          "id": 504,
+          "nameKr": "보르쥐"
+        },
+        {
+          "id": 506,
+          "nameKr": "요테리"
+        },
+        {
+          "id": 531,
+          "nameKr": "다부니"
+        },
+        {
+          "id": 572,
+          "nameKr": "치라미"
+        },
+        {
+          "id": 585,
+          "nameKr": "사철록"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        }
+      ]
+    },
+    {
+      "id": "burgh",
+      "nameKr": "아티",
+      "nameEn": "Burgh",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 7,
+          "nameKr": "벌레"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 415,
+          "nameKr": "세꿀버리"
+        },
+        {
+          "id": 540,
+          "nameKr": "두르보"
+        },
+        {
+          "id": 543,
+          "nameKr": "마디네"
+        },
+        {
+          "id": 557,
+          "nameKr": "돌살이"
+        },
+        {
+          "id": 588,
+          "nameKr": "딱정곤"
+        },
+        {
+          "id": 616,
+          "nameKr": "쪼마리"
+        },
+        {
+          "id": 632,
+          "nameKr": "아이앤트"
+        }
+      ]
+    },
+    {
+      "id": "elesa",
+      "nameKr": "카밀레",
+      "nameEn": "Elesa",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 13,
+          "nameKr": "전기"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 179,
+          "nameKr": "메리프"
+        },
+        {
+          "id": 403,
+          "nameKr": "꼬링크"
+        },
+        {
+          "id": 522,
+          "nameKr": "줄뮤마"
+        },
+        {
+          "id": 587,
+          "nameKr": "에몽가"
+        },
+        {
+          "id": 595,
+          "nameKr": "파쪼옥"
+        },
+        {
+          "id": 602,
+          "nameKr": "저리어"
+        },
+        {
+          "id": 618,
+          "nameKr": "메더"
+        }
+      ]
+    },
+    {
+      "id": "clay",
+      "nameKr": "야콘",
+      "nameEn": "Clay",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 5,
+          "nameKr": "땅"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 27,
+          "nameKr": "모래두지"
+        },
+        {
+          "id": 95,
+          "nameKr": "롱스톤"
+        },
+        {
+          "id": 220,
+          "nameKr": "꾸꾸리"
+        },
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 343,
+          "nameKr": "오뚝군"
+        },
+        {
+          "id": 529,
+          "nameKr": "두더류"
+        },
+        {
+          "id": 535,
+          "nameKr": "동챙이"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        },
+        {
+          "id": 622,
+          "nameKr": "골비람"
+        }
+      ]
+    },
+    {
+      "id": "skyla",
+      "nameKr": "풍란",
+      "nameEn": "Skyla",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 3,
+          "nameKr": "비행"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 187,
+          "nameKr": "통통코"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 425,
+          "nameKr": "흔들풍손"
+        },
+        {
+          "id": 519,
+          "nameKr": "콩둘기"
+        },
+        {
+          "id": 527,
+          "nameKr": "또르박쥐"
+        },
+        {
+          "id": 561,
+          "nameKr": "심보러"
+        },
+        {
+          "id": 566,
+          "nameKr": "아켄"
+        },
+        {
+          "id": 580,
+          "nameKr": "꼬지보리"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        },
+        {
+          "id": 629,
+          "nameKr": "벌차이"
+        }
+      ]
+    },
+    {
+      "id": "brycen",
+      "nameKr": "담죽",
+      "nameEn": "Brycen",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 86,
+          "nameKr": "쥬쥬"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 318,
+          "nameKr": "샤프니아"
+        },
+        {
+          "id": 363,
+          "nameKr": "대굴레오"
+        },
+        {
+          "id": 539,
+          "nameKr": "타격귀"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 570,
+          "nameKr": "조로아"
+        },
+        {
+          "id": 582,
+          "nameKr": "바닐프티"
+        },
+        {
+          "id": 588,
+          "nameKr": "딱정곤"
+        },
+        {
+          "id": 613,
+          "nameKr": "코고미"
+        },
+        {
+          "id": 615,
+          "nameKr": "프리지오"
+        },
+        {
+          "id": 624,
+          "nameKr": "자망칼"
+        },
+        {
+          "id": 629,
+          "nameKr": "벌차이"
+        },
+        {
+          "id": 633,
+          "nameKr": "모노두"
+        }
+      ]
+    },
+    {
+      "id": "drayden",
+      "nameKr": "사간",
+      "nameEn": "Drayden",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 371,
+          "nameKr": "아공이"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 621,
+          "nameKr": "크리만"
+        },
+        {
+          "id": 633,
+          "nameKr": "모노두"
+        }
+      ]
+    },
+    {
+      "id": "iris",
+      "nameKr": "아이리스",
+      "nameEn": "Iris",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader",
+        "champion"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 131,
+          "nameKr": "라프라스"
+        },
+        {
+          "id": 304,
+          "nameKr": "가보리"
+        },
+        {
+          "id": 371,
+          "nameKr": "아공이"
+        },
+        {
+          "id": 566,
+          "nameKr": "아켄"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 621,
+          "nameKr": "크리만"
+        },
+        {
+          "id": 633,
+          "nameKr": "모노두"
+        }
+      ]
+    },
+    {
+      "id": "roxie",
+      "nameKr": "보미카",
+      "nameEn": "Roxie",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 4,
+          "nameKr": "독"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 88,
+          "nameKr": "질퍽이"
+        },
+        {
+          "id": 109,
+          "nameKr": "또가스"
+        },
+        {
+          "id": 336,
+          "nameKr": "세비퍼"
+        },
+        {
+          "id": 451,
+          "nameKr": "스콜피"
+        },
+        {
+          "id": 453,
+          "nameKr": "삐딱구리"
+        },
+        {
+          "id": 543,
+          "nameKr": "마디네"
+        },
+        {
+          "id": 568,
+          "nameKr": "깨봉이"
+        },
+        {
+          "id": 590,
+          "nameKr": "깜놀버슬"
+        }
+      ]
+    },
+    {
+      "id": "marlon",
+      "nameKr": "시즈",
+      "nameEn": "Marlon",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 120,
+          "nameKr": "별가사리"
+        },
+        {
+          "id": 194,
+          "nameKr": "우파"
+        },
+        {
+          "id": 320,
+          "nameKr": "고래왕자"
+        },
+        {
+          "id": 458,
+          "nameKr": "타만타"
+        },
+        {
+          "id": 564,
+          "nameKr": "프로토가"
+        },
+        {
+          "id": 592,
+          "nameKr": "탱그릴"
+        },
+        {
+          "id": 594,
+          "nameKr": "맘복치"
+        }
+      ]
+    },
+    {
+      "id": "shauntal",
+      "nameKr": "망초",
+      "nameEn": "Shauntal",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        },
+        {
+          "id": 353,
+          "nameKr": "어둠대신"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 425,
+          "nameKr": "흔들풍손"
+        },
+        {
+          "id": 562,
+          "nameKr": "데스마스"
+        },
+        {
+          "id": 592,
+          "nameKr": "탱그릴"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        },
+        {
+          "id": 622,
+          "nameKr": "골비람"
+        }
+      ]
+    },
+    {
+      "id": "marshal",
+      "nameKr": "연무",
+      "nameEn": "Marshal",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 307,
+          "nameKr": "요가랑"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        },
+        {
+          "id": 453,
+          "nameKr": "삐딱구리"
+        },
+        {
+          "id": 532,
+          "nameKr": "으랏차"
+        },
+        {
+          "id": 538,
+          "nameKr": "던지미"
+        },
+        {
+          "id": 539,
+          "nameKr": "타격귀"
+        },
+        {
+          "id": 619,
+          "nameKr": "비조푸"
+        }
+      ]
+    },
+    {
+      "id": "grimsley",
+      "nameKr": "블래리",
+      "nameEn": "Grimsley",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 246,
+          "nameKr": "애버라스"
+        },
+        {
+          "id": 318,
+          "nameKr": "샤프니아"
+        },
+        {
+          "id": 359,
+          "nameKr": "앱솔"
+        },
+        {
+          "id": 451,
+          "nameKr": "스콜피"
+        },
+        {
+          "id": 509,
+          "nameKr": "쌔비냥"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 624,
+          "nameKr": "자망칼"
+        }
+      ]
+    },
+    {
+      "id": "caitlin",
+      "nameKr": "카틀레야",
+      "nameEn": "Caitlin",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "elite-four",
+        "frontier-brain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 63,
+          "nameKr": "캐이시"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 374,
+          "nameKr": "메탕"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 517,
+          "nameKr": "몽나"
+        },
+        {
+          "id": 561,
+          "nameKr": "심보러"
+        },
+        {
+          "id": 574,
+          "nameKr": "고디탱"
+        },
+        {
+          "id": 577,
+          "nameKr": "유니란"
+        }
+      ]
+    },
+    {
+      "id": "alder",
+      "nameKr": "노간주",
+      "nameEn": "Alder",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "champion"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 532,
+          "nameKr": "으랏차"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        },
+        {
+          "id": 577,
+          "nameKr": "유니란"
+        },
+        {
+          "id": 582,
+          "nameKr": "바닐프티"
+        },
+        {
+          "id": 588,
+          "nameKr": "딱정곤"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        },
+        {
+          "id": 616,
+          "nameKr": "쪼마리"
+        },
+        {
+          "id": 621,
+          "nameKr": "크리만"
+        },
+        {
+          "id": 626,
+          "nameKr": "버프론"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        },
+        {
+          "id": 636,
+          "nameKr": "활화르바"
+        }
+      ]
+    },
+    {
+      "id": "n",
+      "nameKr": "N",
+      "nameEn": "N",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "rival",
+        "team-plasma-king"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 60,
+          "nameKr": "발챙이"
+        },
+        {
+          "id": 72,
+          "nameKr": "왕눈해"
+        },
+        {
+          "id": 77,
+          "nameKr": "포니타"
+        },
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 111,
+          "nameKr": "뿔카노"
+        },
+        {
+          "id": 120,
+          "nameKr": "별가사리"
+        },
+        {
+          "id": 123,
+          "nameKr": "스라크"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 138,
+          "nameKr": "암나이트"
+        },
+        {
+          "id": 140,
+          "nameKr": "투구"
+        },
+        {
+          "id": 170,
+          "nameKr": "초라기"
+        },
+        {
+          "id": 220,
+          "nameKr": "꾸꾸리"
+        },
+        {
+          "id": 273,
+          "nameKr": "도토링"
+        },
+        {
+          "id": 290,
+          "nameKr": "토중몬"
+        },
+        {
+          "id": 345,
+          "nameKr": "릴링"
+        },
+        {
+          "id": 347,
+          "nameKr": "아노딥스"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 422,
+          "nameKr": "깝질무"
+        },
+        {
+          "id": 449,
+          "nameKr": "히포포타스"
+        },
+        {
+          "id": 459,
+          "nameKr": "눈쓰개"
+        },
+        {
+          "id": 509,
+          "nameKr": "쌔비냥"
+        },
+        {
+          "id": 519,
+          "nameKr": "콩둘기"
+        },
+        {
+          "id": 524,
+          "nameKr": "단굴"
+        },
+        {
+          "id": 532,
+          "nameKr": "으랏차"
+        },
+        {
+          "id": 535,
+          "nameKr": "동챙이"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        },
+        {
+          "id": 554,
+          "nameKr": "달막화"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 561,
+          "nameKr": "심보러"
+        },
+        {
+          "id": 564,
+          "nameKr": "프로토가"
+        },
+        {
+          "id": 566,
+          "nameKr": "아켄"
+        },
+        {
+          "id": 570,
+          "nameKr": "조로아"
+        },
+        {
+          "id": 582,
+          "nameKr": "바닐프티"
+        },
+        {
+          "id": 595,
+          "nameKr": "파쪼옥"
+        },
+        {
+          "id": 597,
+          "nameKr": "철시드"
+        },
+        {
+          "id": 599,
+          "nameKr": "기어르"
+        },
+        {
+          "id": 643,
+          "nameKr": "레시라무"
+        },
+        {
+          "id": 644,
+          "nameKr": "제크로무"
+        }
+      ]
+    },
+    {
+      "id": "ghetsis",
+      "nameKr": "게치스",
+      "nameEn": "Ghetsis",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 451,
+          "nameKr": "스콜피"
+        },
+        {
+          "id": 453,
+          "nameKr": "삐딱구리"
+        },
+        {
+          "id": 535,
+          "nameKr": "동챙이"
+        },
+        {
+          "id": 562,
+          "nameKr": "데스마스"
+        },
+        {
+          "id": 602,
+          "nameKr": "저리어"
+        },
+        {
+          "id": 624,
+          "nameKr": "자망칼"
+        },
+        {
+          "id": 626,
+          "nameKr": "버프론"
+        },
+        {
+          "id": 633,
+          "nameKr": "모노두"
+        },
+        {
+          "id": 643,
+          "nameKr": "레시라무"
+        },
+        {
+          "id": 644,
+          "nameKr": "제크로무"
+        }
+      ]
+    },
+    {
+      "id": "colress",
+      "nameKr": "아크로마",
+      "nameEn": "Colress",
+      "generation": 5,
+      "region": "Unova",
+      "roles": [
+        "villain-admin"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 374,
+          "nameKr": "메탕"
+        },
+        {
+          "id": 479,
+          "nameKr": "로토무"
+        },
+        {
+          "id": 599,
+          "nameKr": "기어르"
+        },
+        {
+          "id": 605,
+          "nameKr": "리그레"
+        }
+      ]
+    },
+    {
+      "id": "calem",
+      "nameKr": "칼름",
+      "nameEn": "Calem",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "protagonist",
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 173,
+          "nameKr": "삐"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 359,
+          "nameKr": "앱솔"
+        },
+        {
+          "id": 650,
+          "nameKr": "도치마론"
+        },
+        {
+          "id": 653,
+          "nameKr": "푸호꼬"
+        },
+        {
+          "id": 656,
+          "nameKr": "개구마르"
+        },
+        {
+          "id": 661,
+          "nameKr": "화살꼬빈"
+        },
+        {
+          "id": 677,
+          "nameKr": "냐스퍼"
+        }
+      ]
+    },
+    {
+      "id": "serena",
+      "nameKr": "세레나",
+      "nameEn": "Serena",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "protagonist",
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 173,
+          "nameKr": "삐"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 359,
+          "nameKr": "앱솔"
+        },
+        {
+          "id": 650,
+          "nameKr": "도치마론"
+        },
+        {
+          "id": 653,
+          "nameKr": "푸호꼬"
+        },
+        {
+          "id": 656,
+          "nameKr": "개구마르"
+        },
+        {
+          "id": 661,
+          "nameKr": "화살꼬빈"
+        },
+        {
+          "id": 677,
+          "nameKr": "냐스퍼"
+        }
+      ]
+    },
+    {
+      "id": "shauna",
+      "nameKr": "사나",
+      "nameEn": "Shauna",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 300,
+          "nameKr": "에나비"
+        },
+        {
+          "id": 650,
+          "nameKr": "도치마론"
+        },
+        {
+          "id": 653,
+          "nameKr": "푸호꼬"
+        },
+        {
+          "id": 656,
+          "nameKr": "개구마르"
+        },
+        {
+          "id": 704,
+          "nameKr": "미끄메라"
+        }
+      ]
+    },
+    {
+      "id": "tierno",
+      "nameKr": "티에르노",
+      "nameEn": "Tierno",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 341,
+          "nameKr": "가재군"
+        },
+        {
+          "id": 406,
+          "nameKr": "꼬몽울"
+        },
+        {
+          "id": 661,
+          "nameKr": "화살꼬빈"
+        },
+        {
+          "id": 669,
+          "nameKr": "플라베베"
+        }
+      ]
+    },
+    {
+      "id": "trevor",
+      "nameKr": "트로바",
+      "nameEn": "Trevor",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 142,
+          "nameKr": "프테라"
+        },
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 341,
+          "nameKr": "가재군"
+        },
+        {
+          "id": 669,
+          "nameKr": "플라베베"
+        }
+      ]
+    },
+    {
+      "id": "viola",
+      "nameKr": "비올라",
+      "nameEn": "Viola",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 7,
+          "nameKr": "벌레"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 283,
+          "nameKr": "비구술"
+        },
+        {
+          "id": 664,
+          "nameKr": "분이벌레"
+        }
+      ]
+    },
+    {
+      "id": "grant",
+      "nameKr": "자크",
+      "nameEn": "Grant",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 6,
+          "nameKr": "바위"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 696,
+          "nameKr": "티고라스"
+        },
+        {
+          "id": 698,
+          "nameKr": "아마루스"
+        }
+      ]
+    },
+    {
+      "id": "korrina",
+      "nameKr": "코르니",
+      "nameEn": "Korrina",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 83,
+          "nameKr": "파오리"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 307,
+          "nameKr": "요가랑"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        },
+        {
+          "id": 619,
+          "nameKr": "비조푸"
+        },
+        {
+          "id": 650,
+          "nameKr": "도치마론"
+        },
+        {
+          "id": 701,
+          "nameKr": "루차불"
+        },
+        {
+          "id": 739,
+          "nameKr": "오기지게"
+        }
+      ]
+    },
+    {
+      "id": "ramos",
+      "nameKr": "후쿠지",
+      "nameEn": "Ramos",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 12,
+          "nameKr": "풀"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 69,
+          "nameKr": "모다피"
+        },
+        {
+          "id": 187,
+          "nameKr": "통통코"
+        },
+        {
+          "id": 672,
+          "nameKr": "메이클"
+        }
+      ]
+    },
+    {
+      "id": "clemont",
+      "nameKr": "시트론",
+      "nameEn": "Clemont",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 13,
+          "nameKr": "전기"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 587,
+          "nameKr": "에몽가"
+        },
+        {
+          "id": 694,
+          "nameKr": "목도리키텔"
+        }
+      ]
+    },
+    {
+      "id": "valerie",
+      "nameKr": "마슈",
+      "nameEn": "Valerie",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 18,
+          "nameKr": "페어리"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 303,
+          "nameKr": "입치트"
+        },
+        {
+          "id": 439,
+          "nameKr": "흉내내"
+        }
+      ]
+    },
+    {
+      "id": "olympia",
+      "nameKr": "고지카",
+      "nameEn": "Olympia",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 561,
+          "nameKr": "심보러"
+        },
+        {
+          "id": 677,
+          "nameKr": "냐스퍼"
+        }
+      ]
+    },
+    {
+      "id": "wulfric",
+      "nameKr": "우르프",
+      "nameEn": "Wulfric",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 459,
+          "nameKr": "눈쓰개"
+        },
+        {
+          "id": 615,
+          "nameKr": "프리지오"
+        },
+        {
+          "id": 712,
+          "nameKr": "꽁어름"
+        }
+      ]
+    },
+    {
+      "id": "malva",
+      "nameKr": "파키라",
+      "nameEn": "Malva",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        },
+        {
+          "id": 661,
+          "nameKr": "화살꼬빈"
+        },
+        {
+          "id": 667,
+          "nameKr": "레오꼬"
+        }
+      ]
+    },
+    {
+      "id": "siebold",
+      "nameKr": "즈미",
+      "nameEn": "Siebold",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 120,
+          "nameKr": "별가사리"
+        },
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 688,
+          "nameKr": "거북손손"
+        },
+        {
+          "id": 692,
+          "nameKr": "완철포"
+        }
+      ]
+    },
+    {
+      "id": "wikstrom",
+      "nameKr": "간피",
+      "nameEn": "Wikstrom",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 123,
+          "nameKr": "스라크"
+        },
+        {
+          "id": 299,
+          "nameKr": "코코파스"
+        },
+        {
+          "id": 679,
+          "nameKr": "단칼빙"
+        },
+        {
+          "id": 707,
+          "nameKr": "클레피"
+        }
+      ]
+    },
+    {
+      "id": "drasna",
+      "nameKr": "드라세나",
+      "nameEn": "Drasna",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 621,
+          "nameKr": "크리만"
+        },
+        {
+          "id": 690,
+          "nameKr": "수레기"
+        },
+        {
+          "id": 714,
+          "nameKr": "음뱃"
+        }
+      ]
+    },
+    {
+      "id": "diantha",
+      "nameKr": "카르네",
+      "nameEn": "Diantha",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "champion"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 696,
+          "nameKr": "티고라스"
+        },
+        {
+          "id": 698,
+          "nameKr": "아마루스"
+        },
+        {
+          "id": 701,
+          "nameKr": "루차불"
+        },
+        {
+          "id": 704,
+          "nameKr": "미끄메라"
+        },
+        {
+          "id": 710,
+          "nameKr": "호바귀"
+        }
+      ]
+    },
+    {
+      "id": "lysandre",
+      "nameKr": "플라드리",
+      "nameEn": "Lysandre",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 129,
+          "nameKr": "잉어킹"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 302,
+          "nameKr": "깜까미"
+        },
+        {
+          "id": 568,
+          "nameKr": "깨봉이"
+        },
+        {
+          "id": 619,
+          "nameKr": "비조푸"
+        },
+        {
+          "id": 667,
+          "nameKr": "레오꼬"
+        },
+        {
+          "id": 669,
+          "nameKr": "플라베베"
+        },
+        {
+          "id": 714,
+          "nameKr": "음뱃"
+        },
+        {
+          "id": 716,
+          "nameKr": "제르네아스"
+        },
+        {
+          "id": 717,
+          "nameKr": "이벨타르"
+        }
+      ]
+    },
+    {
+      "id": "az",
+      "nameKr": "AZ",
+      "nameEn": "AZ",
+      "generation": 6,
+      "region": "Kalos",
+      "roles": [
+        "legendary-trainer"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 561,
+          "nameKr": "심보러"
+        },
+        {
+          "id": 622,
+          "nameKr": "골비람"
+        }
+      ]
+    },
+    {
+      "id": "hau",
+      "nameKr": "하우",
+      "nameEn": "Hau",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 128,
+          "nameKr": "켄타로스"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 172,
+          "nameKr": "피츄"
+        },
+        {
+          "id": 714,
+          "nameKr": "음뱃"
+        },
+        {
+          "id": 722,
+          "nameKr": "나몰빼미"
+        },
+        {
+          "id": 725,
+          "nameKr": "냐오불"
+        },
+        {
+          "id": 728,
+          "nameKr": "누리공"
+        },
+        {
+          "id": 739,
+          "nameKr": "오기지게"
+        },
+        {
+          "id": 775,
+          "nameKr": "자말라"
+        }
+      ]
+    },
+    {
+      "id": "gladion",
+      "nameKr": "글라디오",
+      "nameEn": "Gladion",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 1,
+          "nameKr": "이상해씨"
+        },
+        {
+          "id": 4,
+          "nameKr": "파이리"
+        },
+        {
+          "id": 7,
+          "nameKr": "꼬부기"
+        },
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 137,
+          "nameKr": "폴리곤"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        },
+        {
+          "id": 570,
+          "nameKr": "조로아"
+        },
+        {
+          "id": 772,
+          "nameKr": "타입:널"
+        }
+      ]
+    },
+    {
+      "id": "ilima",
+      "nameKr": "일리마",
+      "nameEn": "Ilima",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "trial-captain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 1,
+          "nameKr": "노말"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 235,
+          "nameKr": "루브도"
+        },
+        {
+          "id": 734,
+          "nameKr": "영구스"
+        },
+        {
+          "id": 775,
+          "nameKr": "자말라"
+        }
+      ]
+    },
+    {
+      "id": "lana",
+      "nameKr": "수련",
+      "nameEn": "Lana",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "trial-captain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 170,
+          "nameKr": "초라기"
+        },
+        {
+          "id": 751,
+          "nameKr": "물거미"
+        }
+      ]
+    },
+    {
+      "id": "kiawe",
+      "nameKr": "키아웨",
+      "nameEn": "Kiawe",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "trial-captain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 104,
+          "nameKr": "탕구리"
+        },
+        {
+          "id": 661,
+          "nameKr": "화살꼬빈"
+        }
+      ]
+    },
+    {
+      "id": "mallow",
+      "nameKr": "마오",
+      "nameEn": "Mallow",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "trial-captain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 12,
+          "nameKr": "풀"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 708,
+          "nameKr": "나목령"
+        },
+        {
+          "id": 755,
+          "nameKr": "자마슈"
+        },
+        {
+          "id": 761,
+          "nameKr": "달콤아"
+        }
+      ]
+    },
+    {
+      "id": "sophocles",
+      "nameKr": "마마네",
+      "nameEn": "Sophocles",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "trial-captain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 13,
+          "nameKr": "전기"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 239,
+          "nameKr": "에레키드"
+        },
+        {
+          "id": 736,
+          "nameKr": "턱지충이"
+        },
+        {
+          "id": 777,
+          "nameKr": "토게데마루"
+        }
+      ]
+    },
+    {
+      "id": "acerola",
+      "nameKr": "아세로라",
+      "nameEn": "Acerola",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "trial-captain",
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 302,
+          "nameKr": "깜까미"
+        },
+        {
+          "id": 353,
+          "nameKr": "어둠대신"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 425,
+          "nameKr": "흔들풍손"
+        },
+        {
+          "id": 769,
+          "nameKr": "모래꿍"
+        },
+        {
+          "id": 781,
+          "nameKr": "타타륜"
+        }
+      ]
+    },
+    {
+      "id": "mina",
+      "nameKr": "말리화",
+      "nameEn": "Mina",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "trial-captain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 18,
+          "nameKr": "페어리"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 174,
+          "nameKr": "푸푸린"
+        },
+        {
+          "id": 209,
+          "nameKr": "블루"
+        },
+        {
+          "id": 303,
+          "nameKr": "입치트"
+        },
+        {
+          "id": 439,
+          "nameKr": "흉내내"
+        },
+        {
+          "id": 707,
+          "nameKr": "클레피"
+        },
+        {
+          "id": 742,
+          "nameKr": "에블리"
+        },
+        {
+          "id": 755,
+          "nameKr": "자마슈"
+        }
+      ]
+    },
+    {
+      "id": "hala",
+      "nameKr": "할라",
+      "nameEn": "Hala",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "kahuna",
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 56,
+          "nameKr": "망키"
+        },
+        {
+          "id": 60,
+          "nameKr": "발챙이"
+        },
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 296,
+          "nameKr": "마크탕"
+        },
+        {
+          "id": 739,
+          "nameKr": "오기지게"
+        },
+        {
+          "id": 759,
+          "nameKr": "포곰곰"
+        }
+      ]
+    },
+    {
+      "id": "olivia",
+      "nameKr": "라이치",
+      "nameEn": "Olivia",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "kahuna",
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 6,
+          "nameKr": "바위"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 299,
+          "nameKr": "코코파스"
+        },
+        {
+          "id": 345,
+          "nameKr": "릴링"
+        },
+        {
+          "id": 347,
+          "nameKr": "아노딥스"
+        },
+        {
+          "id": 369,
+          "nameKr": "시라칸"
+        },
+        {
+          "id": 524,
+          "nameKr": "단굴"
+        },
+        {
+          "id": 703,
+          "nameKr": "멜리시"
+        },
+        {
+          "id": 744,
+          "nameKr": "암멍이"
+        }
+      ]
+    },
+    {
+      "id": "nanu",
+      "nameKr": "나누",
+      "nameEn": "Nanu",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "kahuna"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 52,
+          "nameKr": "나옹"
+        },
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 302,
+          "nameKr": "깜까미"
+        },
+        {
+          "id": 359,
+          "nameKr": "앱솔"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        }
+      ]
+    },
+    {
+      "id": "hapu",
+      "nameKr": "하푸우",
+      "nameEn": "Hapu",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "kahuna"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 5,
+          "nameKr": "땅"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 50,
+          "nameKr": "디그다"
+        },
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 422,
+          "nameKr": "깝질무"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        },
+        {
+          "id": 622,
+          "nameKr": "골비람"
+        },
+        {
+          "id": 749,
+          "nameKr": "머드나기"
+        }
+      ]
+    },
+    {
+      "id": "kahili",
+      "nameKr": "카일리",
+      "nameEn": "Kahili",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 3,
+          "nameKr": "비행"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        },
+        {
+          "id": 629,
+          "nameKr": "벌차이"
+        },
+        {
+          "id": 701,
+          "nameKr": "루차불"
+        },
+        {
+          "id": 731,
+          "nameKr": "콕코구리"
+        },
+        {
+          "id": 741,
+          "nameKr": "춤추새"
+        }
+      ]
+    },
+    {
+      "id": "molayne",
+      "nameKr": "멀레인",
+      "nameEn": "Molayne",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 27,
+          "nameKr": "모래두지"
+        },
+        {
+          "id": 50,
+          "nameKr": "디그다"
+        },
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 374,
+          "nameKr": "메탕"
+        },
+        {
+          "id": 624,
+          "nameKr": "자망칼"
+        },
+        {
+          "id": 707,
+          "nameKr": "클레피"
+        }
+      ]
+    },
+    {
+      "id": "kukui",
+      "nameKr": "쿠쿠이",
+      "nameEn": "Professor Kukui",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "professor",
+        "champion-challenger"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 446,
+          "nameKr": "먹고자"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        },
+        {
+          "id": 722,
+          "nameKr": "나몰빼미"
+        },
+        {
+          "id": 725,
+          "nameKr": "냐오불"
+        },
+        {
+          "id": 728,
+          "nameKr": "누리공"
+        },
+        {
+          "id": 744,
+          "nameKr": "암멍이"
+        }
+      ]
+    },
+    {
+      "id": "lusamine",
+      "nameKr": "루자미네",
+      "nameEn": "Lusamine",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 173,
+          "nameKr": "삐"
+        },
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        },
+        {
+          "id": 349,
+          "nameKr": "빈티나"
+        },
+        {
+          "id": 427,
+          "nameKr": "이어롤"
+        },
+        {
+          "id": 548,
+          "nameKr": "치릴리"
+        },
+        {
+          "id": 759,
+          "nameKr": "포곰곰"
+        }
+      ]
+    },
+    {
+      "id": "guzma",
+      "nameKr": "구즈마",
+      "nameEn": "Guzma",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 7,
+          "nameKr": "벌레"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 123,
+          "nameKr": "스라크"
+        },
+        {
+          "id": 127,
+          "nameKr": "쁘사이저"
+        },
+        {
+          "id": 167,
+          "nameKr": "페이검"
+        },
+        {
+          "id": 283,
+          "nameKr": "비구술"
+        },
+        {
+          "id": 736,
+          "nameKr": "턱지충이"
+        },
+        {
+          "id": 767,
+          "nameKr": "꼬시레"
+        }
+      ]
+    },
+    {
+      "id": "plumeria",
+      "nameKr": "플루메리",
+      "nameEn": "Plumeria",
+      "generation": 7,
+      "region": "Alola",
+      "roles": [
+        "villain-admin"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 4,
+          "nameKr": "독"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 41,
+          "nameKr": "주뱃"
+        },
+        {
+          "id": 88,
+          "nameKr": "질퍽이"
+        },
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 747,
+          "nameKr": "시마사리"
+        },
+        {
+          "id": 757,
+          "nameKr": "야도뇽"
+        }
+      ]
+    },
+    {
+      "id": "hop",
+      "nameKr": "호브",
+      "nameEn": "Hop",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 446,
+          "nameKr": "먹고자"
+        },
+        {
+          "id": 810,
+          "nameKr": "흥나숭"
+        },
+        {
+          "id": 813,
+          "nameKr": "염버니"
+        },
+        {
+          "id": 816,
+          "nameKr": "울머기"
+        },
+        {
+          "id": 821,
+          "nameKr": "파라꼬"
+        },
+        {
+          "id": 831,
+          "nameKr": "우르"
+        },
+        {
+          "id": 871,
+          "nameKr": "찌르성게"
+        },
+        {
+          "id": 888,
+          "nameKr": "자시안"
+        },
+        {
+          "id": 889,
+          "nameKr": "자마젠타"
+        }
+      ]
+    },
+    {
+      "id": "bede",
+      "nameKr": "비트",
+      "nameEn": "Bede",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "rival",
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 18,
+          "nameKr": "페어리"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 77,
+          "nameKr": "포니타"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 303,
+          "nameKr": "입치트"
+        },
+        {
+          "id": 574,
+          "nameKr": "고디탱"
+        },
+        {
+          "id": 577,
+          "nameKr": "유니란"
+        },
+        {
+          "id": 856,
+          "nameKr": "몸지브림"
+        }
+      ]
+    },
+    {
+      "id": "marnie",
+      "nameKr": "마리",
+      "nameEn": "Marnie",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "rival",
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 453,
+          "nameKr": "삐딱구리"
+        },
+        {
+          "id": 509,
+          "nameKr": "쌔비냥"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 859,
+          "nameKr": "메롱꿍"
+        },
+        {
+          "id": 877,
+          "nameKr": "모르페코"
+        }
+      ]
+    },
+    {
+      "id": "klara",
+      "nameKr": "도정",
+      "nameEn": "Klara",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 4,
+          "nameKr": "독"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 109,
+          "nameKr": "또가스"
+        },
+        {
+          "id": 451,
+          "nameKr": "스콜피"
+        },
+        {
+          "id": 543,
+          "nameKr": "마디네"
+        }
+      ]
+    },
+    {
+      "id": "avery",
+      "nameKr": "세이버리",
+      "nameEn": "Avery",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 63,
+          "nameKr": "캐이시"
+        },
+        {
+          "id": 77,
+          "nameKr": "포니타"
+        },
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 527,
+          "nameKr": "또르박쥐"
+        }
+      ]
+    },
+    {
+      "id": "milo",
+      "nameKr": "아킬",
+      "nameEn": "Milo",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 12,
+          "nameKr": "풀"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 43,
+          "nameKr": "뚜벅쵸"
+        },
+        {
+          "id": 270,
+          "nameKr": "연꽃몬"
+        },
+        {
+          "id": 273,
+          "nameKr": "도토링"
+        },
+        {
+          "id": 420,
+          "nameKr": "체리버"
+        },
+        {
+          "id": 761,
+          "nameKr": "달콤아"
+        },
+        {
+          "id": 829,
+          "nameKr": "꼬모카"
+        },
+        {
+          "id": 840,
+          "nameKr": "과사삭벌레"
+        }
+      ]
+    },
+    {
+      "id": "nessa",
+      "nameKr": "야청",
+      "nameEn": "Nessa",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 118,
+          "nameKr": "콘치"
+        },
+        {
+          "id": 194,
+          "nameKr": "우파"
+        },
+        {
+          "id": 278,
+          "nameKr": "갈모매"
+        },
+        {
+          "id": 747,
+          "nameKr": "시마사리"
+        },
+        {
+          "id": 767,
+          "nameKr": "꼬시레"
+        },
+        {
+          "id": 833,
+          "nameKr": "깨물부기"
+        },
+        {
+          "id": 846,
+          "nameKr": "찌로꼬치"
+        }
+      ]
+    },
+    {
+      "id": "kabu",
+      "nameKr": "순무",
+      "nameEn": "Kabu",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 757,
+          "nameKr": "야도뇽"
+        },
+        {
+          "id": 850,
+          "nameKr": "태우지네"
+        }
+      ]
+    },
+    {
+      "id": "bea",
+      "nameKr": "채두",
+      "nameEn": "Bea",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 66,
+          "nameKr": "알통몬"
+        },
+        {
+          "id": 83,
+          "nameKr": "파오리"
+        },
+        {
+          "id": 236,
+          "nameKr": "배루키"
+        },
+        {
+          "id": 674,
+          "nameKr": "판짱"
+        },
+        {
+          "id": 701,
+          "nameKr": "루차불"
+        },
+        {
+          "id": 852,
+          "nameKr": "때때무노"
+        },
+        {
+          "id": 870,
+          "nameKr": "대여르"
+        }
+      ]
+    },
+    {
+      "id": "allister",
+      "nameKr": "어니언",
+      "nameEn": "Allister",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 92,
+          "nameKr": "고오스"
+        },
+        {
+          "id": 222,
+          "nameKr": "코산호"
+        },
+        {
+          "id": 355,
+          "nameKr": "해골몽"
+        },
+        {
+          "id": 562,
+          "nameKr": "데스마스"
+        },
+        {
+          "id": 607,
+          "nameKr": "불켜미"
+        },
+        {
+          "id": 778,
+          "nameKr": "따라큐"
+        },
+        {
+          "id": 854,
+          "nameKr": "데인차"
+        }
+      ]
+    },
+    {
+      "id": "opal",
+      "nameKr": "포플러",
+      "nameEn": "Opal",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 18,
+          "nameKr": "페어리"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 109,
+          "nameKr": "또가스"
+        },
+        {
+          "id": 175,
+          "nameKr": "토게피"
+        },
+        {
+          "id": 303,
+          "nameKr": "입치트"
+        },
+        {
+          "id": 868,
+          "nameKr": "마빌크"
+        }
+      ]
+    },
+    {
+      "id": "gordie",
+      "nameKr": "마쿠와",
+      "nameEn": "Gordie",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 6,
+          "nameKr": "바위"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 213,
+          "nameKr": "단단지"
+        },
+        {
+          "id": 246,
+          "nameKr": "애버라스"
+        },
+        {
+          "id": 688,
+          "nameKr": "거북손손"
+        },
+        {
+          "id": 837,
+          "nameKr": "탄동"
+        },
+        {
+          "id": 874,
+          "nameKr": "돌헨진"
+        }
+      ]
+    },
+    {
+      "id": "melony",
+      "nameKr": "멜론",
+      "nameEn": "Melony",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 131,
+          "nameKr": "라프라스"
+        },
+        {
+          "id": 439,
+          "nameKr": "흉내내"
+        },
+        {
+          "id": 554,
+          "nameKr": "달막화"
+        },
+        {
+          "id": 872,
+          "nameKr": "누니머기"
+        },
+        {
+          "id": 875,
+          "nameKr": "빙큐보"
+        }
+      ]
+    },
+    {
+      "id": "piers",
+      "nameKr": "두송",
+      "nameEn": "Piers",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 263,
+          "nameKr": "지그제구리"
+        },
+        {
+          "id": 434,
+          "nameKr": "스컹뿡"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 686,
+          "nameKr": "오케이징"
+        },
+        {
+          "id": 848,
+          "nameKr": "일레즌"
+        }
+      ]
+    },
+    {
+      "id": "raihan",
+      "nameKr": "금랑",
+      "nameEn": "Raihan",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 524,
+          "nameKr": "단굴"
+        },
+        {
+          "id": 704,
+          "nameKr": "미끄메라"
+        },
+        {
+          "id": 776,
+          "nameKr": "폭거북스"
+        },
+        {
+          "id": 843,
+          "nameKr": "모래뱀"
+        },
+        {
+          "id": 884,
+          "nameKr": "두랄루돈"
+        }
+      ]
+    },
+    {
+      "id": "leon",
+      "nameKr": "단델",
+      "nameEn": "Leon",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "champion"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 4,
+          "nameKr": "파이리"
+        },
+        {
+          "id": 111,
+          "nameKr": "뿔카노"
+        },
+        {
+          "id": 439,
+          "nameKr": "흉내내"
+        },
+        {
+          "id": 535,
+          "nameKr": "동챙이"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 679,
+          "nameKr": "단칼빙"
+        },
+        {
+          "id": 810,
+          "nameKr": "흥나숭"
+        },
+        {
+          "id": 813,
+          "nameKr": "염버니"
+        },
+        {
+          "id": 816,
+          "nameKr": "울머기"
+        },
+        {
+          "id": 821,
+          "nameKr": "파라꼬"
+        },
+        {
+          "id": 885,
+          "nameKr": "드라꼰"
+        }
+      ]
+    },
+    {
+      "id": "rose",
+      "nameKr": "로즈",
+      "nameEn": "Chairman Rose",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "villain-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 52,
+          "nameKr": "나옹"
+        },
+        {
+          "id": 588,
+          "nameKr": "딱정곤"
+        },
+        {
+          "id": 597,
+          "nameKr": "철시드"
+        },
+        {
+          "id": 599,
+          "nameKr": "기어르"
+        },
+        {
+          "id": 878,
+          "nameKr": "끼리동"
+        }
+      ]
+    },
+    {
+      "id": "oleana",
+      "nameKr": "올리브",
+      "nameEn": "Oleana",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "villain-admin"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 349,
+          "nameKr": "빈티나"
+        },
+        {
+          "id": 361,
+          "nameKr": "눈꼬마"
+        },
+        {
+          "id": 568,
+          "nameKr": "깨봉이"
+        },
+        {
+          "id": 757,
+          "nameKr": "야도뇽"
+        },
+        {
+          "id": 761,
+          "nameKr": "달콤아"
+        }
+      ]
+    },
+    {
+      "id": "mustard",
+      "nameKr": "마스터드",
+      "nameEn": "Mustard",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "former-champion"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 403,
+          "nameKr": "꼬링크"
+        },
+        {
+          "id": 619,
+          "nameKr": "비조푸"
+        },
+        {
+          "id": 744,
+          "nameKr": "암멍이"
+        },
+        {
+          "id": 782,
+          "nameKr": "짜랑꼬"
+        },
+        {
+          "id": 821,
+          "nameKr": "파라꼬"
+        },
+        {
+          "id": 891,
+          "nameKr": "치고마"
+        }
+      ]
+    },
+    {
+      "id": "peony",
+      "nameKr": "피오니",
+      "nameEn": "Peony",
+      "generation": 8,
+      "region": "Galar",
+      "roles": [
+        "former-gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 52,
+          "nameKr": "나옹"
+        },
+        {
+          "id": 123,
+          "nameKr": "스라크"
+        },
+        {
+          "id": 304,
+          "nameKr": "가보리"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 878,
+          "nameKr": "끼리동"
+        }
+      ]
+    },
+    {
+      "id": "adaman",
+      "nameKr": "찬석",
+      "nameEn": "Adaman",
+      "generation": 8,
+      "region": "Hisui",
+      "roles": [
+        "clan-leader"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        }
+      ]
+    },
+    {
+      "id": "irida",
+      "nameKr": "주혜",
+      "nameEn": "Irida",
+      "generation": 8,
+      "region": "Hisui",
+      "roles": [
+        "clan-leader"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        }
+      ]
+    },
+    {
+      "id": "kamado",
+      "nameKr": "전목",
+      "nameEn": "Kamado",
+      "generation": 8,
+      "region": "Hisui",
+      "roles": [
+        "commander"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 74,
+          "nameKr": "꼬마돌"
+        },
+        {
+          "id": 173,
+          "nameKr": "삐"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 216,
+          "nameKr": "깜지곰"
+        },
+        {
+          "id": 299,
+          "nameKr": "코코파스"
+        },
+        {
+          "id": 446,
+          "nameKr": "먹고자"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        }
+      ]
+    },
+    {
+      "id": "volo",
+      "nameKr": "월로",
+      "nameEn": "Volo",
+      "generation": 8,
+      "region": "Hisui",
+      "roles": [
+        "rival",
+        "villain"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 175,
+          "nameKr": "토게피"
+        },
+        {
+          "id": 406,
+          "nameKr": "꼬몽울"
+        },
+        {
+          "id": 442,
+          "nameKr": "화강돌"
+        },
+        {
+          "id": 443,
+          "nameKr": "딥상어동"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        }
+      ]
+    },
+    {
+      "id": "nemona",
+      "nameKr": "네모",
+      "nameEn": "Nemona",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "rival",
+        "champion-ranked"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 206,
+          "nameKr": "노고치"
+        },
+        {
+          "id": 349,
+          "nameKr": "빈티나"
+        },
+        {
+          "id": 355,
+          "nameKr": "해골몽"
+        },
+        {
+          "id": 390,
+          "nameKr": "불꽃숭이"
+        },
+        {
+          "id": 656,
+          "nameKr": "개구마르"
+        },
+        {
+          "id": 704,
+          "nameKr": "미끄메라"
+        },
+        {
+          "id": 722,
+          "nameKr": "나몰빼미"
+        },
+        {
+          "id": 742,
+          "nameKr": "에블리"
+        },
+        {
+          "id": 744,
+          "nameKr": "암멍이"
+        },
+        {
+          "id": 782,
+          "nameKr": "짜랑꼬"
+        },
+        {
+          "id": 906,
+          "nameKr": "나오하"
+        },
+        {
+          "id": 909,
+          "nameKr": "뜨아거"
+        },
+        {
+          "id": 912,
+          "nameKr": "꾸왁스"
+        },
+        {
+          "id": 921,
+          "nameKr": "빠모"
+        },
+        {
+          "id": 968,
+          "nameKr": "꿈트렁"
+        }
+      ]
+    },
+    {
+      "id": "arven",
+      "nameKr": "페퍼",
+      "nameEn": "Arven",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 819,
+          "nameKr": "탐리스"
+        },
+        {
+          "id": 932,
+          "nameKr": "베베솔트"
+        },
+        {
+          "id": 942,
+          "nameKr": "오라티프"
+        },
+        {
+          "id": 948,
+          "nameKr": "들눈해"
+        },
+        {
+          "id": 951,
+          "nameKr": "캡싸이"
+        }
+      ]
+    },
+    {
+      "id": "penny",
+      "nameKr": "모란",
+      "nameEn": "Penny",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "rival",
+        "team-star-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 90,
+          "nameKr": "셀러"
+        },
+        {
+          "id": 133,
+          "nameKr": "이브이"
+        },
+        {
+          "id": 819,
+          "nameKr": "탐리스"
+        },
+        {
+          "id": 942,
+          "nameKr": "오라티프"
+        }
+      ]
+    },
+    {
+      "id": "carmine",
+      "nameKr": "시유",
+      "nameEn": "Carmine",
+      "generation": 9,
+      "region": "Kitakami",
+      "roles": [
+        "rival"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 261,
+          "nameKr": "포챠나"
+        },
+        {
+          "id": 540,
+          "nameKr": "두르보"
+        },
+        {
+          "id": 559,
+          "nameKr": "곤율랭"
+        },
+        {
+          "id": 731,
+          "nameKr": "콕코구리"
+        },
+        {
+          "id": 877,
+          "nameKr": "모르페코"
+        },
+        {
+          "id": 1012,
+          "nameKr": "차데스"
+        }
+      ]
+    },
+    {
+      "id": "kieran",
+      "nameKr": "카지",
+      "nameEn": "Kieran",
+      "generation": 9,
+      "region": "Kitakami",
+      "roles": [
+        "rival",
+        "blueberry-champion"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 60,
+          "nameKr": "발챙이"
+        },
+        {
+          "id": 137,
+          "nameKr": "폴리곤"
+        },
+        {
+          "id": 147,
+          "nameKr": "미뇽"
+        },
+        {
+          "id": 161,
+          "nameKr": "꼬리선"
+        },
+        {
+          "id": 193,
+          "nameKr": "왕자리"
+        },
+        {
+          "id": 207,
+          "nameKr": "글라이거"
+        },
+        {
+          "id": 273,
+          "nameKr": "도토링"
+        },
+        {
+          "id": 299,
+          "nameKr": "코코파스"
+        },
+        {
+          "id": 725,
+          "nameKr": "냐오불"
+        },
+        {
+          "id": 840,
+          "nameKr": "과사삭벌레"
+        },
+        {
+          "id": 845,
+          "nameKr": "윽우지"
+        },
+        {
+          "id": 859,
+          "nameKr": "메롱꿍"
+        },
+        {
+          "id": 1024,
+          "nameKr": "테라파고스"
+        }
+      ]
+    },
+    {
+      "id": "katy",
+      "nameKr": "단풍",
+      "nameEn": "Katy",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 7,
+          "nameKr": "벌레"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 204,
+          "nameKr": "피콘"
+        },
+        {
+          "id": 214,
+          "nameKr": "헤라크로스"
+        },
+        {
+          "id": 216,
+          "nameKr": "깜지곰"
+        },
+        {
+          "id": 751,
+          "nameKr": "물거미"
+        },
+        {
+          "id": 917,
+          "nameKr": "타랜툴라"
+        },
+        {
+          "id": 919,
+          "nameKr": "콩알뚜기"
+        }
+      ]
+    },
+    {
+      "id": "brassius",
+      "nameKr": "콜사",
+      "nameEn": "Brassius",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 12,
+          "nameKr": "풀"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 43,
+          "nameKr": "뚜벅쵸"
+        },
+        {
+          "id": 285,
+          "nameKr": "버섯꼬"
+        },
+        {
+          "id": 438,
+          "nameKr": "꼬지지"
+        },
+        {
+          "id": 548,
+          "nameKr": "치릴리"
+        },
+        {
+          "id": 761,
+          "nameKr": "달콤아"
+        },
+        {
+          "id": 928,
+          "nameKr": "미니브"
+        }
+      ]
+    },
+    {
+      "id": "iono",
+      "nameKr": "모야모",
+      "nameEn": "Iono",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 13,
+          "nameKr": "전기"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 100,
+          "nameKr": "찌리리공"
+        },
+        {
+          "id": 200,
+          "nameKr": "무우마"
+        },
+        {
+          "id": 239,
+          "nameKr": "에레키드"
+        },
+        {
+          "id": 403,
+          "nameKr": "꼬링크"
+        },
+        {
+          "id": 938,
+          "nameKr": "빈나두"
+        },
+        {
+          "id": 940,
+          "nameKr": "찌리비"
+        }
+      ]
+    },
+    {
+      "id": "kofu",
+      "nameKr": "곤포",
+      "nameEn": "Kofu",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 11,
+          "nameKr": "물"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 158,
+          "nameKr": "리아코"
+        },
+        {
+          "id": 278,
+          "nameKr": "갈모매"
+        },
+        {
+          "id": 692,
+          "nameKr": "완철포"
+        },
+        {
+          "id": 739,
+          "nameKr": "오기지게"
+        },
+        {
+          "id": 960,
+          "nameKr": "바다그다"
+        },
+        {
+          "id": 976,
+          "nameKr": "가비루사"
+        }
+      ]
+    },
+    {
+      "id": "larry",
+      "nameKr": "청목",
+      "nameEn": "Larry",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader",
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 1,
+          "nameKr": "노말"
+        },
+        {
+          "id": 3,
+          "nameKr": "비행"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 128,
+          "nameKr": "켄타로스"
+        },
+        {
+          "id": 206,
+          "nameKr": "노고치"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 357,
+          "nameKr": "트로피우스"
+        },
+        {
+          "id": 396,
+          "nameKr": "찌르꼬"
+        },
+        {
+          "id": 627,
+          "nameKr": "수리둥보"
+        },
+        {
+          "id": 741,
+          "nameKr": "춤추새"
+        },
+        {
+          "id": 775,
+          "nameKr": "자말라"
+        },
+        {
+          "id": 915,
+          "nameKr": "맛보돈"
+        },
+        {
+          "id": 973,
+          "nameKr": "꼬이밍고"
+        }
+      ]
+    },
+    {
+      "id": "ryme",
+      "nameKr": "라임",
+      "nameEn": "Ryme",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 8,
+          "nameKr": "고스트"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 353,
+          "nameKr": "어둠대신"
+        },
+        {
+          "id": 442,
+          "nameKr": "화강돌"
+        },
+        {
+          "id": 622,
+          "nameKr": "골비람"
+        },
+        {
+          "id": 778,
+          "nameKr": "따라큐"
+        },
+        {
+          "id": 848,
+          "nameKr": "일레즌"
+        },
+        {
+          "id": 971,
+          "nameKr": "망망이"
+        }
+      ]
+    },
+    {
+      "id": "tulip",
+      "nameKr": "리파",
+      "nameEn": "Tulip",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 14,
+          "nameKr": "에스퍼"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 203,
+          "nameKr": "키링키"
+        },
+        {
+          "id": 280,
+          "nameKr": "랄토스"
+        },
+        {
+          "id": 653,
+          "nameKr": "푸호꼬"
+        },
+        {
+          "id": 669,
+          "nameKr": "플라베베"
+        },
+        {
+          "id": 955,
+          "nameKr": "하느라기"
+        }
+      ]
+    },
+    {
+      "id": "grusha",
+      "nameKr": "그루샤",
+      "nameEn": "Grusha",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "gym-leader"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 15,
+          "nameKr": "얼음"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 37,
+          "nameKr": "식스테일"
+        },
+        {
+          "id": 215,
+          "nameKr": "포푸니"
+        },
+        {
+          "id": 333,
+          "nameKr": "파비코"
+        },
+        {
+          "id": 613,
+          "nameKr": "코고미"
+        },
+        {
+          "id": 872,
+          "nameKr": "누니머기"
+        },
+        {
+          "id": 974,
+          "nameKr": "터벅고래"
+        }
+      ]
+    },
+    {
+      "id": "rika",
+      "nameKr": "칠리",
+      "nameEn": "Rika",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 5,
+          "nameKr": "땅"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 50,
+          "nameKr": "디그다"
+        },
+        {
+          "id": 194,
+          "nameKr": "우파"
+        },
+        {
+          "id": 231,
+          "nameKr": "코코리"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 339,
+          "nameKr": "미꾸리"
+        },
+        {
+          "id": 387,
+          "nameKr": "모부기"
+        }
+      ]
+    },
+    {
+      "id": "poppy",
+      "nameKr": "뽀삐",
+      "nameEn": "Poppy",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 81,
+          "nameKr": "코일"
+        },
+        {
+          "id": 410,
+          "nameKr": "방패톱스"
+        },
+        {
+          "id": 436,
+          "nameKr": "동미러"
+        },
+        {
+          "id": 821,
+          "nameKr": "파라꼬"
+        },
+        {
+          "id": 878,
+          "nameKr": "끼리동"
+        },
+        {
+          "id": 957,
+          "nameKr": "어리짱"
+        }
+      ]
+    },
+    {
+      "id": "hassel",
+      "nameKr": "팔자크",
+      "nameEn": "Hassel",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 147,
+          "nameKr": "미뇽"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 690,
+          "nameKr": "수레기"
+        },
+        {
+          "id": 714,
+          "nameKr": "음뱃"
+        },
+        {
+          "id": 840,
+          "nameKr": "과사삭벌레"
+        },
+        {
+          "id": 884,
+          "nameKr": "두랄루돈"
+        },
+        {
+          "id": 996,
+          "nameKr": "드니차"
+        }
+      ]
+    },
+    {
+      "id": "geeta",
+      "nameKr": "테사",
+      "nameEn": "Geeta",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "top-champion"
+      ],
+      "specialtyTypes": [],
+      "pokemon": [
+        {
+          "id": 624,
+          "nameKr": "자망칼"
+        },
+        {
+          "id": 650,
+          "nameKr": "도치마론"
+        },
+        {
+          "id": 672,
+          "nameKr": "메이클"
+        },
+        {
+          "id": 712,
+          "nameKr": "꽁어름"
+        },
+        {
+          "id": 885,
+          "nameKr": "드라꼰"
+        },
+        {
+          "id": 955,
+          "nameKr": "하느라기"
+        },
+        {
+          "id": 969,
+          "nameKr": "초롱순"
+        },
+        {
+          "id": 976,
+          "nameKr": "가비루사"
+        }
+      ]
+    },
+    {
+      "id": "giacomo",
+      "nameKr": "피나",
+      "nameEn": "Giacomo",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "team-star-boss"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 17,
+          "nameKr": "악"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 198,
+          "nameKr": "니로우"
+        },
+        {
+          "id": 331,
+          "nameKr": "선인왕"
+        },
+        {
+          "id": 551,
+          "nameKr": "깜눈크"
+        },
+        {
+          "id": 624,
+          "nameKr": "자망칼"
+        },
+        {
+          "id": 942,
+          "nameKr": "오라티프"
+        },
+        {
+          "id": 965,
+          "nameKr": "부르롱"
+        }
+      ]
+    },
+    {
+      "id": "mela",
+      "nameKr": "멜로코",
+      "nameEn": "Mela",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "team-star-boss"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 58,
+          "nameKr": "가디"
+        },
+        {
+          "id": 228,
+          "nameKr": "델빌"
+        },
+        {
+          "id": 324,
+          "nameKr": "코터스"
+        },
+        {
+          "id": 837,
+          "nameKr": "탄동"
+        },
+        {
+          "id": 935,
+          "nameKr": "카르본"
+        },
+        {
+          "id": 965,
+          "nameKr": "부르롱"
+        }
+      ]
+    },
+    {
+      "id": "atticus",
+      "nameKr": "추명",
+      "nameEn": "Atticus",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "team-star-boss"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 4,
+          "nameKr": "독"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 88,
+          "nameKr": "질퍽이"
+        },
+        {
+          "id": 434,
+          "nameKr": "스컹뿡"
+        },
+        {
+          "id": 690,
+          "nameKr": "수레기"
+        },
+        {
+          "id": 747,
+          "nameKr": "시마사리"
+        },
+        {
+          "id": 965,
+          "nameKr": "부르롱"
+        }
+      ]
+    },
+    {
+      "id": "ortega",
+      "nameKr": "오르티가",
+      "nameEn": "Ortega",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "team-star-boss"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 18,
+          "nameKr": "페어리"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 174,
+          "nameKr": "푸푸린"
+        },
+        {
+          "id": 298,
+          "nameKr": "루리리"
+        },
+        {
+          "id": 707,
+          "nameKr": "클레피"
+        },
+        {
+          "id": 856,
+          "nameKr": "몸지브림"
+        },
+        {
+          "id": 926,
+          "nameKr": "쫀도기"
+        },
+        {
+          "id": 965,
+          "nameKr": "부르롱"
+        }
+      ]
+    },
+    {
+      "id": "eri",
+      "nameKr": "비파",
+      "nameEn": "Eri",
+      "generation": 9,
+      "region": "Paldea",
+      "roles": [
+        "team-star-boss"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 2,
+          "nameKr": "격투"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 56,
+          "nameKr": "망키"
+        },
+        {
+          "id": 447,
+          "nameKr": "리오르"
+        },
+        {
+          "id": 453,
+          "nameKr": "삐딱구리"
+        },
+        {
+          "id": 766,
+          "nameKr": "내던숭이"
+        },
+        {
+          "id": 965,
+          "nameKr": "부르롱"
+        }
+      ]
+    },
+    {
+      "id": "crispin",
+      "nameKr": "아카마츠",
+      "nameEn": "Crispin",
+      "generation": 9,
+      "region": "Blueberry",
+      "roles": [
+        "blueberry-elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 10,
+          "nameKr": "불꽃"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 102,
+          "nameKr": "아라리"
+        },
+        {
+          "id": 240,
+          "nameKr": "마그비"
+        },
+        {
+          "id": 255,
+          "nameKr": "아차모"
+        },
+        {
+          "id": 322,
+          "nameKr": "둔타"
+        },
+        {
+          "id": 479,
+          "nameKr": "로토무"
+        },
+        {
+          "id": 661,
+          "nameKr": "화살꼬빈"
+        }
+      ]
+    },
+    {
+      "id": "amarys",
+      "nameKr": "네리네",
+      "nameEn": "Amarys",
+      "generation": 9,
+      "region": "Blueberry",
+      "roles": [
+        "blueberry-elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 9,
+          "nameKr": "강철"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 50,
+          "nameKr": "디그다"
+        },
+        {
+          "id": 123,
+          "nameKr": "스라크"
+        },
+        {
+          "id": 227,
+          "nameKr": "무장조"
+        },
+        {
+          "id": 374,
+          "nameKr": "메탕"
+        },
+        {
+          "id": 393,
+          "nameKr": "팽도리"
+        },
+        {
+          "id": 577,
+          "nameKr": "유니란"
+        }
+      ]
+    },
+    {
+      "id": "lacey",
+      "nameKr": "타로",
+      "nameEn": "Lacey",
+      "generation": 9,
+      "region": "Blueberry",
+      "roles": [
+        "blueberry-elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 18,
+          "nameKr": "페어리"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 79,
+          "nameKr": "야돈"
+        },
+        {
+          "id": 209,
+          "nameKr": "블루"
+        },
+        {
+          "id": 311,
+          "nameKr": "플러시"
+        },
+        {
+          "id": 312,
+          "nameKr": "마이농"
+        },
+        {
+          "id": 529,
+          "nameKr": "두더류"
+        },
+        {
+          "id": 546,
+          "nameKr": "소미안"
+        },
+        {
+          "id": 728,
+          "nameKr": "누리공"
+        },
+        {
+          "id": 868,
+          "nameKr": "마빌크"
+        }
+      ]
+    },
+    {
+      "id": "drayton",
+      "nameKr": "카키츠바타",
+      "nameEn": "Drayton",
+      "generation": 9,
+      "region": "Blueberry",
+      "roles": [
+        "blueberry-elite-four"
+      ],
+      "specialtyTypes": [
+        {
+          "id": 16,
+          "nameKr": "드래곤"
+        }
+      ],
+      "pokemon": [
+        {
+          "id": 116,
+          "nameKr": "쏘드라"
+        },
+        {
+          "id": 147,
+          "nameKr": "미뇽"
+        },
+        {
+          "id": 252,
+          "nameKr": "나무지기"
+        },
+        {
+          "id": 328,
+          "nameKr": "톱치"
+        },
+        {
+          "id": 610,
+          "nameKr": "터검니"
+        },
+        {
+          "id": 884,
+          "nameKr": "두랄루돈"
+        }
+      ]
+    }
+  ],
+  "removedProtagonistIds": [
+    "leaf",
+    "ethan",
+    "kris",
+    "lyra",
+    "lucas",
+    "dawn",
+    "hilbert",
+    "hilda",
+    "nate",
+    "rosa",
+    "elio",
+    "selene",
+    "victor",
+    "gloria",
+    "rei",
+    "akari",
+    "florian",
+    "juliana"
+  ]
+}

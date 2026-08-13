@@ -8,6 +8,7 @@ import DraftScreen from "./screens/DraftScreen";
 import HuntScreen from "./screens/HuntScreen";
 import IdentifyScreen from "./screens/IdentifyScreen";
 import MapScreen from "./screens/MapScreen";
+import TrainerRevealScreen from "./screens/TrainerRevealScreen";
 
 class GameErrorBoundary extends Component<{children:ReactNode},{error:Error|null}>{
   state={error:null as Error|null};
@@ -17,7 +18,7 @@ class GameErrorBoundary extends Component<{children:ReactNode},{error:Error|null
 }
 
 function ScreenRouter(){const {state}=useGame();switch(state.screen){
-  case "draft":return <DraftScreen/>;case "base":return <BaseScreen/>;case "hunt":return <HuntScreen/>;
+  case "draft":return <DraftScreen/>;case "trainerReveal":return <TrainerRevealScreen/>;case "base":return <BaseScreen/>;case "hunt":return <HuntScreen/>;
   case "identify":return <IdentifyScreen/>;case "map":return <MapScreen/>;case "battle":return <BattleScreen/>;
 }}
 

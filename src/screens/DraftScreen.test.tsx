@@ -6,7 +6,7 @@ import { GAME_SAVE_KEY } from "../services/storageService";
 import DraftScreen from "./DraftScreen";
 
 const pokemon=(id:number,name:string):PokemonRecord=>({pokemonRowid:id,nameKr:name,hp:45,atk:49,def:49,satk:65,sdef:65,spd:45,details:{sprites:{front_default:""}}});
-const data:GameDataBundle={pokemon:[pokemon(1,"이상해씨"),pokemon(4,"파이리"),pokemon(7,"꼬부기")],types:[],moves:[],abilities:[]};
+const data:GameDataBundle={pokemon:[pokemon(1,"이상해씨"),pokemon(4,"파이리"),pokemon(7,"꼬부기")],types:[],moves:[],abilities:[],trainers:[{id:"red",nameKr:"레드",nameEn:"Red",generation:1,region:"Kanto",roles:["trainer"],specialtyTypes:[],pokemon:[{id:1,nameKr:"이상해씨"}]}]};
 
 describe("DraftScreen",()=>{
   beforeEach(()=>localStorage.clear());

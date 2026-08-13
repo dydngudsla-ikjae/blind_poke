@@ -21,6 +21,7 @@ export interface PokemonRecord {
   spd: number;
   heightM?: number;
   weightKg?: number;
+  baseRowid?: number;
   details?: Record<string, any>;
 }
 
@@ -37,7 +38,7 @@ export interface RosterMember {
   iv: Record<string, number>;
   buildingId?: string | null;
   job?: string | null;
-  inEntry?: boolean;
+  /** @deprecated legacy save migration only */ inEntry?: boolean;
   heldItem?: string | null;
 }
 
@@ -52,11 +53,24 @@ export interface GameDataBundle {
   types: TypeRecord[];
   moves: MoveRecord[];
   abilities: AbilityRecord[];
+  trainers: TrainerRecord[];
 }
 
 export interface MoveRecord { moveRowid:number; typeRowid:number; nameKr:string; descriptionKr?:string; details:{accuracy:number|null;power:number|null;pp:number;damageClass:number} }
 export interface TypeRecord { typeRowid:number; nameKr:string; relation?:{relationMap:Record<string,{damageFrom:number;damageTo:number}>} }
 export interface AbilityRecord { abilityRowid:number; nameKr:string; descriptionKr?:string }
+export interface TrainerTypeRef { id:number; nameKr:string }
+export interface TrainerPokemonRef { id:number; nameKr:string }
+export interface TrainerRecord {
+  id:string;
+  nameKr:string;
+  nameEn:string;
+  generation:number;
+  region:string;
+  roles:string[];
+  specialtyTypes:TrainerTypeRef[];
+  pokemon:TrainerPokemonRef[];
+}
 
 export interface SaveEnvelope {
   v: number;

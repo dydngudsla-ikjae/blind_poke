@@ -7,11 +7,12 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 export async function loadGameData(): Promise<GameDataBundle> {
-  const [pokemon, types, moves, abilities] = await Promise.all([
+  const [pokemon, types, moves, abilities, trainerData] = await Promise.all([
     fetchJson<GameDataBundle["pokemon"]>("/data/pokemon.json"),
     fetchJson<GameDataBundle["types"]>("/data/type.json"),
     fetchJson<GameDataBundle["moves"]>("/data/move.json"),
     fetchJson<GameDataBundle["abilities"]>("/data/ability.json"),
+    fetchJson<{trainers:GameDataBundle["trainers"]}>("/data/trainer.json"),
   ]);
-  return { pokemon, types, moves, abilities };
+  return { pokemon, types, moves, abilities, trainers:trainerData.trainers };
 }
