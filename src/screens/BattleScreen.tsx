@@ -1,12 +1,276 @@
-import { useMemo, useState } from "react";
-import { buildCombatant, calculateDamage, effectiveness, type Combatant } from "../domain/battle";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import arena from "../../assets/observatory-battle.webp";
+import useFieldMotion from "../components/useFieldMotion";
+import {
+  battleMoves, buildCombatant, createBattle, effectiveAttack, effectiveness, movePower, resolveBattleTurn, STRUGGLE, TACKLE,
+  type BattleAction, type BattleSide, type BattleStep, type Combatant,
+} from "../domain/battle";
+import { worldMapNodes } from "../domain/worldMap";
+import { statusLabels } from "../domain/battleStatus";
+import { suppliedTerritories, TERRITORY_GOLD } from "../domain/territorySupply";
 import { useGame } from "../game/GameProvider";
 import { ART, SPRITE } from "../game/gameHelpers";
+import type { BattleSetup } from "../game/gameTypes";
+import { battleEntries } from "../game/territoryBattle";
+import { describeFirstVictoryReward } from "../game/campaign";
+import transitionFieldView from "./transitionFieldView";
+import InheritanceChoice from "./InheritanceChoice";
+import "./BattleScreen.css";
 
-export default function BattleScreen(){const {state,data,dispatch}=useGame();const setup=state.battle;const entries=state.entryOrder.map(id=>state.roster.find(member=>member.id===id)).filter((member):member is (typeof state.roster)[number]=>Boolean(member));const source=entries.length?entries:state.roster;
- const initialPlayer=useMemo(()=>source.map((m,i)=>buildCombatant(m,data,`p-${i}`)),[]);const initialEnemy=useMemo(()=>setup?setup.enemyTeam.map((entry,i)=>{const pokemon=data.pokemon.find(p=>p.pokemonRowid===entry.pokemonId)!;return buildCombatant({pokemon,level:entry.level},data,`e-${i}`)}):[],[]);
- const [players,setPlayers]=useState(initialPlayer),[enemies,setEnemies]=useState(initialEnemy),[activeP,setActiveP]=useState(0),[activeE,setActiveE]=useState(0),[logs,setLogs]=useState(["대결이 시작됐다!"]),[result,setResult]=useState<"win"|"lose"|null>(null);if(!setup||!players.length||!enemies.length)return null;const p=players[activeP],e=enemies[activeE];
- const useMove=(idx:number)=>{const nextP=players.map(x=>({...x})),nextE=enemies.map(x=>({...x}));let actor=nextP[activeP],target=nextE[activeE],move=actor.moves[idx]||actor.moves[0],lines:string[]=[];const enemyMoves=nextE[activeE].moves.filter(m=>m.power>0),enemyMove=enemyMoves[Math.floor(Math.random()*enemyMoves.length)]||nextE[activeE].moves[0];const order=actor.stats.spd>=target.stats.spd?[[actor,target,move,true] as const,[target,actor,enemyMove,false] as const]:[[target,actor,enemyMove,false] as const,[actor,target,move,true] as const];for(const [a,t,m] of order){if(a.fainted||t.fainted)continue;if(m.accuracy>0&&Math.random()*100>=m.accuracy){lines.push(`${a.name}의 ${m.name}! 하지만 빗나갔다!`);continue}if(m.damageClass===1){lines.push(`${a.name}의 ${m.name}!`);continue}const damage=calculateDamage(a,t,m,data);t.curHp=Math.max(0,t.curHp-damage);const eff=effectiveness(m.typeRowid,t.types,data);lines.push(`${a.name}의 ${m.name}! ${damage} 데미지!${eff>1?" 효과는 굉장했다!":eff<1?" 효과는 별로였다...":""}`);if(t.curHp===0){t.fainted=true;lines.push(`${t.name}은(는) 쓰러졌다!`)}}
-  let np=activeP,ne=activeE;if(nextP[np].fainted){const found=nextP.findIndex(x=>!x.fainted);if(found>=0){np=found;lines.push(`${nextP[found].name}, 나서라!`)}}if(nextE[ne].fainted){const found=nextE.findIndex(x=>!x.fainted);if(found>=0)ne=found}const outcome=nextE.every(x=>x.fainted)?"win":nextP.every(x=>x.fainted)?"lose":null;setPlayers(nextP);setEnemies(nextE);setActiveP(np);setActiveE(ne);setLogs(l=>[...lines,...l].slice(0,8));setResult(outcome)};
- const mon=(m:Combatant,side:string)=><div className={`battle-mon ${side} ${m.fainted?"fainted":""}`}><img src={side==="player"?SPRITE(m.pokemon):ART(m.pokemon.pokemonRowid)} alt={m.name}/><div className="battle-name">{m.name} <span className="battle-lv">Lv.{m.level}</span></div><div className="battle-hpbar"><div className="battle-hpfill" style={{width:`${Math.round(m.curHp/m.maxHp*100)}%`}}/></div><div className="battle-hptext">{m.curHp}/{m.maxHp}</div></div>;
- return <div className="battle-scene"><div className="battle-field">{mon(e,"enemy")}{mon(p,"player")}</div><div className="battle-log">{logs.map((l,i)=><div className="logline" key={i}>{l}</div>)}</div>{result?<><div className={`battle-result ${result}`}>{result==="win"?"승리했다!":"패배했다..."}</div><button className="btn wide" id={result==="win"?"battleContinue":undefined} onClick={()=>result==="win"?dispatch({type:"CLAIM_TERRITORY",territoryId:setup.territoryId}):dispatch({type:"PATCH",patch:{screen:"map",battle:null}})}>계속하기</button></>:<div className="battle-moves">{p.moves.map((m,i)=><button className="battle-move" data-move={i} key={m.id} onClick={()=>useMove(i)}><span className="bm-name">{m.name}</span><span className="bm-meta">{m.typeName} · {m.damageClass===1?"변화":`위력 ${m.power} · 명중 ${m.accuracy||100}%`}</span></button>)}</div>}</div>}
+const BattleShader = lazy(() => import("../components/BattleShader").catch(() => ({ default: () => null })));
+const moveColors: Record<string, string> = {
+  불꽃: "#ffab75", 물: "#9bd8ff", 풀: "#bfe58e", 전기: "#f7dc82", 얼음: "#b5edf3",
+  독: "#ddade9", 에스퍼: "#ffaecb", 고스트: "#ccbbf7", 땅: "#dac195",
+};
+
+function Fighter({ mon, side, action, selected, typeLabel }: {
+  mon: Combatant; side: BattleSide; action: string | undefined; selected: string; typeLabel: string;
+}) {
+  const [fallback, setFallback] = useState(false);
+  const artwork = fallback ? SPRITE(mon.pokemon) : ART(mon.pokemon.pokemonRowid);
+  // Blastoise's official artwork faces right. Most battle art faces left.
+  const facesRight = !fallback && mon.pokemon.pokemonRowid === 9;
+  const mirrored = side === "player" ? !facesRight : facesRight;
+  return (
+    <>
+      <div className="duel-fighter" data-side={side} data-fainted={mon.fainted} aria-hidden="true">
+        <span className="duel-shadow" />
+        <div className="duel-gesture" key={selected} data-action={action}>
+          <img src={artwork} alt="" draggable={false} data-mirrored={mirrored}
+            onError={fallback ? undefined : () => setFallback(true)} />
+        </div>
+      </div>
+      <div className="duel-vitals" data-side={side}>
+        <p className="duel-side">{side === "player" ? "내 포켓몬" : "상대 포켓몬"}</p>
+        <div><h2>{mon.name}</h2><b>Lv.{mon.level}</b></div>
+        <p className="duel-types">{typeLabel}{mon.status && <span className="duel-condition" data-condition={mon.status.kind}>{statusLabels[mon.status.kind]}</span>}</p>
+        <meter aria-label={`${mon.name} 체력`} min={0} max={mon.maxHp} low={mon.maxHp / 4} high={mon.maxHp / 2}
+          optimum={mon.maxHp} value={mon.curHp} />
+        <p className="duel-hp"><span>HP</span> {mon.curHp}<span> / {mon.maxHp}</span></p>
+      </div>
+    </>
+  );
+}
+
+function Duel({ setup }: { setup: BattleSetup }) {
+  const { state, data, dispatch } = useGame();
+  const [battle, setBattle] = useState(() => createBattle(
+    battleEntries(state).map((member, index) => buildCombatant(member, data, `p-${index}`)),
+    setup.enemyTeam.flatMap((entry, index) => {
+      const pokemon = data.pokemon.find(record => record.pokemonRowid === entry.pokemonId);
+      if (!pokemon) return [];
+      const combatant = buildCombatant({ pokemon, level: entry.level }, data, `e-${index}`);
+      return [setup.firstVictory ? { ...combatant, moves: [TACKLE] } : combatant];
+    }),
+  ));
+  const [reward] = useState(() => setup.firstVictory ? describeFirstVictoryReward(state) : "");
+  const [logs, setLogs] = useState(["양쪽 포켓몬이 대치합니다."]);
+  const [exchange, setExchange] = useState<{ steps: BattleStep[]; index: number } | null>(null);
+  const [switching, setSwitching] = useState(false);
+  const [reduced, setReduced] = useState(() => matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const showShader = useFieldMotion();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const outcome = useRef<HTMLHeadingElement>(null);
+  const firstAction = useRef<HTMLButtonElement>(null);
+  const focusAction = useRef(false);
+  const commandPending = useRef(false);
+  const territory = worldMapNodes.find(node => node.id === setup.territoryId);
+  const player = battle.teams.player[battle.active.player];
+  const enemy = battle.teams.enemy[battle.active.enemy];
+  const step = exchange?.steps[exchange.index];
+  const strike = step?.strike;
+  const result = battle.phase === "command" || battle.phase === "replacement" ? null : battle.phase;
+  const isolatedVictory = result === "win" && territory && territory.region > 1 && !suppliedTerritories(state.territories).has(territory.id);
+  const selectingAlly = switching || battle.phase === "replacement";
+  const round = battle.round;
+
+  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  useEffect(() => {
+    const preference = matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReduced(preference.matches);
+    preference.addEventListener("change", onChange);
+    return () => preference.removeEventListener("change", onChange);
+  }, []);
+  useEffect(() => {
+    if (result) outcome.current?.focus();
+    else if (!exchange && (focusAction.current || battle.phase === "replacement")) firstAction.current?.focus({ preventScroll: true });
+  }, [exchange, result, selectingAlly, battle.phase]);
+
+  useEffect(() => {
+    if (!exchange || !step) return;
+    const timer = window.setTimeout(() => {
+      setBattle(step.state);
+      if (step.lines.length) setLogs(current => [step.lines.join(" "), ...current].slice(0, 8));
+      if (exchange.index + 1 < exchange.steps.length) {
+        setExchange({ ...exchange, index: exchange.index + 1 });
+        return;
+      }
+      if (step.state.phase === "win") dispatch({ type: "CLAIM_TERRITORY", territoryId: setup.territoryId });
+      commandPending.current = false;
+      setExchange(null);
+    }, reduced || !step.strike ? 0 : 320);
+    return () => window.clearTimeout(timer);
+  }, [exchange, step, reduced, dispatch, setup.territoryId]);
+
+  function command(action: BattleAction, fromKeyboard: boolean) {
+    if (commandPending.current || (action.kind === "cure" && state.resources.cureItem < 1)) return;
+    const steps = resolveBattleTurn(battle, action, data);
+    if (!steps.length) return;
+    commandPending.current = true;
+    if (action.kind === "cure") dispatch({ type: "USE_BATTLE_CURE", territoryId: setup.territoryId, round: battle.round });
+    focusAction.current = fromKeyboard;
+    setSwitching(false);
+    setExchange({ steps, index: 0 });
+  }
+
+  function returnToMap() {
+    transitionFieldView(() => {
+      dispatch({ type: "PATCH", patch: { screen: "map", battle: null, mapFocusId: setup.territoryId } });
+    }, "battle");
+  }
+
+  if (!player || !enemy) {
+    return (
+      <section className="draft-station duel-unavailable">
+        <h1>거점 배틀</h1>
+        <p>출전할 포켓몬을 불러오지 못했습니다.</p>
+        <button className="hunt-return" onClick={returnToMap}>월드맵으로</button>
+      </section>
+    );
+  }
+
+  const cue = exchange ? `${round}-${exchange.index}` : "idle";
+  const outcomeNames = { win: "승리", lose: "패배", draw: "무승부" };
+  const battleStatus = result ? outcomeNames[result] : strike?.move.name ?? (selectingAlly ? "포켓몬 교체" : "기술 선택");
+  const impactColor = strike ? moveColors[strike.move.typeName] ?? "#ffe1a6" : "#ffe1a6";
+  const eligibleAllies = battle.teams.player.flatMap((mon, index) => mon.fainted || index === battle.active.player ? [] : [{ mon, index }]);
+  const canAttack = (mon: Combatant) => effectiveAttack(mon.moves, enemy.types, data, 0, {
+    actor: mon.status?.kind === "sleep" && mon.status.remaining > 0, target: enemy.status?.kind === "sleep",
+  });
+  const needsCounter = !result && !exchange && (player.fainted || !canAttack(player));
+  const counterAlly = needsCounter ? eligibleAllies.find(({ mon }) => canAttack(mon))?.mon : undefined;
+  const moves = battleMoves(player);
+  const firstMove = moves.findIndex(move => move.pp > 0 || move.id === STRUGGLE.id);
+
+  return (
+    <section className="draft-station duel-station" aria-labelledby="duel-title">
+      <div className="draft-device">
+        <div className="duel-arena draft-view" role="group" aria-label="포켓몬 대치 장면">
+          <img className="duel-landscape" src={arena} alt="" width={1672} height={941} fetchPriority="high" />
+          {showShader && (
+            <Suspense fallback={null}>
+              <BattleShader side={strike?.side} impact={Boolean(strike?.damage)} cue={cue} color={impactColor} />
+            </Suspense>
+          )}
+          <header className="draft-view-header">
+            <div className="draft-mission">
+              <span className="draft-location">{territory?.name ?? "미확인 거점"}</span>
+              <h1 id="duel-title" ref={heading} tabIndex={-1}>거점 배틀</h1>
+            </div>
+            <p className="draft-scanner-status" data-locked={!result || result === "win"}>
+              <span className="draft-status-light" aria-hidden="true" />
+              {setup.enemyName}
+            </p>
+          </header>
+          {([["player", player], ["enemy", enemy]] as const).map(([side, mon]) => (
+            <Fighter key={mon.key} mon={mon} side={side} selected={cue}
+              typeLabel={mon.types.map(id => data.types.find(type => type.typeRowid === id)?.nameKr).filter(Boolean).join(" · ")}
+              action={strike ? strike.side === side ? "attack" : strike.damage ? "impact" : undefined : undefined} />
+          ))}
+          <p className="duel-turn" aria-label={`${round}턴, ${battleStatus}`}><b>{String(round).padStart(2, "0")}</b> <span>{battleStatus}</span></p>
+        </div>
+
+        <div className="duel-console">
+          <div className="duel-command">
+            {result ? (
+              <div className="duel-outcome" data-result={result}>
+                <div>
+                  <h2 ref={outcome} tabIndex={-1}>거점 배틀 {outcomeNames[result]}</h2>
+                  <p>{result === "win" ? `${territory?.name ?? "거점"} 확보 · ${isolatedVictory ? "보급로 연결 필요" : `매 턴 자금 +${TERRITORY_GOLD}`}` : "포켓몬을 데리고 월드맵으로 돌아갑니다."}</p>
+                  {result === "win" && reward && <p>첫 승리 보상 · {reward}</p>}
+                  {result === "win" && <InheritanceChoice siteId={setup.territoryId} />}
+                </div>
+                <button className="duel-continue" onClick={returnToMap}>월드맵으로 <span aria-hidden="true">→</span></button>
+              </div>
+            ) : selectingAlly ? (
+              <>
+                <h2>{battle.phase === "replacement" ? "다음 포켓몬 선택" : "포켓몬 교체"}</h2>
+                <div className="duel-moves" role="group" aria-label="교체할 포켓몬">
+                  {eligibleAllies.map(({ mon, index }, order) => (
+                    <button className="duel-move duel-ally" key={mon.key} ref={order === 0 ? firstAction : undefined}
+                      data-switch-index={index} disabled={Boolean(exchange)}
+                      onClick={event => command({ kind: "switch", index }, event.detail === 0)}>
+                      <strong>{mon.name}</strong><span>Lv.{mon.level} · HP {mon.curHp}/{mon.maxHp}{mon.status && ` · ${statusLabels[mon.status.kind]}`}</span>
+                    </button>
+                  ))}
+                </div>
+                {battle.phase !== "replacement" && <button className="duel-switch" onClick={() => {
+                  focusAction.current = true;
+                  setSwitching(false);
+                }}>취소</button>}
+              </>
+            ) : (
+              <>
+                <h2>기술 선택</h2>
+                <div className="duel-moves" role="group" aria-label="사용할 기술">
+                  {moves.map((move, index) => {
+                    const power = movePower(move, enemy);
+                    const matchup = power > 0 || move.statusTypeCheck ? effectiveness(move.typeRowid, enemy.types, data) : null;
+                    const label = matchup === null ? "" : matchup === 0 ? "효과 없음" : matchup < 1 ? "반감" : matchup > 1 ? "약점" : "보통";
+                    const consequence = move.id === STRUGGLE.id ? "반동 HP ¼" : move.selfKO ? "사용자 기절" : "";
+                    const condition = move.requiresSleep === "actor" ? "잠든 상태" : move.requiresSleep === "target" ? "잠든 상대" :
+                      move.status ? statusLabels[move.status] : move.secondary?.status ? `${statusLabels[move.secondary.status]} ${move.secondary.chance}%` : "";
+                    const details = [label, move.maxPp > 0 ? `PP ${move.pp}/${move.maxPp}` : "", condition, consequence].filter(Boolean).join(" · ");
+                    return (
+                      <button className="duel-move" key={move.id} ref={index === firstMove ? firstAction : undefined}
+                        data-move-id={move.id} data-matchup={matchup}
+                        disabled={Boolean(exchange) || (move.pp === 0 && move.id !== STRUGGLE.id)}
+                        onClick={event => command({ kind: "move", moveId: move.id }, event.detail === 0)}>
+                        <strong>{move.name}</strong>
+                        <span style={{ color: moveColors[move.typeName] }}>{move.typeName} <small>
+                          {power === 0 ? "변화" : `위력 ${power}`} · {move.accuracy ? `명중 ${move.accuracy}%` : "명중 판정 없음"}
+                        </small></span>
+                        <small className="duel-move-detail">{details}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+                {eligibleAllies.length > 0 && <button className="duel-switch" disabled={Boolean(exchange)} onClick={() => {
+                  focusAction.current = true;
+                  setSwitching(true);
+                }}>교체</button>}
+                {player.status && !player.fainted && <button className="duel-switch" disabled={Boolean(exchange) || state.resources.cureItem < 1}
+                  onClick={event => command({ kind: "cure" }, event.detail === 0)}>
+                  치료 아이템 사용 <small>보유 {state.resources.cureItem}개</small>
+                </button>}
+              </>
+            )}
+            {needsCounter && (
+              <div className="duel-counter-note">
+                {counterAlly ? <p>{counterAlly.name}(으)로 교체하면 유효한 공격을 쓸 수 있습니다.</p> : (
+                  <>
+                    <p>현재 상대에게 피해를 줄 일반 공격이 남아 있지 않습니다. 기권하면 도전 행동력은 돌아오지 않습니다.</p>
+                    <button className="duel-switch" onClick={() => {
+                      if (commandPending.current) return;
+                      commandPending.current = true;
+                      transitionFieldView(() => dispatch({ type: "CONCEDE_TERRITORY", territoryId: setup.territoryId }), "battle");
+                    }}>기권하고 돌아가기</button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          <section className="duel-record" aria-labelledby="duel-record-title">
+            <h2 id="duel-record-title">전투 기록</h2>
+            <ol aria-live="polite">{logs.map((line, index) => <li key={index}>{line}</li>)}</ol>
+          </section>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function BattleScreen() {
+  const { state } = useGame();
+  return state.battle ? <Duel key={state.battle.territoryId} setup={state.battle} /> : null;
+}

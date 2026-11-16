@@ -1,7 +1,11 @@
+import type { JobId } from "./jobs";
+
 export type BuildingStatus = "constructing" | "active";
 
 export interface BuildingState {
   id: string;
+  siteId?: string;
+  inherited?: true;
   type: string;
   plotIndex: number;
   status: BuildingStatus;
@@ -34,10 +38,12 @@ export interface RosterMember {
   favor: number;
   favCeil: number;
   favFloor: number;
+  departurePending?: boolean;
   aptitude: number;
   iv: Record<string, number>;
   buildingId?: string | null;
-  job?: string | null;
+  jobId?: JobId | null;
+  jobOrder?: number;
   /** @deprecated legacy save migration only */ inEntry?: boolean;
   heldItem?: string | null;
 }
@@ -54,6 +60,33 @@ export interface GameDataBundle {
   moves: MoveRecord[];
   abilities: AbilityRecord[];
   trainers: TrainerRecord[];
+  battle: BattleData;
+}
+
+export type BattleStat = "atk" | "def" | "satk" | "sdef" | "spd";
+export const BATTLE_STATUS_KINDS = ["poison", "toxic", "burn", "paralysis", "sleep", "freeze"] as const;
+export type BattleStatusKind = (typeof BATTLE_STATUS_KINDS)[number];
+export interface BattleBoost {
+  target: "actor" | "target";
+  changes: Partial<Record<BattleStat, number>>;
+}
+export interface BattleMoveRule {
+  priority?: number;
+  boosts?: BattleBoost;
+  secondary?: { chance: number; flinch?: true; boosts?: BattleBoost; status?: BattleStatusKind };
+  status?: BattleStatusKind;
+  powder?: true;
+  statusTypeCheck?: true;
+  requiresSleep?: "actor" | "target";
+  drain?: [number, number];
+  recoil?: [number, number];
+  selfKO?: true;
+  weightPower?: true;
+}
+export interface BattleData {
+  learnsets: Record<string, Array<[moveId: number, level: number]>>;
+  statusLearnsets?: Record<string, Array<[moveId: number, level: number]>>;
+  moves: Record<string, BattleMoveRule>;
 }
 
 export interface MoveRecord { moveRowid:number; typeRowid:number; nameKr:string; descriptionKr?:string; details:{accuracy:number|null;power:number|null;pp:number;damageClass:number} }

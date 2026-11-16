@@ -1,18 +1,222 @@
-import { useState, type CSSProperties } from "react";
-import { HELD_ITEMS, RESOURCE_LABELS, candyMember, feedMember, type HeldItemId } from "../domain/economy";
-import type { BuildingState, RosterMember } from "../domain/types";
-import { constructionTurns, projectedConstructionTurns } from "../domain/construction";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { preload } from "react-dom";
+import town from "../../assets/observatory-base.webp";
+import forest from "../../assets/observatory-forest.webp";
+import atlas from "../../assets/observatory-atlas.webp";
+import useFieldMotion from "../components/useFieldMotion";
+import { ENERGY_PER_TURN, isFreeWorker } from "../game/gameReducer";
+import { ENERGY_CHARGE_COST, turnsUntilDepartureWarning } from "../domain/economy";
+import { HUNT_ENERGY_COST } from "../domain/jobs";
+import { forecastGold } from "../domain/production";
+import { advanceTerritoryLoyalty, TERRITORY_GOLD } from "../domain/territorySupply";
+import { activeIntrusion, activeObservation } from "../domain/frontierOperations";
+import { worldMapNodes } from "../domain/worldMap";
+import { canOperateSettlement, HOME_SITE, settlementAt, settlementName } from "../domain/settlements";
 import { useGame } from "../game/GameProvider";
 import { SPRITE } from "../game/gameHelpers";
-import EntryModal from "../components/EntryModal";
+import { BasePanels, buildings, GoldForecast, type BasePanel } from "./BasePanels";
+import { CampaignStatus } from "./CampaignGoals";
+import InheritanceChoice from "./InheritanceChoice";
+import transitionFieldView from "./transitionFieldView";
+import "./BaseScreen.css";
 
-const layouts=[{left:11.45,top:42.30,width:13.80,height:15.94},{left:26.98,top:42.24,width:13.27,height:16.01},{left:43.12,top:42.24,width:13.10,height:16.18},{left:59.04,top:42.02,width:13.40,height:16.42},{left:74.41,top:41.82,width:14.19,height:16.35},{left:8.27,top:64.35,width:15.02,height:18.76},{left:25.31,top:64.12,width:14.49,height:18.98},{left:42.77,top:64.51,width:14.09,height:18.86},{left:59.81,top:64.37,width:14.47,height:18.91},{left:76.24,top:64.14,width:15.23,height:18.91}];
-const BUILDINGS={farm:{label:"밭",desc:"씨앗을 심고 열매를 거두는 경작지",art:"/assets/plot.png"},restaurant:{label:"레스토랑",desc:"수확물로 음식을 만들고 저장하는 곳",art:"/assets/restaurant.png"},dojo:{label:"훈련소",desc:"전투 능력을 단련하고 성장시키는 곳",art:"/assets/training-center.png"},workshop:{label:"제작소",desc:"재료를 캐고 가공하는 곳",art:"/assets/factory.png"},clinic:{label:"치료소",desc:"회복과 치료를 담당하는 곳",art:"/assets/heal-center.png"}} as const;type BuildingType=keyof typeof BUILDINGS;
+// Coordinates follow the visible soil pads in the 1672 × 941 background.
+const plots = [
+  [104, 429, 279, 144], [408, 429, 262, 144], [708, 429, 256, 144],
+  [999, 429, 267, 144], [1289, 429, 287, 144],
+  [34, 624, 310, 168], [370, 624, 288, 168], [701, 624, 279, 168],
+  [1014, 624, 295, 168], [1330, 624, 314, 168],
+] as const;
+const trail = [[33, 42], [50, 42], [67, 42]];
+const BaseWaterShader = lazy(() => import("../components/BaseWaterShader").catch(() => ({ default: () => null })));
 
-function BuildModal({plot,onClose}:{plot:number;onClose:()=>void}){const {state,dispatch}=useGame();const [type,setType]=useState<BuildingType>("farm"),[selected,setSelected]=useState<string[]>([]);const free=state.roster.filter(m=>!m.buildingId&&!m.job);const start=()=>{if(!selected.length||state.energy<1)return;dispatch({type:"START_BUILDING",building:{id:`building-${state.nextBuildingId}`,type,plotIndex:plot,status:"constructing",remainingTurns:constructionTurns(selected.length)},memberIds:selected});onClose()};return <div className="modal-overlay"><div className="modal-box"><div className="modal-head"><span>건설 · 부지 {plot+1}</span><button className="dd-close" onClick={onClose}>✕</button></div><div className="modal-body"><div className="install-buildings">{Object.entries(BUILDINGS).map(([id,b])=><button key={id} className={`install-building has-art ${type===id?"active":""}`} onClick={()=>setType(id as BuildingType)}><img className="install-building-art" src={b.art} alt=""/><span>{b.label}</span></button>)}</div><div className="install-note">{BUILDINGS[type].desc}</div><div className="install-note">기본 3턴 · 선택 {selected.length}마리 → <b>{selected.length?constructionTurns(selected.length):"-"}턴</b> · 에너지 1</div><div className="pc-grid">{free.map(m=><button key={m.id} data-install-pick={m.id} className={`pc-cell ${selected.includes(m.id)?"selected":""}`} onClick={()=>setSelected(s=>s.includes(m.id)?s.filter(x=>x!==m.id):[...s,m.id])}><img src={SPRITE(m.pokemon)} alt={m.pokemon.nameKr}/><span>{m.pokemon.nameKr}</span></button>)}</div><button className="btn wide" data-build-confirm disabled={!selected.length||state.energy<1} onClick={start}>{BUILDINGS[type].label} 건설 시작</button></div></div></div>}
-function ConstructionModal({building,onClose}:{building:BuildingState;onClose:()=>void}){const {state,dispatch}=useGame();const [selected,setSelected]=useState<string[]>([]);const workers=state.roster.filter(m=>m.buildingId===building.id&&!m.job),free=state.roster.filter(m=>!m.buildingId&&!m.job);const projected=projectedConstructionTurns(building.remainingTurns,workers.length+selected.length);return <div className="modal-overlay"><div className="modal-box"><div className="modal-head"><span>{BUILDINGS[building.type as BuildingType].label} · 공사 관리</span><button className="dd-close" onClick={onClose}>✕</button></div><div className="modal-body"><div className="install-note">현재 {workers.length}마리 · {building.remainingTurns}턴 남음 {workers.length?"":"· 일시정지"}</div><div className="entry-list">{workers.map(m=><div className="entry-row" key={m.id}><span>{m.pokemon.nameKr}</span><button onClick={()=>dispatch({type:"REMOVE_BUILDER",buildingId:building.id,memberId:m.id})}>회수</button></div>)}</div><div className="pc-grid">{free.map(m=><button className={`pc-cell ${selected.includes(m.id)?"selected":""}`} key={m.id} onClick={()=>setSelected(s=>s.includes(m.id)?s.filter(x=>x!==m.id):[...s,m.id])}><img src={SPRITE(m.pokemon)} alt=""/><span>{m.pokemon.nameKr}</span></button>)}</div><div className="install-note">추가 후 {projected}턴 · 에너지 1</div><button className="btn wide" disabled={!selected.length||state.energy<1} onClick={()=>{dispatch({type:"ADD_BUILDERS",buildingId:building.id,memberIds:selected,remainingTurns:projected});setSelected([])}}>추가 배치</button><button className="btn wide" onClick={()=>{dispatch({type:"CANCEL_BUILDING",buildingId:building.id});onClose()}}>공사 취소</button></div></div></div>}
+export default function BaseScreen() {
+  const { state } = useGame();
+  const siteId = state.siteViewId ?? HOME_SITE;
+  return <SettlementScreen key={siteId} siteId={siteId} />;
+}
 
-function PcModal({onClose}:{onClose:()=>void}){const {state,dispatch}=useGame();const [selected,setSelected]=useState(state.roster[0]?.id||"");const m=state.roster.find(x=>x.id===selected);const update=(fn:(x:RosterMember)=>RosterMember,cost=0,res?:keyof typeof state.resources)=>{if(state.energy<cost||res&&Number(state.resources[res])<=0)return;dispatch({type:"PATCH",patch:{energy:state.energy-cost,roster:state.roster.map(x=>x.id===selected?fn(x):x),resources:res?{...state.resources,[res]:Number(state.resources[res])-1}:state.resources}})};const craft=(id:HeldItemId)=>{if(state.resources.tool<3)return;dispatch({type:"PATCH",patch:{resources:{...state.resources,tool:state.resources.tool-3,items:{...state.resources.items,[id]:(state.resources.items[id]||0)+1}}}})};const equip=(id:HeldItemId)=>{if(!m||(state.resources.items[id]||0)<1)return;const items={...state.resources.items,[id]:(state.resources.items[id]||0)-1};if(m.heldItem)items[m.heldItem]=(items[m.heldItem]||0)+1;dispatch({type:"PATCH",patch:{resources:{...state.resources,items},roster:state.roster.map(x=>x.id===m.id?{...x,heldItem:id}:x)}})};return <div className="modal-overlay"><div className="modal-box"><div className="modal-head"><span>보유 포켓몬 · {state.roster.length}마리</span><button className="dd-close" onClick={onClose}>✕</button></div><div className="modal-body"><div className="pc-grid">{state.roster.map(x=><button className={`pc-cell ${selected===x.id?"selected":""}`} key={x.id} onClick={()=>setSelected(x.id)}><img src={SPRITE(x.pokemon)} alt={x.pokemon.nameKr}/><span>{x.pokemon.nameKr}</span></button>)}</div>{m&&<div className="roster-card"><div className="rc-head"><span className="rc-name">{m.pokemon.nameKr}</span><span>Lv.{m.level}</span></div><div className="rc-favtxt">우호도 {Math.round(m.favor)}/{m.favCeil} · 경험치 {m.exp}/{m.level*20} · 특수능력 {m.aptitude}/100</div><div className="rc-job"><span>{m.buildingId?"건물 배치 중":"미배정"}</span><button onClick={()=>{const included=state.entryOrder.includes(m.id);dispatch({type:"SET_ENTRY_ORDER",memberIds:included?state.entryOrder.filter(id=>id!==m.id):[...state.entryOrder,m.id]})}}>{state.entryOrder.includes(m.id)?"엔트리 해제":"엔트리 등록"}</button></div><div className="rc-actions"><button disabled={!state.resources.healItem||!state.energy} onClick={()=>update(feedMember,1,"healItem")}>먹이 주기</button><button disabled={!state.resources.candy||!state.energy} onClick={()=>update(candyMember,1,"candy")}>사탕 먹이기</button><button disabled={!state.resources.tm||!state.energy||m.aptitude>=100} onClick={()=>update(x=>({...x,aptitude:Math.min(100,x.aptitude+5)}),1,"tm")}>기술 지도</button></div><div className="install-note">도구: {m.heldItem?HELD_ITEMS[m.heldItem as HeldItemId]?.name:"미장착"} · 보유 부품 {state.resources.tool}</div><div className="entry-list">{Object.entries(HELD_ITEMS).map(([id,item])=><div className="entry-row" key={id}><span>{item.name} · {item.desc} · 보관 {state.resources.items[id]||0}</span><span><button disabled={state.resources.tool<3} onClick={()=>craft(id as HeldItemId)}>제작 3</button><button disabled={(state.resources.items[id]||0)<1} onClick={()=>equip(id as HeldItemId)}>장착</button></span></div>)}</div></div>}</div></div></div>}
-function ResourceModal({kind,onClose}:{kind:"resources"|"shop"|"entry"|"log";onClose:()=>void}){const {state,dispatch}=useGame();if(kind==="entry")return <EntryModal onClose={onClose}/>;if(kind==="log")return <div className="modal-overlay"><div className="modal-box"><div className="modal-head"><span>턴 로그</span><button onClick={onClose}>✕</button></div><div className="modal-body">{state.lastLog.map((x,i)=><div className="logline" key={i}>{x}</div>)}</div></div></div>;if(kind==="shop"){const buyEnergy=()=>state.resources.gold>=5&&dispatch({type:"PATCH",patch:{energy:Math.min(5,state.energy+2),resources:{...state.resources,gold:state.resources.gold-5}}});return <div className="modal-overlay"><div className="modal-box"><div className="modal-head"><span>상점 · 자금 {state.resources.gold}</span><button onClick={onClose}>✕</button></div><div className="modal-body"><div className="entry-row"><span>에너지 충전권 · 자금 5</span><button disabled={state.resources.gold<5||state.energy>=5} onClick={buyEnergy}>구매</button></div></div></div></div>}return <div className="modal-overlay"><div className="modal-box"><div className="modal-head"><span>자원 현황 · 저장 상한 {state.storageCap}</span><button onClick={onClose}>✕</button></div><div className="res-grid">{Object.entries(RESOURCE_LABELS).map(([k,label])=><div className="res-item" key={k}><span>{label}</span><b>{state.resources[k as keyof typeof RESOURCE_LABELS]}</b></div>)}</div></div></div>}
+function SettlementScreen({ siteId }: { siteId: string }) {
+  const { state, dispatch } = useGame();
+  const [panel, setPanel] = useState<BasePanel | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const showWater = useFieldMotion();
+  const settlement = settlementAt(state, siteId)!;
+  const home = siteId === HOME_SITE;
+  const canOperate = canOperateSettlement(state, siteId);
+  const name = settlementName(siteId);
+  const resting = state.roster.filter(member => isFreeWorker(state, member)).slice(0, trail.length);
+  const assignedCount = state.roster.filter(member => !isFreeWorker(state, member)).length;
+  const imminentLosses = useMemo(() => advanceTerritoryLoyalty(state.territories).lost, [state.territories]);
+  const favorWarnings = state.roster.flatMap(member => {
+    const turns = turnsUntilDepartureWarning(member);
+    return turns !== null && turns <= 5 ? [{ member, turns }] : [];
+  }).sort((a, b) => a.turns - b.turns);
+  const firstWarning = favorWarnings[0];
+  const imminentDepartures = favorWarnings.filter(({ turns }) => turns === 0).length;
+  const intrusion = activeIntrusion(state.territories, state.frontier.intrusion);
+  const observation = activeObservation(state.territories, state.frontier.espionage?.observation);
+  const turnDetails = [home && "base-gold-preview", imminentLosses.length && "base-supply-warning", firstWarning && "base-departure-warning",
+    intrusion && !intrusion.defenderId && "base-intrusion-warning",
+    observation && !observation.detectorId && "base-espionage-warning"].filter(Boolean).join(" ");
+  const goldReading = useMemo(() => home ? forecastGold(state) : null, [home, state]);
+  const turnHint = state.energy < HUNT_ENERGY_COST
+    ? state.resources.gold >= ENERGY_CHARGE_COST
+      ? "행동력이 더 필요하면 상점에서 충전권 구매 전후를 비교하세요."
+      : `다음 턴에 행동력이 ${ENERGY_PER_TURN}까지 회복됩니다.`
+    : undefined;
 
-export default function BaseScreen(){const {state,dispatch}=useGame();const [buildPlot,setBuildPlot]=useState<number|null>(null),[manage,setManage]=useState<string|null>(null),[panel,setPanel]=useState<"pc"|"resources"|"shop"|"entry"|"log"|null>(null);const activeManage=state.buildings.find(b=>b.id===manage);return <div className="base-scene"><div className="base-art"><div className="hud-top"><button className="turn-hud" onClick={()=>setPanel("log")}><span>TURN</span><span className="th-num">{String(state.turnCount).padStart(2,"0")}</span><span>행동력 {state.energy}/5</span></button><div className="cmdbar"><button className="cmd-item" onClick={()=>setPanel("pc")}>PC <b>{state.roster.length}</b></button><button className="cmd-item" onClick={()=>setPanel("entry")}>엔트리</button><button className="cmd-item" onClick={()=>setPanel("shop")}>상점</button><button className="cmd-item" onClick={()=>setPanel("resources")}>자원</button><button className="cmd-item" data-action="map" onClick={()=>dispatch({type:"PATCH",patch:{screen:"map"}})}>지도</button><button className="cmd-item" data-action="hunt" disabled={state.energy<2} onClick={()=>dispatch({type:"PATCH",patch:{screen:"hunt",energy:state.energy-2}})}>탐험</button></div></div><div className="plot-grid">{layouts.map((box,i)=>{const b=state.buildings.find(x=>x.plotIndex===i),unlocked=i<state.plotCap,style={left:`${box.left}%`,top:`${box.top}%`,width:`${box.width}%`,height:`${box.height}%`} as CSSProperties;return <div key={i}>{b&&<div className="plot-art-layer" style={{...style,transform:"scale(1.5)"}}><img src={BUILDINGS[b.type as BuildingType].art} alt=""/></div>}<button style={style} className={`plot ${!unlocked?"locked":b?.status==="constructing"?"constructing":b?"pending":"empty"}`} data-plot-install={!b&&unlocked?i:undefined} data-plot-construction={b?.status==="constructing"?b.id:undefined} onClick={()=>!b&&unlocked?setBuildPlot(i):b?.status==="constructing"?setManage(b.id):undefined}><span className="plot-info"><b>{b?BUILDINGS[b.type as BuildingType].label:unlocked?"건설":"미개척지"}</b></span></button><span className={`plot-tag ${b?"sprite-tag":""}`} style={{left:`${box.left+box.width/2}%`,top:`${box.top+box.height/2}%`}}>{b?state.roster.filter(m=>m.buildingId===b.id).slice(0,3).map(m=><img className="plot-sprite" key={m.id} src={SPRITE(m.pokemon)} alt=""/>):<span>{unlocked?"＋ 건설":"▣"}</span>}{b?.status==="constructing"&&<span className="plot-turns-badge">{b.remainingTurns}턴</span>}</span></div>})}</div></div><div className="hud-dock"><span>배치 <b>{state.roster.filter(m=>m.buildingId).length}/{state.roster.length}</b></span><span>개척 <b>{state.plotCap}/10</b></span><button id="nextTurn" className="dock-zone dock-nextturn" onClick={()=>dispatch({type:"NEXT_TURN"})}>TURN END · 다음 턴 〉</button></div>{buildPlot!==null&&<BuildModal plot={buildPlot} onClose={()=>setBuildPlot(null)}/>} {activeManage&&<ConstructionModal building={activeManage} onClose={()=>setManage(null)}/>} {panel==="pc"?<PcModal onClose={()=>setPanel(null)}/>:panel?<ResourceModal kind={panel} onClose={()=>setPanel(null)}/>:null}</div>}
+  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+
+  function explore() {
+    transitionFieldView(() => dispatch({ type: "START_HUNT" }));
+  }
+
+  return (
+    <section className="field-base" aria-labelledby="base-title">
+      <div className="base-device">
+        <header className="base-hud">
+          <div className="base-identity">
+            <button className="base-trainer-button" aria-label="트레이너 카드" onClick={() => setPanel({ kind: "trainer" })}>
+              <span className="base-emblem" aria-hidden="true" />
+              <span>신분증</span>
+            </button>
+            <div><span>야생 관측소</span><h1 id="base-title" data-base-heading ref={heading} tabIndex={-1}>{name}</h1></div>
+          </div>
+          <button className="base-button base-turn" onClick={() => setPanel({ kind: "log" })} aria-label={`${state.turnCount}턴, 턴 기록`}>
+            <span>턴 기록</span><b>{String(state.turnCount).padStart(2, "0")}</b>
+          </button>
+          <div className="base-energy" aria-label={`행동력 ${state.energy}/${ENERGY_PER_TURN}`}>
+            <span>행동력 <b>{state.energy}/{ENERGY_PER_TURN}</b></span>
+            <div className="base-energy-cells" aria-hidden="true">
+              {Array.from({ length: ENERGY_PER_TURN }, (_, index) => <i key={index} data-filled={index < state.energy} />)}
+            </div>
+          </div>
+        </header>
+
+        {!home && <div className="base-supply-warning base-departure-warning" role="group" aria-label="거점 운영 상태">
+          <span>{canOperate ? "보급 연결 · 본거지와 재고 공유" : "고립 · 공사·개척·생산 중단"}</span>
+          <button className="base-button" onClick={() => dispatch({ type: "PATCH", patch: { siteViewId: null } })}>본거지로</button>
+        </div>}
+        {!home && <InheritanceChoice siteId={siteId} />}
+        <div className="base-board" role="group" aria-label={`${name} 조감도`}>
+          <img className="base-landscape" src={town} width={1672} height={941} alt="" fetchPriority="high" />
+          {showWater && (
+            <div className="base-water" aria-hidden="true">
+              <Suspense fallback={null}><BaseWaterShader /></Suspense>
+            </div>
+          )}
+          {home && resting.map((member, index) => (
+            <div className="base-path-partner" key={member.id} style={{ left: `${trail[index][0]}%`, top: `${trail[index][1]}%` }}>
+              <img src={SPRITE(member.pokemon)} alt={member.pokemon.nameKr} />
+            </div>
+          ))}
+          {plots.map(([left, top, width, height], index) => {
+            const building = state.buildings.find(item => (item.siteId ?? HOME_SITE) === siteId && item.plotIndex === index);
+            const facility = building && buildings[building.type as keyof typeof buildings];
+            const clearing = settlement.clearing?.plotIndex === index ? settlement.clearing : null;
+            const workers = state.roster.filter(member => building ? member.buildingId === building.id : member.id === clearing?.memberId);
+            const isOpen = index < settlement.plotCap;
+            const constructing = building?.status === "constructing";
+            const phase = building ? (constructing ? "constructing" : "complete") : isOpen ? "empty" : index === settlement.plotCap ? "frontier" : "locked";
+            const remaining = constructing && building
+              ? canOperate && workers.length ? building.remainingTurns === 1 ? "다음 턴 완공" : `${building.remainingTurns}턴 남음` : "공사 일시정지"
+              : "완공";
+            const style = {
+              left: `${left / 16.72}%`, top: `${top / 9.41}%`,
+              width: `${width / 16.72}%`, height: `${height / 9.41}%`,
+            } as CSSProperties;
+
+            return (
+              <div className="base-plot" data-phase={phase} data-plot={index} key={index} style={style}>
+                {facility && <img className="base-facility" src={facility.art} alt="" />}
+                {workers.length > 0 && (
+                  <div className="base-plot-workers">
+                    {workers.slice(0, 3).map(member => <img key={member.id} src={SPRITE(member.pokemon)} alt={member.pokemon.nameKr} />)}
+                  </div>
+                )}
+                {!building && isOpen && index === 0 && settlement.inheritancePending ? <span className="base-plot-label">승계 선택</span>
+                : !building && isOpen ? (
+                  <button className="base-plot-action" data-plot-install={index} disabled={!canOperate} onClick={() => setPanel({ kind: "build", plot: index })} aria-label={`${index + 1}번 부지 건설`}>
+                    <span className="base-plot-label"><span aria-hidden="true">＋</span> 건설</span>
+                  </button>
+                ) : building && constructing ? (
+                  <button className="base-plot-action" data-plot-construction={building.id} onClick={() => setPanel({ kind: "construction", buildingId: building.id })} aria-label={`${facility?.label ?? "시설"} 공사 관리, ${remaining}`}>
+                    <span className="base-plot-label">{remaining}</span>
+                  </button>
+                ) : building ? (
+                  <button className="base-plot-action" onClick={() => setPanel({ kind: "facility", buildingId: building.id })}
+                    aria-label={`${index + 1}번 부지 ${facility?.label ?? "시설"} 관리`}>
+                    <span className="base-plot-label">{facility?.label ?? "시설"}<span className="base-wide-label"> · 관리</span></span>
+                  </button>
+                ) : index === settlement.plotCap ? (
+                  <button className="base-plot-action" onClick={() => setPanel({ kind: "clearing", plot: index })}
+                    disabled={!canOperate && !clearing}
+                    aria-label={`${index + 1}번 미개척 부지`}>
+                    <span className="base-plot-label">{clearing ? "개척 중" : <><span className="base-wide-label">미개척 · </span>평탄화</>}</span>
+                  </button>
+                ) : <span className="base-plot-label">미개척</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        <footer className="base-dock">
+          <nav className="base-tools" aria-label="본거지 관리">
+            <button className="base-button" onClick={() => setPanel({ kind: "pc" })}>포켓몬 <b>{state.roster.length}</b></button>
+            <button className="base-button" onClick={() => setPanel({ kind: "entry" })}>엔트리</button>
+            <button className="base-button" onClick={() => setPanel({ kind: "resources" })}>자원</button>
+            <button className="base-button" onClick={() => setPanel({ kind: "shop" })}>상점</button>
+            <button className="base-button" data-action="map"
+              onPointerEnter={() => preload(atlas, { as: "image" })}
+              onFocus={() => preload(atlas, { as: "image" })}
+              onClick={() => transitionFieldView(() => dispatch({ type: "PATCH", patch: { screen: "map", siteViewId: null,
+                mapFocusId: home ? state.mapFocusId : siteId } }), "map")}>지도</button>
+            {home && <button className="base-button" data-action="settings" aria-haspopup="dialog" onClick={() => setPanel({ kind: "settings" })}>설정</button>}
+          </nav>
+          <p className="base-counts"><span>배치 <b>{assignedCount}/{state.roster.length}</b></span><span>개척 <b>{settlement.plotCap}/{plots.length}</b></span></p>
+          <div className="base-actions">
+            <button className="base-button base-explore" data-action="hunt" disabled={state.energy < HUNT_ENERGY_COST}
+              onPointerEnter={() => preload(forest, { as: "image" })}
+              onFocus={() => preload(forest, { as: "image" })}
+              onClick={explore}>
+              탐험 <small>행동력 {HUNT_ENERGY_COST}</small><span aria-hidden="true">→</span>
+            </button>
+            <button className="base-button base-next" id="nextTurn"
+              aria-describedby={turnDetails || undefined} onClick={() => dispatch({ type: "NEXT_TURN" })}>
+              다음 턴 <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </footer>
+        {goldReading && <GoldForecast id="base-gold-preview" reading={goldReading} hint={turnHint} />}
+        {imminentLosses.length > 0 && (
+          <p id="base-supply-warning" className="base-supply-warning" role="status">
+            다음 턴에 {imminentLosses[0]}{imminentLosses.length > 1 ? ` 외 ${imminentLosses.length - 1}곳이` : "이"} 미점령지로 바뀝니다.
+          </p>
+        )}
+        {intrusion && !intrusion.defenderId && (
+          <div className="base-supply-warning base-departure-warning">
+            <span id="base-intrusion-warning" role="status">적 침투 예고 · {worldMapNodes.find(node => node.id === intrusion.targetId)?.name} · 다음 턴 자금 수입 {TERRITORY_GOLD} 위험</span>
+            <button className="base-button" onClick={() => transitionFieldView(() =>
+              dispatch({ type: "PATCH", patch: { screen: "map", mapFocusId: intrusion.targetId } }), "map")}>치안 대응</button>
+          </div>
+        )}
+        {observation && !observation.detectorId && (
+          <div className="base-supply-warning base-departure-warning">
+            <span id="base-espionage-warning" role="status">적 첩보 신호 · {settlementName(observation.targetId)} · 다음 턴 정산</span>
+            <button className="base-button" onClick={() => transitionFieldView(() =>
+              dispatch({ type: "PATCH", patch: { screen: "map", mapFocusId: observation.targetId } }), "map")}>첩보 탐지 대응</button>
+          </div>
+        )}
+        {firstWarning && (
+          <div className="base-supply-warning base-departure-warning">
+            <span id="base-departure-warning" role="status">{firstWarning.turns === 0 ? "다음 턴 이탈 예정" : `이탈 경고까지 ${firstWarning.turns}턴`} · {firstWarning.member.pokemon.nameKr}{imminentDepartures > 1 ? ` 외 ${imminentDepartures - 1}마리` : ""}</span>
+            <button className="base-button" onClick={() => setPanel({ kind: "pc", memberId: firstWarning.member.id })}>우호도 관리</button>
+          </div>
+        )}
+        <CampaignStatus onOpen={() => setPanel({ kind: "goals" })} />
+      </div>
+      {panel && <BasePanels panel={panel} siteId={siteId} onClose={() => setPanel(null)} />}
+    </section>
+  );
+}

@@ -6,6 +6,12 @@
   --teal-rgb:120,200,210;
   --mono:"Space Grotesk",system-ui,sans-serif;
   --disp:"Space Grotesk",system-ui,sans-serif;
+  --field-text:system-ui,"Malgun Gothic",sans-serif;
+  --field-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --field-title-size:clamp(19px,1.65vw,25px);
+  --field-title-weight:750;
+  --field-action-font:750 14px/1.25 var(--field-text);
+  --field-readout-font:600 15px/1.2 var(--field-mono);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
@@ -173,9 +179,10 @@ body{
    가장자리가 검은 덩어리처럼 안 보이게 함(항상 선택 쪽이 더 또렷함) */
 .enc-silhouette-wrap{position:relative; z-index:2; display:inline-flex; align-items:center; justify-content:center}
 .enc-silhouette{position:relative; z-index:2; filter:brightness(0) drop-shadow(0 0 7px rgba(195,215,255,.24)) drop-shadow(0 6px 5px rgba(0,0,0,.5))}
-.unknown-wild{position:relative;z-index:2;width:96px;height:90px;object-fit:contain;filter:blur(.35px) drop-shadow(0 0 9px rgba(137,199,255,.42));opacity:.72;transition:filter .18s ease,opacity .18s ease,transform .18s ease}
-.enc-mon:hover .unknown-wild{filter:blur(.1px) drop-shadow(0 0 13px rgba(174,219,255,.58));opacity:.88;transform:scale(1.06)}
-.vp-unknown-wild{width:180px;height:165px;filter:blur(.65px) drop-shadow(0 0 14px rgba(137,199,255,.46));opacity:.68}
+.unknown-wild{position:relative;z-index:2;width:96px;height:90px;object-fit:contain;filter:blur(1px);opacity:.42;mask-image:radial-gradient(ellipse 58% 65%,#000 24%,#000b 57%,transparent 91%);transition:opacity .18s ease}
+.enc-mon:hover .unknown-wild,.enc-mon:focus-visible .unknown-wild{opacity:.66}
+.vp-unknown-wild{width:180px;height:165px;opacity:.58}
+@media (prefers-reduced-motion: reduce){.unknown-wild{transition:none}}
 .enc-mon.is-selected .enc-silhouette{filter:brightness(0) drop-shadow(0 0 11px rgba(255,255,255,.4)) drop-shadow(0 6px 5px rgba(0,0,0,.5))}
 
 /* ---- 선택된 개체 전용: 바깥 점선 원 + 안쪽 얇은 원 + 고정 target bracket 4방향 + 아주 옅은 세로 스캔라인.

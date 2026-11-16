@@ -1,0 +1,30 @@
+.game-notice {
+  color: #f1efe3;
+  background: linear-gradient(145deg, #203a30, #10211b 68%);
+  border: 1px solid #698478;
+  border-block-start: 3px solid #a4bfa7;
+  box-shadow: 0 12px 40px #0008;
+  width: min(100%, 36rem);
+  padding: clamp(1.2rem, 4vw, 2.5rem);
+  margin: clamp(1.5rem, 12vh, 8rem) auto;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.game-notice header span { color: #b6d0bd; font-size: .85rem; }
+.game-notice h1 { color: inherit; font-size: clamp(1.5rem, 4vw, 2.3rem); margin: .35rem 0 0; }
+.game-notice p { margin: 0; line-height: 1.65; }
+.game-notice, .game-storage-notice { --base-ink: #f1efe3; --base-line: #698478; }
+
+.game-storage-notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: .6rem .9rem;
+  color: #ffeece;
+  background: #332a19;
+  border-block-end: 1px solid #95794e;
+  font-size: .9rem;
+}

@@ -29,4 +29,4 @@ export function trainerRelation(trainer:TrainerRecord,pokemon:PokemonRecord,allP
   return "neutral";
 }
 
-export const relationSignal=(relation:TrainerRelation)=>relation==="bond"||relation==="preferred"?"green":relation==="disliked"?"red":"white";
+export const relationSignal=(relation:TrainerRelation):"green"|"red"|"white"=>relation==="bond"||relation==="preferred"?"green":relation==="disliked"?"red":"white";

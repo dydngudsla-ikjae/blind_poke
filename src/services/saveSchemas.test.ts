@@ -13,4 +13,9 @@ describe("game save schema",()=>{
   it("rejects saves without roster members",()=>{
     expect(gameSaveSchema.safeParse({v:3,roster:[],resources:{}}).success).toBe(false);
   });
+  it("accepts a v4 campaign without members only after the intro",()=>{
+    expect(gameSaveSchema.safeParse({v:4,roster:[],introPending:false,resources:{}}).success).toBe(true);
+    expect(gameSaveSchema.safeParse({v:4,roster:[],introPending:true,resources:{}}).success).toBe(false);
+    expect(gameSaveSchema.safeParse({v:4,roster:[],resources:{}}).success).toBe(false);
+  });
 });

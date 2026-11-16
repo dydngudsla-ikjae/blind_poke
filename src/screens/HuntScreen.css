@@ -1,0 +1,94 @@
+.hunt-view {
+  --scope-inset: clamp(14px, 2.1vw, 32px);
+}
+
+.hunt-view h1:focus { outline: none; }
+
+.hunt-lens-guides {
+  position: absolute;
+  inset: var(--scope-inset);
+  pointer-events: none;
+  background:
+    linear-gradient(#ddf7df95, #ddf7df95) center top / 1px 8px no-repeat,
+    linear-gradient(#ddf7df95, #ddf7df95) center bottom / 1px 8px no-repeat,
+    linear-gradient(#ddf7df95, #ddf7df95) left center / 8px 1px no-repeat,
+    linear-gradient(#ddf7df95, #ddf7df95) right center / 8px 1px no-repeat;
+}
+
+.hunt-view .draft-shader { opacity: 0; }
+.hunt-view .draft-shader.is-ready { opacity: 1; }
+
+.hunt-target .draft-signal-art {
+  opacity: .72;
+  filter: brightness(1.40) drop-shadow(0 0 8px #d4f5c76b);
+}
+.hunt-target[data-locked="true"] .draft-signal-art { opacity: 1; }
+.hunt-target:focus-visible { outline-offset: -4px; }
+
+.hunt-target[data-locked="true"] .scanner-contact {
+  --contact-size: clamp(78px, 8.5vw, 128px);
+}
+
+.hunt-readout {
+  position: absolute;
+  z-index: 4;
+  right: var(--scope-inset);
+  bottom: var(--scope-inset);
+  width: clamp(235px, 21vw, 306px);
+  padding: 12px 14px 14px;
+  border: 1px solid #73907e;
+  border-top: 2px solid var(--field-line);
+  background: #0a1913f7;
+  pointer-events: none;
+}
+
+.hunt-readout[data-locked="true"] { border-top-color: var(--field-mint); }
+.hunt-readout h2 { margin: 0 0 8px; font-size: 15px; line-height: 1.2; }
+.hunt-readout:not([data-locked="true"]) h2 { color: var(--field-muted); }
+
+.hunt-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px 18px;
+  min-height: 61px;
+  padding: 7px 5px 9px;
+}
+
+.hunt-return {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid #6a8577;
+  border-radius: 2px;
+  background: #13241b;
+  color: var(--field-ink);
+  font: var(--field-action-font);
+  cursor: pointer;
+}
+
+.hunt-return:hover { background: #2a4133; }
+.hunt-return:focus-visible { outline: 2px solid var(--field-mint); outline-offset: 2px; }
+.hunt-return span { color: var(--field-mint); font: 600 17px/1 var(--field-mono); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hunt-target[data-locked="true"] .scanner-contact { animation: hunt-acquire 200ms ease-out both; }
+  .hunt-view .draft-shader { transition: opacity 180ms ease-out; }
+}
+
+@keyframes hunt-acquire {
+  from { transform: translate(-50%, -50%) scale(1.32); opacity: .45; }
+  to { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+@media (max-width: 680px) {
+  .hunt-readout { right: 8px; bottom: 8px; left: 8px; width: auto; padding: 8px 10px 10px; }
+  .hunt-readout h2 { margin-bottom: 5px; }
+  .hunt-controls { grid-template-columns: auto 1fr; gap: 5px 10px; padding-inline: 0; }
+  .hunt-controls .draft-touch-hint { justify-self: end; }
+}
+.hunt-counter-note { color: var(--field-amber); font-size: 13px; }
+.hunt-target[data-counter="true"] .scanner-contact { outline: 1px solid var(--field-amber); outline-offset: 4px; }

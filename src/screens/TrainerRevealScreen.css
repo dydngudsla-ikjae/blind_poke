@@ -1,0 +1,233 @@
+.draft-view[data-trainer-reveal="true"] { display: grid; }
+
+.trainer-reveal-slot {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-items: center;
+  justify-items: start;
+  min-width: 0;
+  padding: clamp(106px, 17vh, 156px) clamp(18px, 8%, 108px) clamp(28px, 7vh, 72px);
+  pointer-events: none;
+}
+
+.trainer-credential {
+  --credential-edge: 18px;
+  width: min(100%, 620px);
+  border-top: 2px solid var(--field-amber);
+  border-bottom: 1px solid #6a8473;
+  background: #0b1914f5;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--credential-edge)), calc(100% - var(--credential-edge)) 100%, 0 100%);
+  pointer-events: auto;
+}
+
+.trainer-credential-header,
+.trainer-credential-body,
+.trainer-credential-footer {
+  padding-inline: clamp(16px, 3vw, 36px);
+}
+
+.trainer-credential-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 49px;
+  border-bottom: 1px solid var(--field-line);
+  color: var(--field-amber);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.trainer-credential-mark {
+  width: 13px;
+  height: 13px;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+  box-shadow: inset 0 0 0 3px #0b1914, inset 0 0 0 8px currentColor;
+}
+
+.trainer-credential-body {
+  display: grid;
+  grid-template-columns: minmax(0, 39%) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(13px, 2vw, 28px);
+  padding-block: clamp(16px, 3vh, 30px) 20px;
+}
+
+.trainer-portrait {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1 / 1.08;
+  border: 1px solid #708e7b;
+  background:
+    radial-gradient(ellipse at 50% 54%, #46604c, transparent 73%),
+    repeating-linear-gradient(0deg, #c1e2c70c 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(90deg, #c1e2c70c 0 1px, transparent 1px 12px),
+    #172d22;
+}
+
+.trainer-portrait img {
+  position: absolute;
+  inset: 4%;
+  display: block;
+  width: 92%;
+  height: 92%;
+  min-height: 0;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 6px 4px #07150cb3);
+}
+
+.trainer-portrait-placeholder { display: grid; justify-items: center; gap: 4px; width: 66%; opacity: .7; }
+.trainer-portrait-placeholder::before, .trainer-portrait-placeholder::after { content: ""; display: block; background: #a6c2ab; }
+.trainer-portrait-placeholder::before { width: 38%; aspect-ratio: 1; border-radius: 50%; }
+.trainer-portrait-placeholder::after { width: 75%; aspect-ratio: 1.7; border-radius: 50% 50% 12% 12%; }
+
+.trainer-credential-identity { min-width: 0; }
+
+.trainer-credential-identity h2 {
+  width: fit-content;
+  font-size: clamp(26px, 3.8vw, 54px);
+  line-height: 1.06;
+  letter-spacing: -.045em;
+  overflow-wrap: anywhere;
+}
+
+.trainer-credential-identity h2:focus-visible {
+  outline: 2px solid var(--field-mint);
+  outline-offset: 5px;
+}
+
+.trainer-credential-identity p {
+  margin-top: 7px;
+  color: var(--field-muted);
+  font: 500 14px/1.4 var(--field-mono);
+  overflow-wrap: anywhere;
+}
+
+.trainer-credential-data {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  gap: 8px 12px;
+  margin-top: clamp(16px, 3vh, 28px);
+}
+
+.base-dialog .trainer-credential {
+  --field-line: var(--base-line);
+  --field-mint: var(--base-mint);
+  --field-muted: var(--base-muted);
+  --field-ink: var(--base-ink);
+  --field-amber: var(--base-amber);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trainer-reveal-slot .trainer-credential { animation: trainer-register 440ms cubic-bezier(.2,.8,.24,1) both; }
+  .trainer-reveal-slot .trainer-portrait img { animation: trainer-develop 420ms 110ms ease-out both; }
+  .trainer-reveal-slot .trainer-portrait::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 45%, #e4c0793a 49%, #ffe6a6c9 50%, transparent 51%);
+    animation: trainer-scan 520ms 55ms cubic-bezier(.23,.73,.32,1) both;
+  }
+}
+
+@keyframes trainer-register {
+  from { opacity: .55; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes trainer-develop {
+  from { opacity: .52; filter: brightness(1.36) saturate(.4); }
+  to { opacity: 1; }
+}
+
+@keyframes trainer-scan {
+  0% { opacity: 0; transform: translateY(-53%); }
+  14% { opacity: .86; }
+  78% { opacity: .55; }
+  100% { opacity: 0; transform: translateY(53%); }
+}
+
+.trainer-credential-data > div {
+  min-width: 0;
+  border-top: 1px solid var(--field-line);
+  padding-top: 8px;
+}
+
+.trainer-credential-data dt {
+  color: var(--field-muted);
+  font-size: 12px;
+}
+
+.trainer-credential-data dd {
+  margin: 4px 0 0;
+  color: var(--field-ink);
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.trainer-credential-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+}
+
+.trainer-credential-types li {
+  padding: 2px 7px;
+  border: 1px solid #59846c;
+  color: var(--field-mint);
+  font-size: 12px;
+}
+
+.trainer-credential-footer {
+  padding-block: 12px 17px;
+  border-top: 1px solid var(--field-line);
+  background: #13241b;
+}
+
+.trainer-continue {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 44px;
+  width: 100%;
+  padding: 7px 13px;
+  border: 1px solid #dfc47b;
+  border-radius: 2px;
+  background: var(--field-amber);
+  color: #192218;
+  font: var(--field-action-font);
+  text-align: left;
+  cursor: pointer;
+}
+
+.trainer-continue:hover { background: #f9e4a9; }
+.trainer-continue:active { background: #d9b773; }
+.trainer-continue:focus-visible { outline: 2px solid var(--field-mint); outline-offset: 3px; }
+.trainer-continue span { font: 600 20px/1 var(--field-mono); }
+
+@media (max-width: 680px) {
+  .trainer-reveal-slot {
+    padding: 88px 10px 20px;
+    justify-items: center;
+  }
+
+  .trainer-credential-header { min-height: 40px; }
+  .trainer-credential-body { padding-block: 15px; }
+  .trainer-credential-footer { padding-block: 9px 13px; }
+  .trainer-credential-data { grid-template-columns: minmax(0, 1fr); margin-top: 11px; }
+  .trainer-credential-data > div { padding-top: 4px; }
+  .trainer-credential-header, .trainer-credential-body, .trainer-credential-footer { padding-inline: 12px; }
+}
