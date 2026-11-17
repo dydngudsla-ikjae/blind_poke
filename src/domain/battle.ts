@@ -1,5 +1,5 @@
 import type { BattleBoost, BattleMoveRule, BattleStat, GameDataBundle, MoveRecord, PokemonRecord, RosterMember } from "./types";
-import { applyStatus, beforeMove, statusLabels, statusResidual, type BattleStatus } from "./battleStatus";
+import { applyStatus, beforeMove, canApplyStatus, statusLabels, statusResidual, type BattleStatus } from "./battleStatus";
 
 export interface BattleMove extends BattleMoveRule {
   id: number;
@@ -29,16 +29,18 @@ export interface Combatant {
 
 export const TACKLE: BattleMove = {
   id: 33, name: "몸통박치기", power: 40, accuracy: 100, damageClass: 2,
-  typeRowid: 1, typeName: "노말", pp: 35, maxPp: 35,
+  typeRowid: 1, typeName: "노말", pp: 35, maxPp: 35, contact: true,
 };
 export const STRUGGLE: BattleMove = {
   id: 165, name: "발버둥", power: 50, accuracy: 0, damageClass: 2,
-  typeRowid: null, typeName: "무타입", pp: 0, maxPp: 0,
+  typeRowid: null, typeName: "무타입", pp: 0, maxPp: 0, contact: true,
 };
 
 const moveCatalogs = new WeakMap<GameDataBundle, { moves: Map<number, MoveRecord>; types: Map<number, string> }>();
 
-export function pickMoveset(pokemon: PokemonRecord, level: number, data: GameDataBundle): BattleMove[] {
+type LearnRow = [moveId: number, level: number];
+
+function movePool(ordered: LearnRow[], level: number, data: GameDataBundle) {
   let catalog = moveCatalogs.get(data);
   if (!catalog) {
     catalog = { moves: new Map(data.moves.map(move => [move.moveRowid, move])), types: new Map(data.types.map(type => [type.typeRowid, type.nameKr])) };
@@ -46,10 +48,6 @@ export function pickMoveset(pokemon: PokemonRecord, level: number, data: GameDat
   }
   const { moves, types } = catalog;
   const picked = new Map<number, BattleMove>();
-  const learnset = data.battle.learnsets[pokemon.pokemonRowid] ?? [];
-  const statusLearnset = data.battle.statusLearnsets?.[pokemon.pokemonRowid] ?? [];
-  const byLevel = (a: [number, number], b: [number, number]) => b[1] - a[1];
-  const ordered = [...learnset].sort(byLevel).concat([...statusLearnset].sort(byLevel));
   for (const [id, requiredLevel] of ordered) {
     if (requiredLevel > level || picked.has(id)) continue;
     const move = moves.get(id);
@@ -58,9 +56,45 @@ export function pickMoveset(pokemon: PokemonRecord, level: number, data: GameDat
     const { power, accuracy, damageClass, pp } = move.details;
     picked.set(id, { ...rule, id, name: move.nameKr, power: power ?? 0, accuracy: accuracy ?? 0,
       damageClass, typeRowid: move.typeRowid, typeName: types.get(move.typeRowid) ?? "", pp, maxPp: pp });
-    if (picked.size === 4) break;
   }
   return [...picked.values()];
+}
+
+function naturalMoves(id: number, data: GameDataBundle, campaign: boolean) {
+  const unlocks = new Map(campaign ? data.battle.campaignUnlocks?.[id] : undefined);
+  const order = (rows: LearnRow[]): LearnRow[] => rows
+    .map(([move, level]): LearnRow => [move, level === 1 ? unlocks.get(move) ?? level : level])
+    .sort((a, b) => b[1] - a[1]);
+  return order(data.battle.learnsets[id] ?? []).concat(order(data.battle.statusLearnsets?.[id] ?? []));
+}
+
+function ordinaryAttack(move: BattleMove) {
+  return move.damageClass !== 1 && (move.power > 0 || move.weightPower) && !move.requiresSleep && !move.selfKO;
+}
+
+export function campaignLearnLevels(pokemon: PokemonRecord, data: GameDataBundle) {
+  const id = pokemon.pokemonRowid;
+  const rows = [...naturalMoves(id, data, true), ...(data.battle.inheritedAttacks?.[id] ?? [])];
+  return [...new Set(rows.map(([, level]) => level))].sort((a, b) => a - b);
+}
+
+export function pickMoveset(pokemon: PokemonRecord, level: number, data: GameDataBundle): BattleMove[] {
+  const id = pokemon.pokemonRowid;
+  const rows = naturalMoves(id, data, true);
+  const available = movePool(rows, level, data);
+  const equipped = available.slice(0, 4);
+  if (equipped.some(ordinaryAttack)) return equipped;
+  let attack = available.find(ordinaryAttack);
+  if (!attack && data.battle.campaignUnlocks?.[id]?.length) {
+    const oldAttack = movePool(naturalMoves(id, data, false), level, data).filter(ordinaryAttack)
+      .sort((a, b) => (a.weightPower ? 20 : a.power) - (b.weightPower ? 20 : b.power) || a.id - b.id)[0];
+    if (oldAttack) {
+      const native = new Set(rows.map(([move]) => move));
+      const inherited = (data.battle.inheritedAttacks?.[id] ?? []).filter(([move]) => !native.has(move));
+      attack = movePool(inherited, level, data).find(ordinaryAttack) ?? oldAttack;
+    }
+  }
+  return attack ? [...equipped.slice(0, 3), attack] : equipped;
 }
 
 export function battleMoves(mon: Combatant) {
@@ -136,7 +170,7 @@ export type BattleAction = { kind: "move"; moveId: number } | { kind: "switch"; 
 export interface BattleStep {
   state: BattleState;
   lines: string[];
-  strike?: { side: BattleSide; move: BattleMove; damage: number };
+  strike?: { side: BattleSide; move: BattleMove; damage: number; outcome: "hit" | "miss" | "immune" | "blocked"; fainted?: boolean };
 }
 
 export function createBattle(players: Combatant[], enemies: Combatant[]): BattleState {
@@ -186,14 +220,16 @@ function strike(state: BattleState, side: BattleSide, move: BattleMove, data: Ga
   const targetSide = other(side);
   const lines: string[] = [];
   const { mon: actor, blocked } = beforeMove(active(state, side), move, lines, random);
-  if (blocked) return { state: updateActive(state, side, actor), lines, flinch: false };
+  if (blocked) return { state: updateActive(state, side, actor), lines, flinch: false,
+    strike: { side, move, damage: 0, outcome: "blocked" as const } };
   const target = active(state, targetSide);
   lines.push(actor.name + "의 " + move.name + "!");
   const prerequisite = !move.requiresSleep || (move.requiresSleep === "actor" ? actor : target).status?.kind === "sleep";
   const certain = move.status === "toxic" && actor.types.includes(4);
   const missed = prerequisite && !certain && move.accuracy > 0 && random() * 100 >= move.accuracy;
   const matchup = movePower(move, target) > 0 || move.statusTypeCheck ? effectiveness(move.typeRowid, target.types, data) : 1;
-  const immune = matchup === 0;
+  const statusImmune = Boolean(move.status && movePower(move, target) === 0 && !canApplyStatus(target, move.status, move));
+  const immune = matchup === 0 || statusImmune;
   const damage = missed || immune || !prerequisite ? 0 : Math.min(target.curHp, calculateDamage(actor, target, move, data));
   let nextActor = move.id === STRUGGLE.id ? actor : {
     ...actor, moves: actor.moves.map(slot => slot.id === move.id ? { ...slot, pp: slot.pp - 1 } : slot),
@@ -202,7 +238,7 @@ function strike(state: BattleState, side: BattleSide, move: BattleMove, data: Ga
   let flinch = false;
 
   if (!prerequisite) lines.push(move.requiresSleep === "actor" ? "잠들어 있을 때만 쓸 수 있다!" : "잠든 상대에게만 쓸 수 있다!");
-  else if (immune) lines.push("효과 없음");
+  else if (immune) lines.push(statusImmune ? "상태이상 효과 없음" : "효과 없음");
   else if (missed) lines.push("하지만 빗나갔다!");
   else {
     if (damage) lines.push(damage + " 피해" + (matchup > 1 ? " · 효과가 굉장했다!" : matchup < 1 ? " · 효과가 별로였다." : ""));
@@ -238,7 +274,16 @@ function strike(state: BattleState, side: BattleSide, move: BattleMove, data: Ga
   if (nextActor.fainted) lines.push(actor.name + "이(가) 쓰러졌다!");
 
   return { state: updateActive(updateActive(state, side, nextActor), targetSide, nextTarget),
-    lines, strike: { side, move, damage }, flinch };
+    lines, strike: { side, move, damage, outcome: !prerequisite ? "blocked" as const : immune ? "immune" as const :
+      missed ? "miss" as const : "hit" as const, fainted: nextTarget.fainted }, flinch };
+}
+
+function act(state: BattleState, side: BattleSide, move: BattleMove | undefined, data: GameDataBundle, random: () => number) {
+  if (move) return strike(state, side, move, data, random);
+  const lines: string[] = [];
+  const { mon } = beforeMove(active(state, side), STRUGGLE, lines, random);
+  if (!lines.length) lines.push(mon.name + "은(는) 기술을 쓰지 않았다.");
+  return { state: updateActive(state, side, mon), lines, flinch: false };
 }
 
 function finishRound(state: BattleState): BattleStep {
@@ -267,13 +312,43 @@ function finishRound(state: BattleState): BattleStep {
   return { state: { ...state, round: state.round + 1, phase }, lines };
 }
 
-function selectEnemyMove(state: BattleState, random: () => number) {
+function selectEnemyMove(state: BattleState, data: GameDataBundle, random: () => number) {
   const enemy = active(state, "enemy");
-  const available = battleMoves(enemy).filter(move => (move.pp > 0 || move.id === STRUGGLE.id) &&
-    (!move.requiresSleep || (move.requiresSleep === "actor" ? enemy : active(state, "player")).status?.kind === "sleep"));
-  const attacks = available.filter(move => move.power > 0 || move.weightPower);
-  const pool = attacks.length ? attacks : available;
-  return pool[Math.floor(random() * pool.length)] ?? STRUGGLE;
+  const player = active(state, "player");
+  const available = battleMoves(enemy).filter(move => move.pp > 0 || move.id === STRUGGLE.id);
+  const valid = available.filter(move => {
+    if (enemy.status?.kind === "sleep" && enemy.status.remaining > 0 && move.requiresSleep !== "actor") return false;
+    if (move.requiresSleep === "actor") return enemy.status?.kind === "sleep" && enemy.status.remaining > 0;
+    return move.requiresSleep !== "target" || player.status?.kind === "sleep";
+  });
+  const reserve = state.teams.enemy.some((mon, index) => index !== state.active.enemy && !mon.fainted);
+  const attacks = valid.filter(move => movePower(move, player) > 0).map(move => {
+    const damage = calculateDamage(enemy, player, move, data);
+    const accuracy = move.accuracy ? move.accuracy / 100 : 1;
+    const recoil = move.recoil && damage ? ratioHp(Math.min(player.curHp, damage), move.recoil) : 0;
+    const ko = damage >= player.curHp;
+    return { move, damage, ko, score: (Math.min(damage, player.curHp) + (ko ? player.maxHp : 0) - recoil / 2) * accuracy };
+  }).filter(attack => attack.damage > 0);
+  const regular = attacks.filter(attack => !attack.move.selfKO);
+  const finishing = regular.filter(attack => attack.ko);
+  const pool = finishing.length ? finishing : [...regular, ...attacks.filter(attack => attack.move.selfKO && reserve && attack.ko)];
+  if (pool.length) {
+    pool.sort((a, b) => b.score - a.score);
+    const best = pool.filter(attack => attack.score === pool[0].score);
+    return best[Math.floor(random() * best.length)].move;
+  }
+  const useful = valid.find(move => {
+    if (move.status && !player.status && canApplyStatus(player, move.status, move) &&
+      (!move.statusTypeCheck || effectiveness(move.typeRowid, player.types, data) > 0)) return true;
+    const boost = move.boosts;
+    if (!boost || movePower(move, player) > 0) return false;
+    const target = boost.target === "actor" ? enemy : player;
+    return (Object.entries(boost.changes) as [BattleStat, number][]).some(([stat, change]) => {
+      const current = target.stages[stat] ?? 0;
+      return change > 0 ? current < 6 : current > -6;
+    });
+  });
+  return useful ?? valid.find(move => !move.selfKO) ?? available.find(move => !move.selfKO);
 }
 
 export function resolveBattleTurn(state: BattleState, action: BattleAction, data: GameDataBundle, random = Math.random): BattleStep[] {
@@ -285,7 +360,7 @@ export function resolveBattleTurn(state: BattleState, action: BattleAction, data
     const switched = switchTo(state, "player", action.index);
     steps.push({ state: { ...switched, phase: "command" }, lines: [incoming.name + ", 나서라!"] });
     if (state.phase === "replacement") return steps;
-    const response = strike(switched, "enemy", selectEnemyMove(switched, random), data, random);
+    const response = act(switched, "enemy", selectEnemyMove(switched, data, random), data, random);
     return [...steps, response, finishRound(response.state)];
   }
 
@@ -294,27 +369,27 @@ export function resolveBattleTurn(state: BattleState, action: BattleAction, data
     const player = active(state, "player");
     if (player.fainted || !player.status) return steps;
     const treated = updateActive(state, "player", { ...player, status: undefined });
-    const response = strike(treated, "enemy", selectEnemyMove(treated, random), data, random);
+    const response = act(treated, "enemy", selectEnemyMove(treated, data, random), data, random);
     return [{ state: treated, lines: [`${player.name}의 ${statusLabels[player.status.kind]} 상태이상을 치료했다!`] }, response, finishRound(response.state)];
   }
   const playerMove = battleMoves(active(state, "player")).find(move => move.id === action.moveId && (move.pp > 0 || move.id === STRUGGLE.id));
   if (!playerMove) return steps;
 
-  const enemyMove = selectEnemyMove(state, random);
+  const enemyMove = selectEnemyMove(state, data, random);
   const playerPriority = playerMove.priority ?? 0;
-  const enemyPriority = enemyMove.priority ?? 0;
-  const enemyFirst = enemyPriority > playerPriority || (enemyPriority === playerPriority &&
-    combatStat(active(state, "enemy"), "spd") > combatStat(active(state, "player"), "spd"));
+  const enemyPriority = enemyMove?.priority ?? 0;
+  const enemyFirst = enemyMove && (enemyPriority > playerPriority || (enemyPriority === playerPriority &&
+    combatStat(active(state, "enemy"), "spd") > combatStat(active(state, "player"), "spd")));
   const first: BattleSide = enemyFirst ? "enemy" : "player";
   const second = other(first);
   const moves = { player: playerMove, enemy: enemyMove };
-  const hit = strike(state, first, moves[first], data, random);
+  const hit = act(state, first, moves[first], data, random);
   steps.push(hit);
   state = hit.state;
   if (!active(state, first).fainted && !active(state, second).fainted) {
     if (hit.flinch) steps.push({ state, lines: [active(state, second).name + "이(가) 풀죽어 움직이지 못했다!"] });
     else {
-      const response = strike(state, second, moves[second], data, random);
+      const response = act(state, second, moves[second], data, random);
       state = response.state;
       steps.push(response);
     }

@@ -14,9 +14,13 @@ const immuneTypes: Record<BattleStatusKind, number[]> = {
   poison: [4, 9], toxic: [4, 9], burn: [10], paralysis: [13], sleep: [], freeze: [15],
 };
 
+export function canApplyStatus(target: Combatant, kind: BattleStatusKind, move: BattleMove) {
+  return !target.types.some(type => immuneTypes[kind].includes(type) || (move.powder && type === 12));
+}
+
 export function applyStatus(target: Combatant, kind: BattleStatusKind, move: BattleMove, lines: string[], random: () => number) {
   if (target.fainted) return target;
-  if (target.types.some(type => immuneTypes[kind].includes(type) || (move.powder && type === 12))) {
+  if (!canApplyStatus(target, kind, move)) {
     if (move.status) lines.push("상태이상 효과 없음");
     return target;
   }

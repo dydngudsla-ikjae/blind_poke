@@ -30,12 +30,34 @@ const scannerReturn = defineShader({
     // Sweep once during acquisition; keep the fine readout lines live after the lock.
     let row = p.y + (2.0 * acquisition - 1.0) * radius;
     let sweep = exp(-abs(row) * 110.0) * acquisition;
+    let azimuth = atan2(p.y, p.x + 0.000001);
+    let segment = smoothstep(0.20, 0.85, cos(azimuth * 4.0));
+    let apertureArc = exp(-abs(distance - radius - 0.031 * acquisition) * 175.0) * segment;
+    let lensGlint = exp(-abs(row + 0.019) * 75.0) * exp(-p.x * p.x * 12.0);
+    let acquireLight = (apertureArc * 0.34 + lensGlint * 0.3) * acquisition * (1.0 - acquisition * 0.45);
     let lines = pow(0.5 + 0.5 * sin(uv.y * viewport.y * 1.65 - time * 2.4), 5.0);
     let cell = floor(uv * vec2f(200.0, 155.0));
     let grain = fract(sin(dot(cell, vec2f(12.9898, 78.233)) + floor(time * 15.0)) * 43758.5453);
     let response = inside * (0.018 + lines * 0.077 + grain * 0.026 + sweep * 0.42);
     let color = mix(vec3f(0.65, 0.95, 0.75), vec3f(0.98, 0.83, 0.49), confirmed);
-    return vec4f(color, rim * (0.46 + acquisition * 0.38) + response * (1.0 - confirmed * 0.45));
+    return vec4f(color, rim * (0.46 + acquisition * 0.38) + (response + acquireLight * inside) * (1.0 - confirmed * 0.45));
+  `,
+});
+
+const recognitionPulse = defineShader({
+  name: "ScannerRecognitionPulse",
+  props: {
+    center: { default: { x: .5, y: .52 }, transform: transformPosition },
+    pulse: { default: 0 },
+  },
+  paint: wgsl`
+    let p = (uv - center) * vec2f(max(aspect, 1.0), max(1.0 / aspect, 1.0));
+    let distance = length(p);
+    let front = 0.05 + (1.0 - pulse) * 0.39;
+    let ring = exp(-abs(distance - front) * 100.0);
+    let streak = exp(-abs(p.y - (front - 0.21)) * 74.0) * exp(-p.x * p.x * 43.0);
+    let light = (ring * 0.61 + streak * 0.32) * pulse * smoothstep(0.0, 0.22, 1.0 - pulse);
+    return vec4f(0.78, 1.0, 0.70, light);
   `,
 });
 
@@ -45,12 +67,14 @@ export default function DraftShader({
   fieldScan,
   analysisPass,
   analysisResolved,
+  recruited,
 }: {
   target?: Point;
   trainerRevealed: boolean;
   fieldScan: boolean;
   analysisPass?: number;
   analysisResolved: boolean;
+  recruited: boolean;
 }) {
   const [unavailable, setUnavailable] = useState(false);
   const [ready, setReady] = useState(false);
@@ -61,7 +85,7 @@ export default function DraftShader({
     if (!target && !trainerRevealed) return;
     let frame: number;
     const start = performance.now();
-    const duration = trainerRevealed ? 620 : analyzing ? 370 : 200;
+    const duration = recruited ? 680 : trainerRevealed ? 620 : analyzing ? 370 : 200;
     function animate(time: number) {
       const elapsed = Math.min(1, Math.max(0, (time - start) / duration));
       setPulse(trainerRevealed ? (1 - elapsed) ** 2 : 1 - elapsed);
@@ -69,7 +93,7 @@ export default function DraftShader({
     }
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [target, trainerRevealed, analyzing, analysisPass]);
+  }, [target, trainerRevealed, analyzing, analysisPass, recruited]);
 
   if (unavailable) return null;
   const center = { x: (target?.x ?? 50) / 100, y: (target?.y ?? 50) / 100 };
@@ -150,6 +174,7 @@ export default function DraftShader({
           opacity={trainerRevealed ? pulse * 0.46 : target ? 0.24 + pulse * 0.56 : 0}
         />
       )}
+      {recruited && <CustomShader src={recognitionPulse} center={center} pulse={pulse} />}
       {trainerRevealed && (
         <Beam
           startPosition={{ x: 1.1 - pulse * .92, y: .04 }}

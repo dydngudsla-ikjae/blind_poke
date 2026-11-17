@@ -27,6 +27,43 @@ const data: GameDataBundle = {
 const combatant = (pokemon: PokemonRecord, key: string, level = 5) => buildCombatant({ pokemon, level }, data, key);
 const roll = () => 0;
 const attack = (moveId: number) => ({ kind: "move" as const, moveId });
+it("uses the earlier evolution's unlock level and inherits its starter attack when needed", () => {
+  const volcarona = { ...base, pokemonRowid: 637 };
+  const ninetales = { ...base, pokemonRowid: 38 };
+  const catalog = { ...data, battle: battleCatalog as unknown as GameDataBundle["battle"], moves: moves as MoveRecord[] };
+  expect(pickMoveset(volcarona, 1, catalog).map(slot => slot.id)).not.toContain(38);
+  expect(pickMoveset(volcarona, 60, catalog).map(slot => slot.id)).toContain(38);
+  expect(pickMoveset(ninetales, 1, catalog).map(slot => slot.id)).toContain(52);
+});
+
+it("prefers a damaging attack over an immune attack", () => {
+  const player = combatant(ghost, "p");
+  const enemy = { ...combatant(base, "e"), moves: [TACKLE, { ...TACKLE, id: 52, typeRowid: 10 }] };
+  const steps = resolveBattleTurn(createBattle([player], [enemy]), attack(33), data, roll);
+  expect(steps.find(step => step.strike?.side === "enemy")?.strike?.move.id).toBe(52);
+});
+
+it("declines an unsafe last-mon Explosion without skipping PP to Struggle", () => {
+  const player = combatant(ghost, "p");
+  const bomber = combatant(base, "e", 7);
+  const enemy = { ...bomber, moves: bomber.moves.filter(move => move.selfKO) };
+  const steps = resolveBattleTurn(createBattle([player], [enemy]), attack(33), data, roll);
+  expect(steps.find(step => step.strike?.side === "enemy")).toBeUndefined();
+  expect(steps.at(-1)?.state.teams.enemy[0].moves).toEqual(enemy.moves);
+  expect(steps.at(-1)?.state.teams.enemy[0].fainted).toBe(false);
+});
+
+it("uses applicable status when attacks cannot hit and marks innate status immunity", () => {
+  const powder = { ...TACKLE, id: 77, damageClass: 1, power: 0, status: "poison" as const, powder: true as const };
+  const ghostPlayer = combatant(ghost, "p");
+  const enemy = { ...combatant(base, "e"), moves: [TACKLE, powder] };
+  const round = resolveBattleTurn(createBattle([ghostPlayer], [enemy]), attack(33), data, roll);
+  expect(round.find(step => step.strike?.side === "enemy")?.strike?.move.id).toBe(77);
+  expect(round.at(-1)?.state.teams.player[0].status?.kind).toBe("poison");
+  const grassTarget = { ...enemy, types: [12], moves: [TACKLE] };
+  const immuneRound = resolveBattleTurn(createBattle([{ ...ghostPlayer, moves: [powder] }], [grassTarget]), attack(77), data, roll);
+  expect(immuneRound.find(step => step.strike?.side === "player")?.strike?.outcome).toBe("immune");
+});
 const replace = (index: number) => ({ kind: "switch" as const, index });
 const play = (state: ReturnType<typeof createBattle>, action: ReturnType<typeof attack> | ReturnType<typeof replace>, random = roll) =>
   resolveBattleTurn(state, action, data, random).at(-1)!.state;

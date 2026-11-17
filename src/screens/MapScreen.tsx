@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { preload } from "react-dom";
 import atlas from "../../assets/observatory-atlas.webp";
+import chart from "../../assets/field-chart.webp";
 import arena from "../../assets/observatory-battle.webp";
 import useFieldMotion from "../components/useFieldMotion";
 import { worldMapNodes } from "../domain/worldMap";
@@ -9,7 +10,7 @@ import { MAX_LOYALTY, suppliedTerritories, TERRITORY_GOLD } from "../domain/terr
 import { describeFirstVictoryReward, hasFirstVictory, REGION_NAMES, regionProgress } from "../game/campaign";
 import { useGame } from "../game/GameProvider";
 import type { TerritoryState } from "../game/gameTypes";
-import { BATTLE_ENERGY_COST, battleEntries, canScoutTerritory, canTargetTerritory, prepareTerritoryBattle } from "../game/territoryBattle";
+import { BATTLE_ENERGY_COST, battleEntries, canScoutTerritory, canTargetTerritory, prepareTerritoryBattle, territoryEnemyLevel, trainerGrowth } from "../game/territoryBattle";
 import { territoryFaction } from "../game/territoryFactions";
 import { atlasNodes, atlasRoutes } from "./atlasRoutes";
 import { trainerPortrait } from "./TrainerRevealScreen";
@@ -46,6 +47,7 @@ export default function MapScreen() {
   const { state, data, dispatch } = useGame();
   const [selectedId, setSelectedId] = useState(() => state.mapFocusId && atlasNodes.has(state.mapFocusId) ? state.mapFocusId : "home");
   const [view, setView] = useState(overview);
+  const [reportOpen, setReportOpen] = useState(true);
   const [scannedId, setScannedId] = useState<string | null>(null);
   const drag = useRef<{ id: number; x: number; y: number; start: typeof overview } | null>(null);
   const markerTouch = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -87,6 +89,10 @@ export default function MapScreen() {
   const ghostReport = state.frontier.intel[selectedId];
 
   const status = territoryStatus(territory, canScoutTerritory(state, selectedId));
+  const opposition = status === "trainer" || status === "free";
+  const training = !hasFirstVictory(state);
+  const opponentLevel = opposition ? territoryEnemyLevel(state, selected.region, selectedId) : null;
+  const growth = opposition && !training ? trainerGrowth(state, selectedId, selected.region) : null;
   const territoryName = status === "scoutable" || status === "unknown" ? "미확인 거점" : selected.name;
   const trainer = status === "owned" ? player : observedRivals.get(selectedId)?.trainer;
   const occupierName = trainer?.nameKr ?? (status === "trainer" ? "정체 기록 없음" : "내 세력");
@@ -197,6 +203,7 @@ export default function MapScreen() {
   function selectSite(id: string) {
     setSelectedId(id);
     setScannedId(null);
+    setReportOpen(true);
   }
 
   function trackMarkerTouch(event: PointerEvent<HTMLButtonElement>) {
@@ -223,7 +230,10 @@ export default function MapScreen() {
     <section className="draft-station atlas-station" aria-labelledby="atlas-title">
       <div className="draft-device">
         <header className="atlas-header">
-          <div className="atlas-title"><span className="draft-location">야생 관측소</span><h1 id="atlas-title" ref={heading} tabIndex={-1}>월드맵</h1></div>
+          <div className="atlas-title">
+            <img src={chart} alt="" width="168" height="168" />
+            <h1 id="atlas-title" ref={heading} tabIndex={-1}>월드맵</h1>
+          </div>
           <p>{currentRegion && <span>{currentRegion.name} 확보 <b>{currentRegion.owned}/{currentRegion.total}</b></span>}
             <span>전체 거점 확보 <b>{totalOwned}/{worldMapNodes.length}</b></span></p>
         </header>
@@ -248,11 +258,15 @@ export default function MapScreen() {
                     const isSelected = route.from === selectedId || route.to === selectedId;
                     const direct = from?.owner === "player" || to?.owner === "player";
                     const bothOwned = unlocked && from.owner === "player" && to.owner === "player";
-                    return <path key={route.key} d={route.path} vectorEffect="non-scaling-stroke"
+                    const suppliedRoute = bothOwned && supplied.has(route.from) && supplied.has(route.to);
+                    return <g key={route.key}>
+                      <path d={route.path} vectorEffect="non-scaling-stroke"
                       data-route={route.key} data-crossing={route.crossing}
-                      data-owned-route={bothOwned && supplied.has(route.from) && supplied.has(route.to)}
+                      data-owned-route={suppliedRoute}
                       data-isolated-route={bothOwned && !supplied.has(route.from) && !supplied.has(route.to)}
-                      data-route-state={unlocked ? isSelected ? "selected" : direct ? "reachable" : "open" : "locked"} />;
+                      data-route-state={unlocked ? isSelected ? "selected" : direct ? "reachable" : "open" : "locked"} />
+                      {suppliedRoute && showEffects && <path className="atlas-supply-flow" d={route.path} vectorEffect="non-scaling-stroke" />}
+                    </g>;
                   })}
                 </svg>
                 {worldMapNodes.map(node => {
@@ -294,105 +308,118 @@ export default function MapScreen() {
             </div>
           </div>
 
-          <aside className="atlas-report" aria-labelledby="atlas-report-title">
-            <h2 id="atlas-report-title">정찰 기록</h2>
-            <div className="atlas-report-body" aria-live="polite">
-              <p className="atlas-report-status" data-status={status}><i className="atlas-marker" aria-hidden="true" />{statuses[status]}<span>{REGION_NAMES[selected.region - 1]}</span></p>
-              <h3 ref={report} tabIndex={-1} data-atlas-report-heading>{territoryName}</h3>
-              {(status === "owned" || status === "trainer") && <div className="atlas-faction-card" data-status={status}>
-                {portrait && <img src={portrait} alt="" width="48" height="48" />}
-                <div><p>{status === "owned" ? "내 세력" : "점유 트레이너"}</p><strong>{occupierName}</strong>
-                  {trainer?.specialtyTypes.length ? <p className="atlas-specialty">선호 타입 <b>{trainer.specialtyTypes.map(type => type.nameKr).join(" · ")}</b></p> : null}
-                </div>
-              </div>}
-              {faction && <p>{faction.name} · {selectedId === faction.leader ? "대표 거점" : "외곽 거점"}</p>}
-              {supply && (
-                <p className="atlas-supply" data-supply={supply}>
-                  <strong>{supply === "supplied" ? "보급 연결" : "고립 · 보급 중단"}</strong>
-                  <span>충성도 {territory.loyalty ?? MAX_LOYALTY}/{MAX_LOYALTY}</span>
-                  <span>턴당 자금 +{supply === "supplied" ? TERRITORY_GOLD : 0}</span>
-                </p>
-              )}
-              {description && <p>{description}</p>}
-              {canChallenge && !hasFirstVictory(state) && <p>첫 승리 보상 · {describeFirstVictoryReward(state)}</p>}
+          <aside className="atlas-report" aria-labelledby="atlas-report-title" data-open={reportOpen}>
+            <div className="atlas-report-header">
+              <h2 id="atlas-report-title">정찰 기록</h2>
+              <button type="button" className="atlas-report-toggle" aria-expanded={reportOpen} aria-controls="atlas-report-detail"
+                onClick={() => setReportOpen(open => !open)}>
+                <span>{territoryName}</span><span>{reportOpen ? "보고 접기" : "보고 펴기"}</span>
+              </button>
             </div>
-            {status === "scoutable" && (
-              <button className="atlas-scout" data-scout={selectedId} onClick={() => {
-                if (!canScoutTerritory(state, selectedId)) return;
-                dispatch({ type: "SCOUT_TERRITORY", territoryId: selectedId });
-                setScannedId(selectedId);
-              }}>정찰하기 <span aria-hidden="true">→</span></button>
-            )}
-            {intrusion && !intrusion.defenderId && intrusion.targetId !== selectedId && (
-              <button className="atlas-scout" onClick={() => selectKnownSite(intrusion.targetId)}>
-                침투 예고 · {atlasNodes.get(intrusion.targetId)?.name}
-              </button>
-            )}
-            {observation && !observation.detectorId && observation.targetId !== selectedId && (
-              <button className="atlas-scout" onClick={() => selectKnownSite(observation.targetId)}>
-                첩보 신호 · {atlasNodes.get(observation.targetId)?.name}
-              </button>
-            )}
-            {preparation && (!ghostReport || ghostReport.memberId) && (
-              <p className="atlas-readiness" role="status">적 수비 선봉 준비 · 관측한 타입 기준 · {preparation.expiresTurn - state.turnCount}턴 남음</p>
-            )}
-            <FrontierOrders key={selectedId} territoryId={selectedId} />
-            <EnemyWorkshopOrders key={`workshop-${selectedId}`} territoryId={selectedId} />
-            {status === "owned" && state.outposts[selectedId] && <>
-              <InheritanceChoice siteId={selectedId} />
-              <button className="atlas-scout" onClick={() => transitionFieldView(() =>
-                dispatch({ type: "OPEN_OUTPOST", siteId: selectedId }), "map")}>거점 관리 <span aria-hidden="true">→</span></button>
-            </>}
-            {canChallenge && (
-              <>
-                {territory.scouted && <TerritoryReadiness key={selectedId} territoryId={selectedId} />}
-                <button className="atlas-scout" disabled={Boolean(battleUnavailable)} onClick={startBattle}
-                  onPointerEnter={() => preload(arena, { as: "image" })} onFocus={() => preload(arena, { as: "image" })}>
-                  거점 도전 <small>행동력 {BATTLE_ENERGY_COST}</small><span aria-hidden="true">→</span>
+            <div id="atlas-report-detail" className="atlas-report-detail">
+              <div className="atlas-report-body" aria-live="polite">
+                <p className="atlas-report-status" data-status={status}><i className="atlas-marker" aria-hidden="true" />{statuses[status]}<span>{REGION_NAMES[selected.region - 1]}</span></p>
+                <h3 ref={report} tabIndex={-1} data-atlas-report-heading>{territoryName}</h3>
+                {(status === "owned" || status === "trainer") && <div className="atlas-faction-card" data-status={status}>
+                  {portrait && <img src={portrait} alt="" width="48" height="48" />}
+                  <div><p>{status === "owned" ? "내 세력" : "점유 트레이너"}</p><strong>{occupierName}</strong>
+                    {trainer?.specialtyTypes.length ? <p className="atlas-specialty">선호 타입 <b>{trainer.specialtyTypes.map(type => type.nameKr).join(" · ")}</b></p> : null}
+                  </div>
+                </div>}
+                {faction && <p>{faction.name} · {selectedId === faction.leader ? "대표 거점" : "외곽 거점"}</p>}
+                {supply && (
+                  <p className="atlas-supply" data-supply={supply}>
+                    <strong>{supply === "supplied" ? "보급 연결" : "고립 · 보급 중단"}</strong>
+                    <span>충성도 {territory.loyalty ?? MAX_LOYALTY}/{MAX_LOYALTY}</span>
+                    <span>턴당 자금 +{supply === "supplied" ? TERRITORY_GOLD : 0}</span>
+                  </p>
+                )}
+                {description && <p>{description}</p>}
+                {opponentLevel !== null && <p className="atlas-readiness">
+                  예상 수비 레벨 <b>{training ? "Lv.2" : `Lv.${opponentLevel}–${opponentLevel + 1}`}</b>
+                  {status === "trainer" && growth && (growth.nextIn === null ? ` · 성장 +${growth.bonus} (상한)`
+                    : ` · 성장 +${growth.bonus} · 다음 강화까지 ${growth.nextIn}턴`)}
+                </p>}
+                {canChallenge && !hasFirstVictory(state) && <p>첫 승리 보상 · {describeFirstVictoryReward(state)}</p>}
+              </div>
+              {status === "scoutable" && (
+                <button className="atlas-scout" data-scout={selectedId} onClick={() => {
+                  if (!canScoutTerritory(state, selectedId)) return;
+                  dispatch({ type: "SCOUT_TERRITORY", territoryId: selectedId });
+                  setScannedId(selectedId);
+                }}>정찰하기 <span aria-hidden="true">→</span></button>
+              )}
+              {intrusion && !intrusion.defenderId && intrusion.targetId !== selectedId && (
+                <button className="atlas-scout" onClick={() => selectKnownSite(intrusion.targetId)}>
+                  침투 예고 · {atlasNodes.get(intrusion.targetId)?.name}
                 </button>
-                {battleUnavailable && <p className="atlas-battle-note">{battleUnavailable}</p>}
-              </>
-            )}
-            <section className="atlas-factions" aria-labelledby="atlas-factions-title">
-              <h3 id="atlas-factions-title">확인된 세력</h3>
-              <ul>
-                <li><button data-faction-site="home" data-status="owned" aria-current={selectedId === "home" ? "location" : undefined} onClick={() => selectKnownSite("home")}>
-                  <i className="atlas-marker" aria-hidden="true" /><strong>{player?.nameKr ?? "내 세력"}</strong><small>내 거점 {totalOwned}곳</small>
-                </button></li>
-                {[...observedRivals.values()].filter(({ node }) => !state.territories[node.id].factionId).map(({ node, trainer: rival }) => (
-                  <li key={node.id}><button data-faction-site={node.id} data-status="trainer" aria-current={selectedId === node.id ? "location" : undefined} onClick={() => selectKnownSite(node.id)}>
-                    <i className="atlas-marker" aria-hidden="true" /><strong>{rival?.nameKr ?? "정체 기록 없음"}</strong><small>{node.name}</small>
+              )}
+              {observation && !observation.detectorId && observation.targetId !== selectedId && (
+                <button className="atlas-scout" onClick={() => selectKnownSite(observation.targetId)}>
+                  첩보 신호 · {atlasNodes.get(observation.targetId)?.name}
+                </button>
+              )}
+              {preparation && (!ghostReport || ghostReport.memberId) && (
+                <p className="atlas-readiness" role="status">적 수비 선봉 준비 · 관측한 타입 기준 · {preparation.expiresTurn - state.turnCount}턴 남음</p>
+              )}
+              <FrontierOrders key={selectedId} territoryId={selectedId} />
+              <EnemyWorkshopOrders key={`workshop-${selectedId}`} territoryId={selectedId} />
+              {status === "owned" && state.outposts[selectedId] && <>
+                <InheritanceChoice siteId={selectedId} />
+                <button className="atlas-scout" onClick={() => transitionFieldView(() =>
+                  dispatch({ type: "OPEN_OUTPOST", siteId: selectedId }), "map")}>거점 관리 <span aria-hidden="true">→</span></button>
+              </>}
+              {canChallenge && (
+                <>
+                  {territory.scouted && <TerritoryReadiness key={selectedId} territoryId={selectedId} />}
+                  <button className="atlas-scout" disabled={Boolean(battleUnavailable)} onClick={startBattle}
+                    onPointerEnter={() => preload(arena, { as: "image" })} onFocus={() => preload(arena, { as: "image" })}>
+                    거점 도전 <small>행동력 {BATTLE_ENERGY_COST}</small><span aria-hidden="true">→</span>
+                  </button>
+                  {battleUnavailable && <p className="atlas-battle-note">{battleUnavailable}</p>}
+                </>
+              )}
+              <section className="atlas-factions" aria-labelledby="atlas-factions-title">
+                <h3 id="atlas-factions-title">확인된 세력</h3>
+                <ul>
+                  <li><button data-faction-site="home" data-status="owned" aria-current={selectedId === "home" ? "location" : undefined} onClick={() => selectKnownSite("home")}>
+                    <i className="atlas-marker" aria-hidden="true" /><strong>{player?.nameKr ?? "내 세력"}</strong><small>내 거점 {totalOwned}곳</small>
                   </button></li>
+                  {[...observedRivals.values()].filter(({ node }) => !state.territories[node.id].factionId).map(({ node, trainer: rival }) => (
+                    <li key={node.id}><button data-faction-site={node.id} data-status="trainer" aria-current={selectedId === node.id ? "location" : undefined} onClick={() => selectKnownSite(node.id)}>
+                      <i className="atlas-marker" aria-hidden="true" /><strong>{rival?.nameKr ?? "정체 기록 없음"}</strong><small>{node.name}</small>
+                    </button></li>
+                  ))}
+                  {[...observedFactions.values()].map(({ faction: group, known }) => {
+                    const complete = group.sites.every(id => state.territories[id].owner === "player");
+                    return (
+                      <li key={group.id} className="atlas-faction-group" data-faction={group.id}>
+                        <strong>{group.name}</strong>{complete && <small>확보 완료</small>}
+                        <ul aria-label={group.name}>
+                          {known.map(node => {
+                            const nodeStatus = territoryStatus(state.territories[node.id], false);
+                            const rival = observedRivals.get(node.id)?.trainer;
+                            return (
+                              <li key={node.id}><button data-faction-site={node.id} data-status={nodeStatus}
+                                aria-current={selectedId === node.id ? "location" : undefined} onClick={() => selectKnownSite(node.id)}>
+                                <i className="atlas-marker" aria-hidden="true" />
+                                <strong>{rival?.nameKr ?? node.name}</strong>
+                                <small>{node.id === group.leader ? "대표" : "외곽"} · {rival ? node.name : statuses[nodeStatus]}</small>
+                              </button></li>
+                            );
+                          })}
+                        </ul>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+              <ul className="atlas-legend" aria-label="거점 상태">
+                {Object.entries(statuses).map(([value, label]) => (
+                  <li key={value} data-status={value}><i className="atlas-marker" aria-hidden="true" />{label}</li>
                 ))}
-                {[...observedFactions.values()].map(({ faction: group, known }) => {
-                  const complete = group.sites.every(id => state.territories[id].owner === "player");
-                  return (
-                    <li key={group.id} className="atlas-faction-group" data-faction={group.id}>
-                      <strong>{group.name}</strong>{complete && <small>확보 완료</small>}
-                      <ul aria-label={group.name}>
-                        {known.map(node => {
-                          const nodeStatus = territoryStatus(state.territories[node.id], false);
-                          const rival = observedRivals.get(node.id)?.trainer;
-                          return (
-                            <li key={node.id}><button data-faction-site={node.id} data-status={nodeStatus}
-                              aria-current={selectedId === node.id ? "location" : undefined} onClick={() => selectKnownSite(node.id)}>
-                              <i className="atlas-marker" aria-hidden="true" />
-                              <strong>{rival?.nameKr ?? node.name}</strong>
-                              <small>{node.id === group.leader ? "대표" : "외곽"} · {rival ? node.name : statuses[nodeStatus]}</small>
-                            </button></li>
-                          );
-                        })}
-                      </ul>
-                    </li>
-                  );
-                })}
               </ul>
-            </section>
-            <ul className="atlas-legend" aria-label="거점 상태">
-              {Object.entries(statuses).map(([value, label]) => (
-                <li key={value} data-status={value}><i className="atlas-marker" aria-hidden="true" />{label}</li>
-              ))}
-            </ul>
+            </div>
           </aside>
         </div>
         <footer className="atlas-controls">

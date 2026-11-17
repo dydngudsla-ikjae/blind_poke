@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { MAX_PLOTS } from "../domain/jobs";
+import { isJobId, jobDefinitions, MAX_PLOTS } from "../domain/jobs";
+import { PRODUCTION_UNIT } from "../domain/production";
 import { worldMapNodes } from "../domain/worldMap";
 import { ESPIONAGE_QUIET_TURNS, INTRUSION_QUIET_TURNS } from "../domain/frontierOperations";
 
@@ -15,6 +16,8 @@ const rosterMemberSchema=z.object({
   level:z.number().min(1).default(1),exp:z.number().min(0).default(0),job:z.string().nullable().optional(),
   building:z.string().nullable().optional(),buildingId:z.string().nullable().optional(),
   jobId:z.string().nullable().optional(),jobOrder:z.number().int().nonnegative().optional(),
+  productionCarry: z.record(z.string().refine(key => isJobId(key) && Boolean(jobDefinitions[key].recipe)),
+    z.int().min(0).max(PRODUCTION_UNIT - 1)).optional().catch(undefined),
   departurePending:z.boolean().optional(),
 }).passthrough();
 
@@ -49,6 +52,7 @@ export const gameSaveSchema=z.object({
   resources:z.record(z.string(),z.unknown()).default({}),buildings:z.array(buildingSchema).optional(),
   plotCap:z.number().int().min(1).optional(),storageCap:z.number().min(0).optional(),
   entryCap:z.number().int().min(1).optional(),entryOrder:z.array(z.string().min(1)).max(6).optional(),turnCount:z.number().int().min(0).optional(),
+  regionOpenedTurns: z.partialRecord(z.enum(["1", "2", "3", "4"]), z.int().nonnegative()).optional().catch(undefined),
   energy:z.number().min(0).max(5).optional(),nextMemberId:z.number().int().positive().optional(),
   nextBuildingId:z.number().int().positive().optional(),underConstruction:z.record(z.string(),z.number()).optional(),
   trainerId:z.string().min(1).nullable().optional(),

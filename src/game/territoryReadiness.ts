@@ -1,4 +1,4 @@
-import { effectiveAttack, effectiveness, pickMoveset, TACKLE } from "../domain/battle";
+import { campaignLearnLevels, effectiveAttack, effectiveness, pickMoveset, TACKLE } from "../domain/battle";
 import { candyCostToLevel, candyMember } from "../domain/economy";
 import type { GameDataBundle, PokemonRecord, RosterMember } from "../domain/types";
 import type { GameState } from "./gameTypes";
@@ -16,11 +16,7 @@ function pokemonTypes(pokemon: PokemonRecord) {
 export function nextWeaknessMove(member: RosterMember, data: GameDataBundle, targetTypes: number[]) {
   if (!targetTypes.length) return null;
   const current = new Set(pickMoveset(member.pokemon, member.level, data).map(move => move.id));
-  const id = member.pokemon.pokemonRowid;
-  const levelMoves = [...(data.battle.learnsets[id] ?? []), ...(data.battle.statusLearnsets?.[id] ?? [])];
-  const levels = [...new Set(levelMoves.map(([, level]) => level))]
-    .filter(level => level > member.level)
-    .sort((a, b) => a - b);
+  const levels = campaignLearnLevels(member.pokemon, data).filter(level => level > member.level);
   for (const level of levels) {
     const candy = candyCostToLevel(member, level);
     const trained = candyMember(member, candy);
@@ -38,7 +34,7 @@ export function territoryTactics(state: GameState, data: GameDataBundle, territo
     member, types: pokemonTypes(member.pokemon), moves: pickMoveset(member.pokemon, member.level, data),
   }));
   if (!opponents || !entries.length) return [];
-  const level = territoryEnemyLevel(state, opponents.node.region);
+  const level = territoryEnemyLevel(state, opponents.node.region, territoryId);
   const candidates = new Map<string, { typeIds: number[]; attackTypes: Set<number> }>();
   for (const pokemon of opponents.pool) {
     const typeIds = pokemonTypes(pokemon);

@@ -101,8 +101,8 @@ describe("starting region counter preparation", () => {
 
   it("finds the first research level that increases output with the current held item", () => {
     const worker = { ...member("a", species(337, "루나톤", 14)), aptitude: 61, jobId: "research" as const };
-    expect(nextResearchIncrease(worker)).toEqual({ level: 4, candy: 6, current: 1, potential: 2 });
-    expect(nextResearchIncrease({ ...worker, heldItem: "choice_band" })).toEqual({ level: 2, candy: 1, current: 1, potential: 2 });
+    expect(nextResearchIncrease(worker)).toEqual({ level: 9, candy: 36, current: 1, potential: 2 });
+    expect(nextResearchIncrease({ ...worker, heldItem: "choice_band" })).toEqual({ level: 6, candy: 15, current: 1, potential: 2 });
   });
 
   it("selects one marked candidate using actual level-one attacks and excludes rare candidates", () => {

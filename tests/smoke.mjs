@@ -22,7 +22,7 @@ try {
   await page.addInitScript(() => { Math.random = () => 0; });
   page.on("pageerror", error => errors.push(error.message));
   page.on("console", message => {
-    if (message.type() === "error") errors.push(message.text());
+    if (message.type() === "error" || /^\[gpu\].*failed GPU validation/i.test(message.text())) errors.push(message.text());
   });
 
   await page.goto(url, { waitUntil: "networkidle" });
@@ -132,6 +132,12 @@ try {
   await guess.fill(pokemonName);
   await guess.press("Enter");
   await analysis.getByRole("heading", { name: "포획 성공" }).waitFor();
+  await analysis.getByText(pokemonName, { exact: true }).waitFor({ timeout: 2000 });
+  await analysis.getByRole("button", { name: "새 동료 보기" }).click();
+  const profile = page.getByRole("dialog", { name: new RegExp(pokemonName) });
+  await profile.getByText("최대 HP", { exact: true }).waitFor();
+  await profile.getByRole("heading", { name: "장착 기술" }).waitFor();
+  await profile.getByRole("button", { name: "닫기" }).click();
   await lens.getByRole("img", { name: pokemonName, exact: true }).waitFor();
   const capturedSave=await page.evaluate(()=>JSON.parse(localStorage.getItem("blindpoke-save-v1")));
   if(capturedSave.roster.length!==4) throw new Error("포획한 포켓몬이 로스터와 저장 데이터에 추가되지 않았습니다.");
@@ -368,45 +374,154 @@ try {
   await page.getByRole("button", { name: "기록 지우고 시작" }).click();
   await page.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
 
-  const touch = await browser.newPage({ viewport: { width: 320, height: 640 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
-  await touch.addInitScript(() => { Math.random = () => 0; });
-  await touch.goto(url);
-  const touchStarters = touch.locator("[data-draft-target]");
-  for (let round = 1; round <= 3; round++) {
-    const currentRound = touch.getByRole("heading", { name: `스타팅 선택 ${round}/3` });
-    await currentRound.waitFor();
-    await touchStarters.first().tap();
-    await touch.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
-    if (round === 1) {
-      await touchStarters.nth(1).tap();
-      await touch.getByRole("heading", { name: "미확인 개체 2" }).waitFor();
+  async function verifyTouchJourney(viewport) {
+    const touch = await browser.newPage({ viewport, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
+    await touch.addInitScript(() => { Math.random = () => 0; });
+    await touch.goto(url);
+    const touchStarters = touch.locator("[data-draft-target]");
+    for (let round = 1; round <= 3; round++) {
+      const currentRound = touch.getByRole("heading", { name: `스타팅 선택 ${round}/3` });
+      await currentRound.waitFor();
       await touchStarters.first().tap();
       await touch.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
+      if (round === 1) {
+        await touchStarters.nth(1).tap();
+        await touch.getByRole("heading", { name: "미확인 개체 2" }).waitFor();
+        await touchStarters.first().tap();
+        await touch.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
+      }
+      assert.equal(await currentRound.count(), 1);
+      const type = await touch.locator(".draft-detected-type dd").textContent();
+      assert.ok(type && type !== "—");
+      await touchStarters.first().tap();
     }
-    assert.equal(await currentRound.count(), 1);
-    const type = await touch.locator(".draft-detected-type dd").textContent();
-    assert.ok(type && type !== "—");
-    await touchStarters.first().tap();
+    await touch.getByRole("button", { name: "본거지로 이동" }).tap();
+    assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
+    await touch.locator('[data-action="hunt"]').tap();
+    const touchTarget = touch.locator(".hunt-target").first();
+    await touchTarget.tap();
+    const touchReading = touch.getByRole("complementary", { name: "관측 패널" });
+    await touchReading.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
+    assert.equal(await touch.getByRole("heading", { name: "야생 탐험" }).count(), 1);
+    const touchType = await touchReading.locator(".draft-detected-type dd").textContent();
+    const digital = touch.getByRole("button", { name: "디지털 스캐너" });
+    const brass = touch.getByRole("button", { name: "황동 관측경" });
+    const scanSave = await touch.evaluate(() => localStorage.getItem("blindpoke-save-v1"));
+    const observations = await touchReading.locator("dd").allTextContents();
+    assert.equal(await digital.getAttribute("aria-pressed"), "true");
+    await brass.tap();
+    await touchReading.getByText("야외 관측표").waitFor();
+    assert.equal(await brass.getAttribute("aria-pressed"), "true");
+    assert.equal(await touch.locator(".hunt-optical-trace").count(), 3);
+    assert.equal(await touch.locator(".hunt-optics-focus-mark").count(), 1);
+    assert.equal(await touch.locator(".draft-signal-art, .hunt-optics-shader").count(), 0);
+    assert.deepEqual(await touchReading.locator("dd").allTextContents(), observations);
+    await digital.tap();
+    assert.equal(await touch.locator(".draft-signal-art").count(), 3);
+    assert.deepEqual(await touchReading.locator("dd").allTextContents(), observations);
+    await brass.tap();
+    assert.equal(await touch.evaluate(() => localStorage.getItem("blindpoke-save-v1")), scanSave);
+    assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
+    await touchTarget.tap();
+    await touch.locator(".identify-console-header", { hasText: `감지 타입 ${touchType}` }).waitFor();
+    await touch.getByRole("button", { name: /본인확인서 대조/ }).tap();
+    const mobileArtwork = await touch.locator(".identify-target-art").getAttribute("src");
+    const mobileId = Number(mobileArtwork.match(/(\d+)\.png/)?.[1]);
+    const mobileName = await touch.evaluate(async id => {
+      const pokemon = await fetch("/data/pokemon.json").then(response => response.json());
+      return pokemon.find(entry => entry.pokemonRowid === id).nameKr;
+    }, mobileId);
+    const mobileGuess = touch.getByRole("textbox", { name: "포켓몬 이름" });
+    await mobileGuess.tap();
+    await touch.setViewportSize({ ...viewport, height: 360 });
+    await mobileGuess.fill(mobileName);
+    const mobileSubmit = touch.getByRole("button", { name: "식별", exact: true });
+    await touch.waitForFunction(() => {
+      const box = document.querySelector(".identify-submit").getBoundingClientRect();
+      return box.top >= 0 && box.bottom <= window.visualViewport.height && box.height >= 44;
+    });
+    await mobileSubmit.evaluate(element => { element.click(); element.click(); });
+    await touch.setViewportSize(viewport);
+    await touch.getByRole("heading", { name: "포획 성공", exact: true }).waitFor();
+    await touch.getByRole("button", { name: "새 동료 보기" }).tap();
+    const recruited = touch.getByRole("dialog", { name: new RegExp(mobileName + " · 새 동료") });
+    await recruited.getByText("특수공격", { exact: true }).waitFor();
+    await recruited.getByRole("button", { name: "닫기" }).tap();
+    await touch.getByRole("button", { name: "본거지로" }).tap();
+    const mobileSave = () => touch.evaluate(() => JSON.parse(localStorage.getItem("blindpoke-save-v1")));
+    assert.equal((await mobileSave()).roster.length, 4);
+    const seederId = (await mobileSave()).roster.find(member => [member.pokemon.type1Rowid, member.pokemon.type2Rowid].includes(12)).id;
+    await touch.getByRole("button", { name: "1번 부지 건설" }).tap();
+    const mobileBuild = touch.getByRole("dialog", { name: "건설 · 1번 부지" });
+    await mobileBuild.getByRole("button", { name: "밭", exact: true }).tap();
+    for (const id of ["mon-1", "mon-2", "mon-3"]) await mobileBuild.locator(`[data-install-pick="${id}"]`).tap();
+    await mobileBuild.locator("[data-build-confirm]").tap();
+    await touch.locator("#nextTurn").tap();
+    await touch.getByRole("button", { name: "1번 부지 밭 관리" }).tap();
+    const mobileFarm = touch.getByRole("dialog", { name: "밭 · 1번 부지" });
+    const closeFarm = await mobileFarm.getByRole("button", { name: "닫기" }).boundingBox();
+    assert.ok(closeFarm && closeFarm.x + closeFarm.width <= viewport.width);
+    await mobileFarm.getByRole("button", { name: /씨앗 생성/ }).tap();
+    await mobileFarm.locator(`[data-install-pick="${seederId}"]`).tap();
+    await mobileFarm.getByText("현재 0마리 → 배치 후 1마리", { exact: true }).waitFor();
+    await mobileFarm.getByText(/씨앗 산출 0 → [1-9]/).waitFor();
+    await mobileFarm.getByRole("button", { name: /직무 배치 · 행동력/ }).tap();
+    await mobileFarm.getByRole("button", { name: "닫기" }).tap();
+    await touch.locator("#nextTurn").tap();
+    await touch.waitForFunction(() => JSON.parse(localStorage.getItem("blindpoke-save-v1"))?.resources.seed > 0);
+    const meter = touch.locator(".base-energy");
+    assert.equal(await meter.locator("b").textContent(), "5/5");
+    const readouts = await touch.locator(".base-hud").evaluate(hud => {
+      const turn = hud.querySelector(".base-turn b");
+      const energy = hud.querySelector(".base-energy b");
+      const gems = hud.querySelector(".base-energy-cells").getBoundingClientRect();
+      const card = hud.querySelector(".base-trainer-credential").getBoundingClientRect();
+      const energyBox = energy.getBoundingClientRect();
+      return {
+        turnFont: getComputedStyle(turn).fontSize,
+        energyFont: getComputedStyle(energy).fontSize,
+        numberOffset: Math.abs(turn.getBoundingClientRect().top - energyBox.top),
+        gemOffset: Math.abs((energyBox.top + energyBox.bottom - gems.top - gems.bottom) / 2),
+        cardWidth: card.width,
+        cardGap: card.left - gems.right,
+      };
+    });
+    assert.equal(readouts.turnFont, readouts.energyFont);
+    assert.ok(readouts.numberOffset <= 1 && readouts.gemOffset <= 1, JSON.stringify(readouts));
+    assert.ok(readouts.cardWidth >= 100 && readouts.cardGap >= 4, JSON.stringify(readouts));
+    await touch.getByRole("button", { name: /포켓몬 \d/ }).tap();
+    const mobilePc = touch.getByRole("dialog", { name: /보유 포켓몬/ });
+    await mobilePc.getByText("배틀 능력과 장착 기술", { exact: true }).tap();
+    await mobilePc.getByText("최대 HP", { exact: true }).waitFor();
+    assert.ok(await mobilePc.locator(".base-pc-index .pokemon-type-badges li").count());
+    assert.equal(await mobilePc.locator(".pokemon-stat-chart [data-axis]").count(), 6);
+    assert.equal(await mobilePc.getByText(/이탈 경계|약점 기술 확인/).count(), 0);
+    assert.ok(await mobilePc.locator(".base-dialog-body").evaluate(body => body.scrollWidth <= body.clientWidth));
+    await mobilePc.getByRole("button", { name: "엔트리 등록", exact: true }).tap();
+    await mobilePc.getByRole("button", { name: "닫기" }).tap();
+    await touch.getByRole("button", { name: "지도", exact: true }).tap();
+    await touch.locator('[data-node="southwest"]').tap();
+    await touch.getByRole("button", { name: /정찰하기/ }).tap();
+    await touch.getByText("Lv.2", { exact: true }).waitFor();
+    await touch.getByRole("button", { name: /거점 도전/ }).tap();
+    await touch.getByRole("heading", { name: "거점 배틀", exact: true }).waitFor();
+    await touch.locator('.duel-move[data-move-id]:enabled').first().tap();
+    await touch.waitForFunction(() => /의 .*피해/.test(document.querySelector(".duel-latest")?.textContent ?? ""));
+    assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
+    await touch.reload();
+    await touch.getByRole("heading", { name: "본거지", exact: true }).waitFor();
+    assert.ok((await mobileSave()).roster.find(member => member.id === seederId).productionCarry.seed >= 0);
+    await touch.getByRole("button", { name: "설정", exact: true }).tap();
+    await touch.getByRole("button", { name: "데이터 초기화" }).tap();
+    await touch.getByRole("button", { name: "기록 지우고 시작" }).tap();
+    await touch.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
+    await touch.close();
   }
-  await touch.getByRole("button", { name: "본거지로 이동" }).tap();
-  await touch.locator('[data-action="hunt"]').tap();
-  const touchTarget = touch.locator(".hunt-target").first();
-  await touchTarget.tap();
-  const touchReading = touch.getByRole("complementary", { name: "관측 패널" });
-  await touchReading.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
-  assert.equal(await touch.getByRole("heading", { name: "야생 탐험" }).count(), 1);
-  const touchType = await touchReading.locator(".draft-detected-type dd").textContent();
-  await touchTarget.tap();
-  await touch.locator(".identify-console-header", { hasText: `감지 타입 ${touchType}` }).waitFor();
-  await touch.getByRole("button", { name: "본거지로" }).tap();
-  await touch.getByRole("button", { name: "설정", exact: true }).tap();
-  await touch.getByRole("button", { name: "데이터 초기화" }).tap();
-  await touch.getByRole("button", { name: "기록 지우고 시작" }).tap();
-  await touch.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
-  await touch.close();
+  await verifyTouchJourney({ width: 320, height: 640 });
+  await verifyTouchJourney({ width: 390, height: 844 });
 
   if (errors.length) throw new Error(`브라우저 오류:\n${errors.join("\n")}`);
-  console.log("Chrome smoke passed: trainer reveal, mobile scan preview, fresh and v3 base expansion, production preview, starting region cleared, reward spending, ending, Pokédex, reset and recovery");
+  console.log("Chrome smoke passed: keyboard, 320/390px touch recruitment → profile → production → battle, fresh and v3 base expansion, starting region, rewards, ending and reset");
 } finally {
   await browser?.close();
   await server.close();

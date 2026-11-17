@@ -7,7 +7,7 @@ import { enemyPartsSupply } from "../domain/frontierOperations";
 import { gameSaveSchema, mapSnapshotSchema } from "../services/saveSchemas";
 import { createInitialState, gameReducer, isFreeWorker, restoreGameState } from "./gameReducer";
 import type { GameState } from "./gameTypes";
-import { drawGhostIntel, prepareTerritoryBattle } from "./territoryBattle";
+import { drawGhostIntel, prepareTerritoryBattle, territoryEnemyLevel } from "./territoryBattle";
 
 const member=(id="mon-1"):RosterMember=>({id,alias:"테스트",pokemon:{pokemonRowid:1,nameKr:"이상해씨",hp:45,atk:49,def:49,satk:65,sdef:65,spd:45},level:1,exp:0,favor:80,favCeil:90,favFloor:20,aptitude:50,iv:{},buildingId:null,jobId:null});
 
@@ -30,6 +30,16 @@ function reloadCampaign(state: ReturnType<typeof createInitialState>) {
   const map = Object.entries(state.territories).map(([id, spot]) => ({ id, ...spot }));
   return restoreGameState(JSON.parse(JSON.stringify(state)), map);
 }
+
+it("starts trainer growth at the legacy load turn and preserves its cap across reloads", () => {
+  const legacy = frontierFixture();
+  const spots = Object.entries(legacy.territories).map(([id, spot]) => ({ id, ...spot }));
+  const state = { ...restoreGameState({ v: 4, roster: legacy.roster, turnCount: 22 }, spots), screen: "map" as const };
+  const baseline = territoryEnemyLevel(state, 2, "nw-02");
+  expect(territoryEnemyLevel({ ...state, turnCount: 26 }, 2, "nw-02")).toBe(baseline);
+  expect(territoryEnemyLevel(reloadCampaign({ ...state, turnCount: 27 }), 2, "nw-02")).toBe(baseline + 1);
+  expect(territoryEnemyLevel({ ...state, turnCount: 65 }, 2, "nw-02")).toBe(baseline + 3);
+});
 
 describe("AI workshop supply and Dark operations", () => {
   const send = { type: "SEND_DARK_SABOTAGE" as const, sourceId: "nw-01", targetId: "nw-04", memberId: "mon-1" };

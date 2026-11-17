@@ -29,7 +29,7 @@ export function createInitialState(
 ): GameState {
   return {
     screen:"draft", roster:[], buildings:[], resources:{...initialResources}, plotCap:1,
-    storageCap:50, entryCap:6, entryOrder:[], turnCount:0, energy:ENERGY_PER_TURN,
+    storageCap:50, entryCap:6, entryOrder:[], turnCount:0, energy:ENERGY_PER_TURN, regionOpenedTurns:{ 1: 0 },
     nextMemberId:1, nextBuildingId:1, draftRound:0, selectedPokemonId:null, selectedTypeName:null, selectedScan:null,
     caughtSpeciesIds:[],claimedDexRewards:[],legacyOutpostResearch:false,endingSeen:false,
     frontier: { intel: {}, intrusion: null, quietTurns: 0 },
@@ -154,7 +154,9 @@ export function restoreGameState(
   const screen = introPending ? (draftRound === 3 ? "trainerReveal" : "draft") : "base";
   const caughtSpeciesIds = [...new Set<number>([...(raw.caughtSpeciesIds ?? []), ...roster.map(member => member.pokemon.pokemonRowid)])];
   const claimedDexRewards = DEX_REWARDS.filter(reward => raw.claimedDexRewards?.includes(reward.threshold)).map(reward => reward.threshold);
-  const restored = {...base,roster,nextMemberId:migrated.nextMemberId,turnCount:raw.turnCount??base.turnCount,energy:raw.energy??base.energy,
+  const turnCount = raw.turnCount ?? base.turnCount;
+  const regionOpenedTurns = openedRegionTurns(territories, raw.regionOpenedTurns, turnCount);
+  const restored = {...base,roster,nextMemberId:migrated.nextMemberId,turnCount,regionOpenedTurns,energy:raw.energy??base.energy,
     buildings,plotCap,storageCap,clearing,nextBuildingId:Math.max(raw.nextBuildingId||1,highestBuildingId+1),resources,
     territories,outposts,caughtSpeciesIds,claimedDexRewards,entryOrder,
     inheritedResearchCompleted: raw.inheritedResearchCompleted === true ? true : undefined,
@@ -163,6 +165,16 @@ export function restoreGameState(
       ? raw.legacyOutpostResearch : raw.v === 4 && Object.keys(outposts).length > 0,
     screen,draftRound,introPending,endingSeen:raw.endingSeen===true,lastLog:raw.lastLog??[]} satisfies GameState;
   return { ...restored, frontier: restoreFrontier(restored, raw.frontier) };
+}
+
+function openedRegionTurns(territories: GameState["territories"], saved: GameState["regionOpenedTurns"] = {}, turn: number) {
+  const result: GameState["regionOpenedTurns"] = {};
+  for (const { id, region } of worldMapNodes) {
+    if (!territories[id]?.active || result[region] !== undefined) continue;
+    const previous = saved?.[region];
+    result[region] = previous !== undefined && Number.isSafeInteger(previous) && previous >= 0 && previous <= turn ? previous : turn;
+  }
+  return result;
 }
 
 export function isFreeWorker(state: GameState, member: RosterMember) {
@@ -230,7 +242,8 @@ function nextTurn(state: GameState, data?: GameDataBundle): GameState {
   const departedIds = new Set<string>();
   const items = { ...production.resources.items };
   for (const previous of state.roster) {
-    const { member, departed, protectedBySash } = advanceMemberFavor(previous);
+    const carry = production.carry.get(previous.id);
+    const { member, departed, protectedBySash } = advanceMemberFavor(carry ? { ...previous, productionCarry: carry } : previous);
     const name = member.pokemon.nameKr;
     if (departed) {
       departedIds.add(member.id);
@@ -482,7 +495,8 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
       const award = !hasFirstVictory(state) && awardResources(state, FIRST_VICTORY_REWARD);
       const outposts = outpostIsOwned({ territories }, id) && !state.outposts[id]
         ? { ...state.outposts, [id]: makeOutpost(state.territories[id].owner === "trainer") } : state.outposts;
-      return { ...state, territories, outposts, frontier: { ...state.frontier, intel }, resources: award || state.resources };
+      return { ...state, territories, outposts, regionOpenedTurns: openedRegionTurns(territories, state.regionOpenedTurns, state.turnCount),
+        frontier: { ...state.frontier, intel }, resources: award || state.resources };
     }
   }
 }

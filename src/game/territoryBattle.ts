@@ -6,6 +6,7 @@ import type { BattleSetup, GameState } from "./gameTypes";
 import { hasFirstVictory, regionProgress } from "./campaign";
 
 export const BATTLE_ENERGY_COST = 2;
+export const TRAINER_GROWTH = { interval: 5, limit: 3 };
 
 export function battleEntries(state: GameState) {
   const roster = new Map(state.roster.map(member => [member.id, member]));
@@ -66,8 +67,16 @@ export function territoryOpponents(state: GameState, data: GameDataBundle, id: s
   return { node, enemyName, firstVictory, pool };
 }
 
-export function territoryEnemyLevel(state: GameState, region: number) {
-  return 3 + (region - 1) * 5 + Math.floor(regionProgress(state.territories)[region - 1].owned / 2);
+export function trainerGrowth(state: GameState, territoryId: string, region: number) {
+  if (state.territories[territoryId]?.owner !== "trainer" || !hasFirstVictory(state)) return { bonus: 0, nextIn: null };
+  const elapsed = Math.max(0, state.turnCount - (state.regionOpenedTurns[region] ?? state.turnCount));
+  const bonus = Math.min(TRAINER_GROWTH.limit, Math.floor(elapsed / TRAINER_GROWTH.interval));
+  return { bonus, nextIn: bonus < TRAINER_GROWTH.limit ? TRAINER_GROWTH.interval - elapsed % TRAINER_GROWTH.interval : null };
+}
+
+export function territoryEnemyLevel(state: GameState, region: number, territoryId: string) {
+  return 3 + (region - 1) * 5 + Math.floor(regionProgress(state.territories)[region - 1].owned / 2) +
+    trainerGrowth(state, territoryId, region).bonus;
 }
 
 export function drawGhostIntel(state: GameState, data: GameDataBundle, id: string) {
@@ -89,7 +98,7 @@ export function prepareTerritoryBattle(state: GameState, data: GameDataBundle, i
   // Draw levels in the original order so a prepared lead only changes deployment order.
   const team = reportAvailable ? (intel.reversed ? [...revealed].reverse() : revealed)
     : samplePokemon(pool, node.region === 1 ? 1 : 2);
-  const level = territoryEnemyLevel(state, node.region);
+  const level = territoryEnemyLevel(state, node.region, id);
   if (!team.length) return null;
   const enemyTeam = team.map(pokemon => ({ pokemonId: pokemon.pokemonRowid, level: rnd(level, level + 1) }));
   if (reportAvailable ? intel.reversed : prefersSecondDefender(id, enemyTeam.map(entry => entry.pokemonId),

@@ -90,6 +90,7 @@ export interface GameState {
   entryCap: number;
   entryOrder: string[];
   turnCount: number;
+  regionOpenedTurns: Partial<Record<number, number>>;
   energy: number;
   nextMemberId: number;
   nextBuildingId: number;

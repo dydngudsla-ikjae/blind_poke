@@ -1,0 +1,87 @@
+.pokemon-battle-profile {
+  display: grid;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  color: var(--base-ink, var(--field-ink));
+  background: #101e18;
+  border: 1px solid #4b6356;
+  font: 14px/1.4 var(--field-text);
+}
+
+.pokemon-battle-profile header { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; }
+.pokemon-battle-profile :is(p, li span) { color: var(--base-muted, var(--field-muted)); }
+.pokemon-battle-profile :is(dl, dd, p, ul) { margin: 0; }
+.pokemon-battle-profile ul { display: grid; gap: 5px; padding: 0; list-style: none; }
+.pokemon-battle-profile li { display: grid; gap: 2px; padding-block: 5px; border-top: 1px solid #314b3e; }
+.pokemon-battle-profile li span { font-size: 13px; overflow-wrap: anywhere; }
+.pokemon-battle-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.pokemon-battle-stats > div { padding: 4px 6px; background: #203429; min-width: 0; }
+.pokemon-battle-stats dt { font-size: 12px; overflow-wrap: anywhere; }
+.pokemon-battle-stats dd { color: var(--base-mint, var(--field-mint)); font: var(--field-readout-font); }
+
+.base-dialog .pokemon-battle-profile {
+  padding: 0 0 6px;
+  border: 0;
+  background: transparent;
+}
+.base-dialog .pokemon-battle-stats > div {
+  padding: 4px 3px 6px;
+  border-bottom: 1px solid var(--base-line);
+  background: transparent;
+}
+.base-dialog .pokemon-battle-profile li { border-color: var(--base-line); }
+
+.pokemon-move-notes { display: grid; gap: 7px; }
+.pokemon-stat-chart + .pokemon-move-notes { padding-top: 11px; border-top: 1px solid var(--base-line); }
+.pokemon-stat-chart {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(104px, 43%) minmax(0, 1fr);
+  grid-template-rows: auto 1fr 1fr auto;
+  align-items: center;
+  gap: 2px 5px;
+}
+.pokemon-stat-radar {
+  position: relative;
+  grid-area: 2 / 2 / 4 / 3;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 156px;
+  justify-self: center;
+}
+.pokemon-radar-ring, .pokemon-radar-fill { position: absolute; inset: 0; }
+.pokemon-radar-ring {
+  background: #80694bb0;
+  clip-path: polygon(evenodd, 50% 0, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%, 50% 0,
+    50% 1.7%, 8.2% 25.85%, 8.2% 74.15%, 50% 98.3%, 91.8% 74.15%, 91.8% 25.85%, 50% 1.7%);
+}
+.pokemon-radar-ring:nth-child(2) { scale: .66667; opacity: .7; }
+.pokemon-radar-ring:nth-child(3) { scale: .33333; opacity: .6; }
+.pokemon-radar-fill { background: #486a47a8; }
+.pokemon-stat-chart .pokemon-battle-stats { display: contents; }
+.base-dialog .pokemon-stat-chart .pokemon-battle-stats > div { border: 0; padding: 0; text-align: center; }
+.pokemon-stat-chart [data-axis="hp"] { grid-area: 1 / 2; }
+.pokemon-stat-chart [data-axis="atk"] { grid-area: 2 / 3; }
+.pokemon-stat-chart [data-axis="satk"] { grid-area: 3 / 3; }
+.pokemon-stat-chart [data-axis="spd"] { grid-area: 4 / 2; }
+.pokemon-stat-chart [data-axis="sdef"] { grid-area: 3 / 1; }
+.pokemon-stat-chart [data-axis="def"] { grid-area: 2 / 1; }
+
+.pokemon-type-badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 0; padding: 0; list-style: none; }
+.pokemon-type-badges li {
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--pokemon-type-color, #564f3b);
+  color: #fff7de;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pokemon-type-badges [data-type="불꽃"] { --pokemon-type-color: #983d24; }
+.pokemon-type-badges :is([data-type="물"], [data-type="얼음"]) { --pokemon-type-color: #2f5a76; }
+.pokemon-type-badges :is([data-type="풀"], [data-type="벌레"]) { --pokemon-type-color: #3d633d; }
+.pokemon-type-badges :is([data-type="독"], [data-type="고스트"]) { --pokemon-type-color: #623e70; }
+.pokemon-type-badges :is([data-type="전기"], [data-type="땅"], [data-type="바위"]) { --pokemon-type-color: #745323; }
+.pokemon-type-badges :is([data-type="페어리"], [data-type="에스퍼"], [data-type="격투"]) { --pokemon-type-color: #843c56; }
+.pokemon-type-badges :is([data-type="드래곤"], [data-type="비행"], [data-type="강철"]) { --pokemon-type-color: #435573; }

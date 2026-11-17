@@ -3,6 +3,17 @@ import { preload } from "react-dom";
 import town from "../../assets/observatory-base.webp";
 import forest from "../../assets/observatory-forest.webp";
 import atlas from "../../assets/observatory-atlas.webp";
+import compass from "../../assets/field-compass.webp";
+import chart from "../../assets/field-chart.webp";
+import hourglass from "../../assets/field-hourglass.webp";
+import ball from "../../assets/field-ball.webp";
+import rosterCards from "../../assets/field-roster.webp";
+import satchel from "../../assets/field-satchel.webp";
+import stall from "../../assets/field-stall.webp";
+import gear from "../../assets/field-gear.webp";
+import buildSign from "../../assets/field-build-sign.webp";
+import clearSign from "../../assets/field-clear-sign.webp";
+import credential from "../../assets/field-credential.webp";
 import useFieldMotion from "../components/useFieldMotion";
 import { ENERGY_PER_TURN, isFreeWorker } from "../game/gameReducer";
 import { ENERGY_CHARGE_COST, turnsUntilDepartureWarning } from "../domain/economy";
@@ -17,6 +28,7 @@ import { SPRITE } from "../game/gameHelpers";
 import { BasePanels, buildings, GoldForecast, type BasePanel } from "./BasePanels";
 import { CampaignStatus } from "./CampaignGoals";
 import InheritanceChoice from "./InheritanceChoice";
+import { trainerPortrait } from "./TrainerRevealScreen";
 import transitionFieldView from "./transitionFieldView";
 import "./BaseScreen.css";
 
@@ -28,6 +40,13 @@ const plots = [
   [1014, 624, 295, 168], [1330, 624, 314, 168],
 ] as const;
 const trail = [[33, 42], [50, 42], [67, 42]];
+const managementTools = [
+  { kind: "pc", label: "포켓몬", art: ball },
+  { kind: "entry", label: "엔트리", art: rosterCards },
+  { kind: "resources", label: "자원", art: satchel },
+  { kind: "shop", label: "상점", art: stall },
+  { kind: "settings", label: "설정", art: gear },
+] as const;
 const BaseWaterShader = lazy(() => import("../components/BaseWaterShader").catch(() => ({ default: () => null })));
 
 export default function BaseScreen() {
@@ -45,6 +64,7 @@ function SettlementScreen({ siteId }: { siteId: string }) {
   const home = siteId === HOME_SITE;
   const canOperate = canOperateSettlement(state, siteId);
   const name = settlementName(siteId);
+  const portrait = state.trainerId ? trainerPortrait(state.trainerId) : undefined;
   const resting = state.roster.filter(member => isFreeWorker(state, member)).slice(0, trail.length);
   const assignedCount = state.roster.filter(member => !isFreeWorker(state, member)).length;
   const imminentLosses = useMemo(() => advanceTerritoryLoyalty(state.territories).lost, [state.territories]);
@@ -73,37 +93,37 @@ function SettlementScreen({ siteId }: { siteId: string }) {
   }
 
   return (
-    <section className="field-base" aria-labelledby="base-title">
-      <div className="base-device">
+    <section className="field-base" aria-labelledby="base-title" data-home={home}>
+      <div className="base-stage">
         <header className="base-hud">
-          <div className="base-identity">
-            <button className="base-trainer-button" aria-label="트레이너 카드" onClick={() => setPanel({ kind: "trainer" })}>
-              <span className="base-emblem" aria-hidden="true" />
-              <span>신분증</span>
+          <h1 className="base-title" id="base-title" data-base-heading ref={heading} tabIndex={-1}>{name}</h1>
+          <div className="base-readouts">
+            <button className="base-button base-turn" type="button" aria-haspopup="dialog"
+              onClick={() => setPanel({ kind: "log" })} aria-label={`${state.turnCount}턴, 턴 기록`}>
+              <span>턴 기록</span><b>{String(state.turnCount).padStart(2, "0")}</b>
             </button>
-            <div><span>야생 관측소</span><h1 id="base-title" data-base-heading ref={heading} tabIndex={-1}>{name}</h1></div>
-          </div>
-          <button className="base-button base-turn" onClick={() => setPanel({ kind: "log" })} aria-label={`${state.turnCount}턴, 턴 기록`}>
-            <span>턴 기록</span><b>{String(state.turnCount).padStart(2, "0")}</b>
-          </button>
-          <div className="base-energy" aria-label={`행동력 ${state.energy}/${ENERGY_PER_TURN}`}>
-            <span>행동력 <b>{state.energy}/{ENERGY_PER_TURN}</b></span>
-            <div className="base-energy-cells" aria-hidden="true">
-              {Array.from({ length: ENERGY_PER_TURN }, (_, index) => <i key={index} data-filled={index < state.energy} />)}
+            <div className="base-energy" role="group" aria-label={`행동력 ${state.energy}/${ENERGY_PER_TURN}`}>
+              <span>행동력</span>
+              <b>{state.energy}/{ENERGY_PER_TURN}</b>
+              <div className="base-energy-cells" aria-hidden="true">
+                {Array.from({ length: ENERGY_PER_TURN }, (_, index) => <i key={index} data-filled={index < state.energy} />)}
+              </div>
             </div>
           </div>
+          <button className="base-trainer-button" type="button" aria-label="트레이너 카드" aria-haspopup="dialog"
+            onClick={() => setPanel({ kind: "trainer" })}>
+            <span className="base-trainer-credential" aria-hidden="true">
+              <img src={credential} alt="" width="176" height="112" />
+              {portrait && <img className="base-credential-portrait" src={portrait} alt="" />}
+            </span>
+          </button>
         </header>
 
-        {!home && <div className="base-supply-warning base-departure-warning" role="group" aria-label="거점 운영 상태">
-          <span>{canOperate ? "보급 연결 · 본거지와 재고 공유" : "고립 · 공사·개척·생산 중단"}</span>
-          <button className="base-button" onClick={() => dispatch({ type: "PATCH", patch: { siteViewId: null } })}>본거지로</button>
-        </div>}
-        {!home && <InheritanceChoice siteId={siteId} />}
         <div className="base-board" role="group" aria-label={`${name} 조감도`}>
           <img className="base-landscape" src={town} width={1672} height={941} alt="" fetchPriority="high" />
           {showWater && (
             <div className="base-water" aria-hidden="true">
-              <Suspense fallback={null}><BaseWaterShader /></Suspense>
+              <Suspense fallback={null}><BaseWaterShader turn={state.turnCount} /></Suspense>
             </div>
           )}
           {home && resting.map((member, index) => (
@@ -138,7 +158,10 @@ function SettlementScreen({ siteId }: { siteId: string }) {
                 {!building && isOpen && index === 0 && settlement.inheritancePending ? <span className="base-plot-label">승계 선택</span>
                 : !building && isOpen ? (
                   <button className="base-plot-action" data-plot-install={index} disabled={!canOperate} onClick={() => setPanel({ kind: "build", plot: index })} aria-label={`${index + 1}번 부지 건설`}>
-                    <span className="base-plot-label"><span aria-hidden="true">＋</span> 건설</span>
+                    <span className="base-plot-sign">
+                      <img src={buildSign} alt="" width="224" height="194" />
+                      <span>건설</span>
+                    </span>
                   </button>
                 ) : building && constructing ? (
                   <button className="base-plot-action" data-plot-construction={building.id} onClick={() => setPanel({ kind: "construction", buildingId: building.id })} aria-label={`${facility?.label ?? "시설"} 공사 관리, ${remaining}`}>
@@ -147,15 +170,18 @@ function SettlementScreen({ siteId }: { siteId: string }) {
                 ) : building ? (
                   <button className="base-plot-action" onClick={() => setPanel({ kind: "facility", buildingId: building.id })}
                     aria-label={`${index + 1}번 부지 ${facility?.label ?? "시설"} 관리`}>
-                    <span className="base-plot-label">{facility?.label ?? "시설"}<span className="base-wide-label"> · 관리</span></span>
+                    <span className="base-plot-label">{facility?.label ?? "시설"}</span>
                   </button>
                 ) : index === settlement.plotCap ? (
                   <button className="base-plot-action" onClick={() => setPanel({ kind: "clearing", plot: index })}
                     disabled={!canOperate && !clearing}
                     aria-label={`${index + 1}번 미개척 부지`}>
-                    <span className="base-plot-label">{clearing ? "개척 중" : <><span className="base-wide-label">미개척 · </span>평탄화</>}</span>
+                    <span className="base-plot-sign">
+                      <img src={clearSign} alt="" width="224" height="194" />
+                      <span>{clearing ? "개척 중" : "평탄화"}</span>
+                    </span>
                   </button>
-                ) : <span className="base-plot-label">미개척</span>}
+                ) : null}
               </div>
             );
           })}
@@ -163,32 +189,64 @@ function SettlementScreen({ siteId }: { siteId: string }) {
 
         <footer className="base-dock">
           <nav className="base-tools" aria-label="본거지 관리">
-            <button className="base-button" onClick={() => setPanel({ kind: "pc" })}>포켓몬 <b>{state.roster.length}</b></button>
-            <button className="base-button" onClick={() => setPanel({ kind: "entry" })}>엔트리</button>
-            <button className="base-button" onClick={() => setPanel({ kind: "resources" })}>자원</button>
-            <button className="base-button" onClick={() => setPanel({ kind: "shop" })}>상점</button>
-            <button className="base-button" data-action="map"
-              onPointerEnter={() => preload(atlas, { as: "image" })}
-              onFocus={() => preload(atlas, { as: "image" })}
-              onClick={() => transitionFieldView(() => dispatch({ type: "PATCH", patch: { screen: "map", siteViewId: null,
-                mapFocusId: home ? state.mapFocusId : siteId } }), "map")}>지도</button>
-            {home && <button className="base-button" data-action="settings" aria-haspopup="dialog" onClick={() => setPanel({ kind: "settings" })}>설정</button>}
+            {managementTools.filter(({ kind }) => home || kind !== "settings").map(({ kind, label, art }) => (
+              <button type="button" className="base-button" key={kind} aria-haspopup="dialog"
+                data-action={kind === "settings" ? "settings" : undefined} onClick={() => setPanel({ kind })}>
+                <img className="base-tool-art" src={art} alt="" width="112" height="112" />
+                <span>{label}{kind === "pc" && <> <b>{state.roster.length}</b></>}</span>
+              </button>
+            ))}
           </nav>
-          <p className="base-counts"><span>배치 <b>{assignedCount}/{state.roster.length}</b></span><span>개척 <b>{settlement.plotCap}/{plots.length}</b></span></p>
-          <div className="base-actions">
+          <nav className="base-actions" aria-label="마을 명령">
             <button className="base-button base-explore" data-action="hunt" disabled={state.energy < HUNT_ENERGY_COST}
+              aria-label={`탐험 행동력 ${HUNT_ENERGY_COST}`}
               onPointerEnter={() => preload(forest, { as: "image" })}
               onFocus={() => preload(forest, { as: "image" })}
               onClick={explore}>
-              탐험 <small>행동력 {HUNT_ENERGY_COST}</small><span aria-hidden="true">→</span>
+              <img src={compass} className="base-command-art" alt="" width="168" height="168" />
+              <span>탐험</span>
+              <small className="base-action-cost" aria-hidden="true">−{HUNT_ENERGY_COST}</small>
+            </button>
+            <button className="base-button base-map" data-action="map"
+              onPointerEnter={() => preload(atlas, { as: "image" })}
+              onFocus={() => preload(atlas, { as: "image" })}
+              onClick={() => transitionFieldView(() => dispatch({ type: "PATCH", patch: { screen: "map", siteViewId: null,
+                mapFocusId: home ? state.mapFocusId : siteId } }), "map")}>
+              <img src={chart} className="base-command-art" alt="" width="168" height="168" />
+              <span>지도</span>
             </button>
             <button className="base-button base-next" id="nextTurn"
               aria-describedby={turnDetails || undefined} onClick={() => dispatch({ type: "NEXT_TURN" })}>
-              다음 턴 <span aria-hidden="true">→</span>
+              <img src={hourglass} className="base-command-art" alt="" width="168" height="168" key={state.turnCount} data-turned={state.turnCount > 0} />
+              <span>다음 턴</span>
             </button>
-          </div>
+          </nav>
         </footer>
-        {goldReading && <GoldForecast id="base-gold-preview" reading={goldReading} hint={turnHint} />}
+      </div>
+      <div className="base-ledger">
+        <div className="base-ledger-strip" data-income={Boolean(goldReading)}>
+          <dl className="base-settlement-metrics" aria-label="운영 현황">
+            <div>
+              <dt>배치</dt>
+              <dd>{assignedCount}<small>/{state.roster.length}</small></dd>
+            </div>
+            <div>
+              <dt>개척</dt>
+              <dd>{settlement.plotCap}<small>/{plots.length}</small>
+                <span className="base-plot-ticks" aria-hidden="true">
+                  {plots.map((_, index) => <i key={index} data-open={index < settlement.plotCap} />)}
+                </span>
+              </dd>
+            </div>
+          </dl>
+          {goldReading && <GoldForecast id="base-gold-preview" reading={goldReading} hint={turnHint} />}
+          <CampaignStatus onOpen={() => setPanel({ kind: "goals" })} />
+        </div>
+        {!home && <div className="base-supply-warning base-departure-warning" role="group" aria-label="거점 운영 상태">
+          <span>{canOperate ? "보급 연결 · 본거지와 재고 공유" : "고립 · 공사·개척·생산 중단"}</span>
+          <button className="base-button" onClick={() => dispatch({ type: "PATCH", patch: { siteViewId: null } })}>본거지로</button>
+        </div>}
+        {!home && <InheritanceChoice siteId={siteId} />}
         {imminentLosses.length > 0 && (
           <p id="base-supply-warning" className="base-supply-warning" role="status">
             다음 턴에 {imminentLosses[0]}{imminentLosses.length > 1 ? ` 외 ${imminentLosses.length - 1}곳이` : "이"} 미점령지로 바뀝니다.
@@ -214,7 +272,6 @@ function SettlementScreen({ siteId }: { siteId: string }) {
             <button className="base-button" onClick={() => setPanel({ kind: "pc", memberId: firstWarning.member.id })}>우호도 관리</button>
           </div>
         )}
-        <CampaignStatus onOpen={() => setPanel({ kind: "goals" })} />
       </div>
       {panel && <BasePanels panel={panel} siteId={siteId} onClose={() => setPanel(null)} />}
     </section>

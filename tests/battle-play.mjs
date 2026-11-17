@@ -1,15 +1,25 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { registerHooks } from "node:module";
 
 const data = name => readFile(new URL("../data/" + name + ".json", import.meta.url), "utf8").then(JSON.parse);
 const [pokemon, types, moves, battle] = await Promise.all([data("pokemon"), data("type"), data("move"), data("battle")]);
+const domain = new URL("../src/domain/", import.meta.url).href;
+const hooks = registerHooks({ resolve(specifier, context, nextResolve) {
+  if (context.parentURL?.startsWith(domain) && /^\.\.?\//.test(specifier) && !specifier.endsWith(".ts")) {
+    return nextResolve(specifier + ".ts", context);
+  }
+  return nextResolve(specifier, context);
+} });
+const { pickMoveset } = await import("../src/domain/battle.ts").finally(() => hooks.deregister());
+const battleData = { pokemon, types, moves, battle, abilities: [], trainers: [] };
 const species = new Map(pokemon.map(mon => [mon.nameKr, mon]));
 const typeChart = new Map(types.map(type => [type.typeRowid, type.relation?.relationMap]));
 const catalog = new Map(moves.map(move => [move.moveRowid, move]));
 const typeIds = mon => [...new Set([mon.type1Rowid, mon.type2Rowid])].filter(id => id != null);
 
 export async function useHistoricalBattleData(page) {
-  const { statusLearnsets, ...baseline } = battle;
+  const { statusLearnsets, campaignUnlocks, inheritedAttacks, ...baseline } = battle;
   await page.route("**/data/battle.json", route => route.fulfill({ json: baseline }));
 }
 
@@ -58,8 +68,7 @@ export function memberScore(member, defender, enemyLevel) {
 }
 
 function playableMoves(member) {
-  return [...new Set((battle.learnsets[member.pokemon.pokemonRowid] ?? [])
-    .filter(([, level]) => level <= member.level).map(([id]) => id))].slice(0, 4);
+  return pickMoveset(member.pokemon, member.level, battleData).map(move => move.id);
 }
 
 export function campaignMemberScore(member, level) {

@@ -311,12 +311,14 @@ async function verifyEnemyObservation(border) {
   const ghostReport = recon.report.getByRole("region", { name: "공개된 수비팀" });
   await ghostReport.waitFor();
   assert.deepEqual(await ghostReport.getByRole("listitem").allTextContents(), changed.map(([name]) => name));
-  await recon.win(challengerId, { expectedLineup: changed, draws: draws.slice(2), inheritance: "승계 포기" });
+  const grownTeam = changed.map(([name, level]) => [name, level + 1]);
+  await recon.page.getByText(/성장 \+1/).waitFor();
+  await recon.win(challengerId, { expectedLineup: grownTeam, draws: draws.slice(2), inheritance: "승계 포기" });
   assert.equal((await recon.read()).frontier.intel[challengerId], undefined);
   await recon.page.close();
   console.log(JSON.stringify({ audit: "Enemy observation and Flying detection", border: "nw-01", source: challengerId,
     observed: changed, blocked: baseline, cost: warned.energy - queued.energy, income: prepared.resources.gold - warned.resources.gold,
-    leadAtSettlement: "나무킹", leadAtChallenge: "개굴닌자", preparationWindow: 3, ghostAfterExpiry: changed, mobileReload: true }));
+    leadAtSettlement: "나무킹", leadAtChallenge: "개굴닌자", preparationWindow: 3, ghostAfterExpiry: grownTeam, mobileReload: true }));
 }
 
 try {

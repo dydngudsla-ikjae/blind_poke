@@ -36,6 +36,37 @@ function claimOutpost(state: GameState, territoryId: string) {
 }
 
 describe("outpost construction", () => {
+  it("pays whole units across turns and restores each worker's fractional production", () => {
+    for (const [aptitude, expected] of [[59, 6], [77, 7]]) {
+      const lab = facility("lab", "dojo", 0);
+      const member = { ...worker("mon-1", 14), aptitude, buildingId: lab.id, jobId: "research" as const };
+      let state: GameState = { ...createInitialState(), roster: [member], buildings: [lab] };
+      for (let turn = 0; turn < 5; turn++) {
+        const forecast = forecastProduction(state).resources;
+        state = gameReducer(state, { type: "NEXT_TURN" });
+        expect(state.resources).toEqual(forecast);
+        if (turn === 1) state = restoreGameState(gameSaveSchema.parse({ ...state, v: 4 }), null);
+      }
+      expect(state.resources.candy).toBe(expected);
+    }
+  });
+
+  it("does not bank unavailable output and retains progress when moved to the same job", () => {
+    const lab = facility("lab", "dojo", 0);
+    const secondLab = facility("lab-2", "dojo", 1);
+    const member = { ...worker("mon-1", 14), aptitude: 59, buildingId: lab.id, jobId: "research" as const };
+    const initial = { ...createInitialState(), roster: [member], buildings: [lab, secondLab] };
+    const first = gameReducer(initial, { type: "NEXT_TURN" });
+    expect(first.roster[0].productionCarry?.research).toBeGreaterThan(500_000);
+    const full = { ...first, resources: { ...first.resources, candy: first.storageCap } };
+    const stalled = gameReducer(full, { type: "NEXT_TURN" });
+    expect(stalled.roster[0].productionCarry).toEqual(first.roster[0].productionCarry);
+    const moved = gameReducer({ ...stalled, resources: { ...stalled.resources, candy: 0 } },
+      { type: "ASSIGN_JOB", buildingId: secondLab.id, memberId: member.id, jobId: "research" });
+    expect(moved.roster[0].buildingId).toBe(secondLab.id);
+    expect(moved.roster[0].productionCarry).toEqual(first.roster[0].productionCarry);
+    expect(forecastProduction(moved).workers.get(member.id)?.rate).toBe(1.199);
+  });
   it("offers a trainer's building once and restores old occupied sites with two empty plots", () => {
     const legacy = outpostCampaign(true);
     expect(legacy.outposts["nw-01"]).toEqual({ plotCap: 2, clearing: null, inheritancePending: false });

@@ -127,7 +127,7 @@ async function play({ seed, picks, advanceTurn, nearCapacity }) {
     assert.equal(await reward().count(), 0);
     await challenge().click();
     await heading("거점 배틀").waitFor();
-    assert.equal((await page.locator(".duel-arena .draft-scanner-status").textContent()).trim(), rival);
+    assert.equal((await page.locator(".duel-opponent").textContent()).trim(), rival);
     await page.locator('.duel-vitals[data-side="player"]').getByText("Lv.2", { exact: true }).waitFor();
     assert.equal((await save()).turnCount, advanceTurn ? 1 : 0);
     assert.equal((await save()).energy, spent.energy - 2);

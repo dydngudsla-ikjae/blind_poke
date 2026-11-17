@@ -42,8 +42,8 @@ export default function BaseDialog({
     >
       <header className="base-dialog-header">
         <h2 id={titleId}>{title}</h2>
-        <button type="button" className="base-button base-dialog-close" onClick={onClose}>
-          닫기 <span aria-hidden="true">×</span>
+        <button type="button" className="base-dialog-close" aria-label="닫기" onClick={onClose}>
+          <span aria-hidden="true">×</span>
         </button>
       </header>
       <div className="base-dialog-body">{children}</div>

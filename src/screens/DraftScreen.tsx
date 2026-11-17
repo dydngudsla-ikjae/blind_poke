@@ -81,7 +81,7 @@ export default function DraftScreen() {
   }
 
   return (
-    <section className="draft-station" aria-labelledby="draft-title">
+    <section className="draft-station starter-station" aria-labelledby="draft-title">
       <div className="draft-device">
         <div
           className="draft-view"

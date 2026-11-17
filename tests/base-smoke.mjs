@@ -23,6 +23,12 @@ function baseControls(page, touch) {
     else await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "hidden" });
   }
+  async function tools(memberId) {
+    const dialog = await open("자원", /자원 현황/);
+    await use(dialog.getByText("지닌 도구", { exact: true }));
+    if (memberId) await dialog.getByLabel("장착할 포켓몬").selectOption(memberId);
+    return dialog;
+  }
   async function turn() {
     const next = (await read()).turnCount + 1;
     await use(page.locator("#nextTurn"));
@@ -75,7 +81,7 @@ function baseControls(page, touch) {
     await page.getByRole("heading", { name: "본거지", exact: true }).waitFor();
     return (await read()).roster.at(-1);
   }
-  return { use, button, read, open, close, turn, build, assign, capture };
+  return { use, button, read, open, close, tools, turn, build, assign, capture };
 }
 
 async function openProfile({ touch = false } = {}) {
@@ -116,18 +122,19 @@ async function verifyLegacyResearchStaff() {
 
   let current = await base.read();
   for (let turn = 0; turn < 2; turn++) {
+    const expected = [5, 4][turn];
     if (turn === 1) await page.reload();
     const dialog = await openDojo();
     assert.deepEqual(staff(await base.read()), original);
     await checkFull(dialog, 4);
     const forecasts = await dialog.getByText(/경험치 사탕 \+\d+ \/ 최대 \d+/).allTextContents();
     assert.equal(forecasts.length, 4);
-    assert.equal(forecasts.reduce((sum, line) => sum + Number(line.match(/\+(\d+)/)[1]), 0), 5);
+    assert.equal(forecasts.reduce((sum, line) => sum + Number(line.match(/\+(\d+)/)[1]), 0), expected);
     await base.close(dialog);
     await base.turn();
     const next = await base.read();
     assert.deepEqual(staff(next), original);
-    assert.equal(next.resources.candy - current.resources.candy, 5);
+    assert.equal(next.resources.candy - current.resources.candy, expected);
     current = next;
   }
   const dialog = await openDojo();
@@ -144,7 +151,7 @@ async function verifyLegacyResearchStaff() {
   assert.deepEqual(staff(reassigned), ["mon-1", "mon-2", "mon-5"]);
   assert.equal(reassigned.energy, current.energy - 1);
   await page.close();
-  console.log("Research staffing Chrome smoke passed: v4 and reload preserve 4 researchers and 5 candy per turn; admit at 2, block at 3");
+  console.log("Research staffing Chrome smoke passed: v4 and reload preserve 4 researchers and settle 5 then 4 candies; admit at 2, block at 3");
 }
 
 try {
@@ -193,7 +200,7 @@ try {
   await fresh.turn();
   dialog = await fresh.open(/포켓몬 \d/, /보유 포켓몬/);
   await fresh.use(dialog.locator(`[data-install-pick="${psychic.id}"]`));
-  await dialog.getByText(/경험치 사탕 \+1 \/ 최대 1/).waitFor();
+  await dialog.getByText(/경험치 사탕 \+0 \/ 최대 0.*기본 산출/).waitFor();
   await fresh.button("사탕 먹이기", dialog).evaluate(element => { element.click(); element.click(); });
   await dialog.getByRole("heading", { name: /Lv\.2/ }).waitFor();
   assert.equal((await fresh.read()).energy, 4);
@@ -283,12 +290,16 @@ try {
   await legacy.assign(dialog, "육성 연구", "mon-2", 0);
   await legacy.close(dialog);
   await legacy.turn();
-  dialog = await legacy.open(/포켓몬 \d/, /보유 포켓몬/);
-  await legacy.use(dialog.locator('[data-install-pick="mon-2"]'));
+  dialog = await legacy.tools("mon-2");
   const egg = dialog.locator("li", { hasText: "행복의알" });
   await legacy.use(legacy.button("장착", egg));
+  await legacy.close(dialog);
+  dialog = await legacy.open(/포켓몬 \d/, /보유 포켓몬/);
+  await legacy.use(dialog.locator('[data-install-pick="mon-2"]'));
   await legacy.use(legacy.button("사탕 먹이기", dialog));
-  assert.match(await dialog.getByText(/경험치 \d+\/40/).textContent(), /경험치 20\/40/);
+  assert.equal(await dialog.locator(".base-partner-summary dl > div").filter({ hasText: "경험치" }).locator("dd").textContent(), "20/40");
+  await legacy.close(dialog);
+  dialog = await legacy.tools("mon-2");
   const band = dialog.locator("li", { hasText: "구애머리띠" });
   await legacy.button("제작 3", band).evaluate(element => { element.click(); element.click(); });
   await legacy.use(legacy.button("장착", band));
@@ -328,7 +339,7 @@ try {
   assert.equal((await legacy.read()).resources.tool, 3);
 
   await mobile.setViewportSize({ width: 320, height: 640 });
-  dialog = await legacy.open(/포켓몬 \d/, /보유 포켓몬/);
+  dialog = await legacy.tools();
   assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth));
   const coin = dialog.locator("li", { hasText: "부적금화" });
   await legacy.use(legacy.button("제작 3", coin));
@@ -356,10 +367,15 @@ try {
   await mobile.reload();
   dialog = await legacy.open("우호도 관리", /보유 포켓몬/);
   await dialog.getByRole("heading", { name: "이상해씨 Lv.1" }).waitFor();
-  await legacy.use(dialog.locator('[data-install-pick="mon-12"]'));
+  await dialog.getByText(/다음 턴 이탈 예정/).waitFor();
+  await legacy.close(dialog);
+  dialog = await legacy.tools("mon-12");
   const sash = dialog.locator("li", { hasText: "기합의띠" });
   await legacy.use(legacy.button("제작 3", sash));
   await legacy.use(legacy.button("장착", sash));
+  await legacy.close(dialog);
+  dialog = await legacy.open("우호도 관리", /보유 포켓몬/);
+  await legacy.use(dialog.locator('[data-install-pick="mon-12"]'));
   await dialog.getByText("기합의띠로 이탈 방지 중").waitFor();
   await legacy.use(dialog.locator('[data-install-pick="mon-13"]'));
   await legacy.use(legacy.button("회복 아이템 사용", dialog));
@@ -385,7 +401,7 @@ try {
   departureSave = await legacy.read();
   assert.equal(departureSave.roster[0].heldItem, "focus_sash");
   assert.equal(departureSave.resources.seed, seedsAtDeparture);
-  dialog = await legacy.open("포켓몬 2", /보유 포켓몬/);
+  dialog = await legacy.tools("mon-12");
   await legacy.use(legacy.button("장착", dialog.locator("li", { hasText: "평온의방울" })));
   await legacy.close(dialog);
   await legacy.turn();

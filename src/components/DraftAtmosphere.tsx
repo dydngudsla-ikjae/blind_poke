@@ -9,12 +9,14 @@ export default function DraftAtmosphere({
   fieldScan = false,
   analysisPass,
   analysisResolved = false,
+  recruited = false,
 }: {
   target?: { x: number; y: number };
   trainerRevealed?: boolean;
   fieldScan?: boolean;
   analysisPass?: number;
   analysisResolved?: boolean;
+  recruited?: boolean;
 }) {
   const enabled = useFieldMotion();
 
@@ -22,7 +24,7 @@ export default function DraftAtmosphere({
     <div className="draft-atmosphere" aria-hidden="true">
       <Suspense fallback={null}>
         <DraftShader target={target} trainerRevealed={trainerRevealed} fieldScan={fieldScan}
-          analysisPass={analysisPass} analysisResolved={analysisResolved} />
+          analysisPass={analysisPass} analysisResolved={analysisResolved} recruited={recruited} />
       </Suspense>
     </div>
   ) : null;

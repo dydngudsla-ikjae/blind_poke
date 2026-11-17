@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import arena from "../../assets/observatory-battle.webp";
 import useFieldMotion from "../components/useFieldMotion";
+import type { BattleEffect } from "../components/BattleShader";
 import {
   battleMoves, buildCombatant, createBattle, effectiveAttack, effectiveness, movePower, resolveBattleTurn, STRUGGLE, TACKLE,
   type BattleAction, type BattleSide, type BattleStep, type Combatant,
@@ -65,10 +66,14 @@ function Duel({ setup }: { setup: BattleSetup }) {
   ));
   const [reward] = useState(() => setup.firstVictory ? describeFirstVictoryReward(state) : "");
   const [logs, setLogs] = useState(["양쪽 포켓몬이 대치합니다."]);
+  const [roundReport, setRoundReport] = useState(logs[0]);
   const [exchange, setExchange] = useState<{ steps: BattleStep[]; index: number } | null>(null);
   const [switching, setSwitching] = useState(false);
   const [reduced, setReduced] = useState(() => matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const [compact, setCompact] = useState(() => matchMedia("(max-width: 790px)").matches);
   const showShader = useFieldMotion();
+  const field = useRef<HTMLDivElement>(null);
+  const [strikePoints, setStrikePoints] = useState<{ from: { x: number; y: number }; to: { x: number; y: number } }>();
   const heading = useRef<HTMLHeadingElement>(null);
   const outcome = useRef<HTMLHeadingElement>(null);
   const firstAction = useRef<HTMLButtonElement>(null);
@@ -83,13 +88,37 @@ function Duel({ setup }: { setup: BattleSetup }) {
   const isolatedVictory = result === "win" && territory && territory.region > 1 && !suppliedTerritories(state.territories).has(territory.id);
   const selectingAlly = switching || battle.phase === "replacement";
   const round = battle.round;
+  const cue = exchange ? `${round}-${exchange.index}` : "idle";
+  const impactSide = strike?.outcome === "blocked" || (strike?.damage === 0 && strike.move.boosts?.target === "actor")
+    ? strike.side : strike?.side === "player" ? "enemy" : "player";
+  const strikeEffect: BattleEffect | "blocked" | undefined = strike?.outcome !== "hit" ? strike?.outcome
+    : strike.move.damageClass === 1 ? "status" : strike.move.contact ? "contact" : "projectile";
 
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  useLayoutEffect(() => {
+    const scene = field.current;
+    if (!scene || !strike) return;
+    const bounds = scene.getBoundingClientRect();
+    function center(side: BattleSide) {
+      const fighter = scene?.querySelector(`.duel-fighter[data-side="${side}"]`)?.getBoundingClientRect();
+      return fighter ? {
+        x: (fighter.left + fighter.width / 2 - bounds.left) / bounds.width,
+        y: (fighter.top + fighter.height * .58 - bounds.top) / bounds.height,
+      } : { x: .5, y: .5 };
+    }
+    setStrikePoints({ from: center(strike.side), to: center(impactSide) });
+  }, [cue, strike, impactSide]);
   useEffect(() => {
     const preference = matchMedia("(prefers-reduced-motion: reduce)");
     const onChange = () => setReduced(preference.matches);
     preference.addEventListener("change", onChange);
     return () => preference.removeEventListener("change", onChange);
+  }, []);
+  useEffect(() => {
+    const view = matchMedia("(max-width: 790px)");
+    const update = () => setCompact(view.matches);
+    view.addEventListener("change", update);
+    return () => view.removeEventListener("change", update);
   }, []);
   useEffect(() => {
     if (result) outcome.current?.focus();
@@ -106,9 +135,10 @@ function Duel({ setup }: { setup: BattleSetup }) {
         return;
       }
       if (step.state.phase === "win") dispatch({ type: "CLAIM_TERRITORY", territoryId: setup.territoryId });
+      setRoundReport(exchange.steps.map(action => action.lines.join(" ")).filter(Boolean).join(" "));
       commandPending.current = false;
       setExchange(null);
-    }, reduced || !step.strike ? 0 : 320);
+    }, reduced || !step.strike ? 0 : step.strike.outcome === "blocked" ? 140 : 320);
     return () => window.clearTimeout(timer);
   }, [exchange, step, reduced, dispatch, setup.territoryId]);
 
@@ -139,10 +169,12 @@ function Duel({ setup }: { setup: BattleSetup }) {
     );
   }
 
-  const cue = exchange ? `${round}-${exchange.index}` : "idle";
   const outcomeNames = { win: "승리", lose: "패배", draw: "무승부" };
   const battleStatus = result ? outcomeNames[result] : strike?.move.name ?? (selectingAlly ? "포켓몬 교체" : "기술 선택");
   const impactColor = strike ? moveColors[strike.move.typeName] ?? "#ffe1a6" : "#ffe1a6";
+  const impact = strike && (strike.damage > 0 ? `−${strike.damage} HP${strike.fainted ? " · 기절" : ""}`
+    : strike.outcome === "miss" ? "빗나감" : strike.outcome === "immune" ? "효과 없음" :
+      strike.outcome === "blocked" ? "행동 실패" : step.lines.slice(1).join(" "));
   const eligibleAllies = battle.teams.player.flatMap((mon, index) => mon.fainted || index === battle.active.player ? [] : [{ mon, index }]);
   const canAttack = (mon: Combatant) => effectiveAttack(mon.moves, enemy.types, data, 0, {
     actor: mon.status?.kind === "sleep" && mon.status.remaining > 0, target: enemy.status?.kind === "sleep",
@@ -151,15 +183,23 @@ function Duel({ setup }: { setup: BattleSetup }) {
   const counterAlly = needsCounter ? eligibleAllies.find(({ mon }) => canAttack(mon))?.mon : undefined;
   const moves = battleMoves(player);
   const firstMove = moves.findIndex(move => move.pp > 0 || move.id === STRUGGLE.id);
+  const impactStyle = {
+    "--impact-tint": impactColor,
+    ...(strikePoints && {
+      "--source-x": `${strikePoints.from.x * 100}%`, "--source-y": `${strikePoints.from.y * 100}%`,
+      "--target-x": `${strikePoints.to.x * 100}%`, "--target-y": `${strikePoints.to.y * 100}%`,
+    }),
+  } as CSSProperties;
 
   return (
     <section className="draft-station duel-station" aria-labelledby="duel-title">
       <div className="draft-device">
-        <div className="duel-arena draft-view" role="group" aria-label="포켓몬 대치 장면">
+        <div className="duel-arena draft-view" ref={field} role="group" aria-label="포켓몬 대치 장면">
           <img className="duel-landscape" src={arena} alt="" width={1672} height={941} fetchPriority="high" />
           {showShader && (
             <Suspense fallback={null}>
-              <BattleShader side={strike?.side} impact={Boolean(strike?.damage)} cue={cue} color={impactColor} />
+              <BattleShader effect={strikeEffect === "blocked" ? undefined : strikeEffect}
+                from={strikePoints?.from} to={strikePoints?.to} cue={cue} color={impactColor} />
             </Suspense>
           )}
           <header className="draft-view-header">
@@ -167,21 +207,30 @@ function Duel({ setup }: { setup: BattleSetup }) {
               <span className="draft-location">{territory?.name ?? "미확인 거점"}</span>
               <h1 id="duel-title" ref={heading} tabIndex={-1}>거점 배틀</h1>
             </div>
-            <p className="draft-scanner-status" data-locked={!result || result === "win"}>
-              <span className="draft-status-light" aria-hidden="true" />
-              {setup.enemyName}
-            </p>
+            <p className="duel-opponent">{setup.enemyName}</p>
           </header>
           {([["player", player], ["enemy", enemy]] as const).map(([side, mon]) => (
             <Fighter key={mon.key} mon={mon} side={side} selected={cue}
               typeLabel={mon.types.map(id => data.types.find(type => type.typeRowid === id)?.nameKr).filter(Boolean).join(" · ")}
-              action={strike ? strike.side === side ? "attack" : strike.damage ? "impact" : undefined : undefined} />
+              action={strike && strike.outcome !== "blocked" ? strike.side === side && strike.move.contact ? "attack" :
+                impactSide === side && strike.damage > 0 ? "impact" : undefined : undefined} />
           ))}
-          <p className="duel-turn" aria-label={`${round}턴, ${battleStatus}`}><b>{String(round).padStart(2, "0")}</b> <span>{battleStatus}</span></p>
+          {strike && <div key={cue} className="duel-impact" aria-hidden="true" data-source={strike.side} data-target={impactSide}
+            data-effect={strikeEffect} style={impactStyle}>
+            <span className="duel-impact-trail" />
+            <span className="duel-impact-label">{impact}</span>
+          </div>}
         </div>
 
         <div className="duel-console">
-          <div className="duel-command">
+          <div className="duel-command" data-terminal={Boolean(result)}>
+            <header className="duel-command-heading">
+              {!result && <h2>{battle.phase === "replacement" ? "다음 포켓몬 선택" : selectingAlly ? "포켓몬 교체" : "기술 선택"}</h2>}
+              <p className="duel-turn" aria-label={`${round}턴, ${battleStatus}`}>
+                {strike && <span>{strike.move.name}</span>}
+                <span>턴</span> <b>{String(round).padStart(2, "0")}</b>
+              </p>
+            </header>
             {result ? (
               <div className="duel-outcome" data-result={result}>
                 <div>
@@ -194,13 +243,13 @@ function Duel({ setup }: { setup: BattleSetup }) {
               </div>
             ) : selectingAlly ? (
               <>
-                <h2>{battle.phase === "replacement" ? "다음 포켓몬 선택" : "포켓몬 교체"}</h2>
                 <div className="duel-moves" role="group" aria-label="교체할 포켓몬">
                   {eligibleAllies.map(({ mon, index }, order) => (
                     <button className="duel-move duel-ally" key={mon.key} ref={order === 0 ? firstAction : undefined}
                       data-switch-index={index} disabled={Boolean(exchange)}
                       onClick={event => command({ kind: "switch", index }, event.detail === 0)}>
-                      <strong>{mon.name}</strong><span>Lv.{mon.level} · HP {mon.curHp}/{mon.maxHp}{mon.status && ` · ${statusLabels[mon.status.kind]}`}</span>
+                      <img src={SPRITE(mon.pokemon)} alt="" />
+                      <div><strong>{mon.name}</strong><span>Lv.{mon.level} · HP {mon.curHp}/{mon.maxHp}{mon.status && ` · ${statusLabels[mon.status.kind]}`}</span></div>
                     </button>
                   ))}
                 </div>
@@ -211,7 +260,6 @@ function Duel({ setup }: { setup: BattleSetup }) {
               </>
             ) : (
               <>
-                <h2>기술 선택</h2>
                 <div className="duel-moves" role="group" aria-label="사용할 기술">
                   {moves.map((move, index) => {
                     const power = movePower(move, enemy);
@@ -227,9 +275,8 @@ function Duel({ setup }: { setup: BattleSetup }) {
                         disabled={Boolean(exchange) || (move.pp === 0 && move.id !== STRUGGLE.id)}
                         onClick={event => command({ kind: "move", moveId: move.id }, event.detail === 0)}>
                         <strong>{move.name}</strong>
-                        <span style={{ color: moveColors[move.typeName] }}>{move.typeName} <small>
-                          {power === 0 ? "변화" : `위력 ${power}`} · {move.accuracy ? `명중 ${move.accuracy}%` : "명중 판정 없음"}
-                        </small></span>
+                        <span className="duel-move-type" style={{ "--move-color": moveColors[move.typeName] } as CSSProperties}>{move.typeName}</span>
+                        <small className="duel-move-power">{power === 0 ? "변화" : `위력 ${power}`} · {move.accuracy ? `명중 ${move.accuracy}%` : "명중 판정 없음"}</small>
                         <small className="duel-move-detail">{details}</small>
                       </button>
                     );
@@ -260,9 +307,12 @@ function Duel({ setup }: { setup: BattleSetup }) {
               </div>
             )}
           </div>
-          <section className="duel-record" aria-labelledby="duel-record-title">
-            <h2 id="duel-record-title">전투 기록</h2>
-            <ol aria-live="polite">{logs.map((line, index) => <li key={index}>{line}</li>)}</ol>
+          <section className="duel-record" aria-label="전투 기록">
+            <p className="duel-latest" aria-live={compact ? "polite" : "off"}>{roundReport}</p>
+            <details open={!compact}>
+              <summary>전투 기록</summary>
+              <ol aria-live={compact ? "off" : "polite"}>{logs.map((line, index) => <li key={index}>{line}</li>)}</ol>
+            </details>
           </section>
         </div>
       </div>

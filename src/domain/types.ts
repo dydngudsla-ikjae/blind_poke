@@ -44,6 +44,7 @@ export interface RosterMember {
   buildingId?: string | null;
   jobId?: JobId | null;
   jobOrder?: number;
+  productionCarry?: Partial<Record<JobId, number>>;
   /** @deprecated legacy save migration only */ inEntry?: boolean;
   heldItem?: string | null;
 }
@@ -71,6 +72,7 @@ export interface BattleBoost {
   changes: Partial<Record<BattleStat, number>>;
 }
 export interface BattleMoveRule {
+  contact?: true;
   priority?: number;
   boosts?: BattleBoost;
   secondary?: { chance: number; flinch?: true; boosts?: BattleBoost; status?: BattleStatusKind };
@@ -86,6 +88,8 @@ export interface BattleMoveRule {
 export interface BattleData {
   learnsets: Record<string, Array<[moveId: number, level: number]>>;
   statusLearnsets?: Record<string, Array<[moveId: number, level: number]>>;
+  campaignUnlocks?: Record<string, Array<[moveId: number, level: number]>>;
+  inheritedAttacks?: Record<string, Array<[moveId: number, level: number]>>;
   moves: Record<string, BattleMoveRule>;
 }
 

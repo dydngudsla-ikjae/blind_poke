@@ -881,7 +881,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     outpostAssignments: 0, outpostHunts: 0, outpostCharges: 0, outpostTurns: 0, placements: [], remoteMaterialUsed: 0, sash: null };
   let productionCrew;
   let researchCheckpoint;
-  const operations = { hunts: 0, recruitEnergy: 0, dragon: null, defenseEnergy: 0, reconEnergy: 0,
+  const operations = { hunts: 0, recruitEnergy: 0, dragon: null, ghostId: null, defenseEnergy: 0, reconEnergy: 0,
     clinicEnergy: 0, charges: 0, turns: [], reports: [] };
   const dark = { hunts: 0, recruitEnergy: 0, dispatchEnergy: 0, preparationTurns: [], worker: null, prevented: [] };
   const flying = { hunts: [], recruitEnergy: 0, detectEnergy: 0, detectCharges: 0, recoveryEnergy: 0, worker: null, events: [] };
@@ -1098,7 +1098,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   }
 
   async function maintainFavor(state) {
-    const important = new Set([...aceIds, thirdStarterId, operations.dragon?.id, dark.worker?.id, flying.worker?.id]);
+    const important = new Set([...aceIds, thirdStarterId, operations.dragon?.id, operations.ghostId, dark.worker?.id, flying.worker?.id]);
     const atRisk = state.roster.filter(member => member.departurePending &&
       (important.has(member.id) || member.jobId === "research" || member.jobId === "heal"));
     for (const member of atRisk) {
@@ -1300,19 +1300,33 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   }
 
   async function reconForBattle(id) {
+    const ghost = member => [member.pokemon.type1Rowid, member.pokemon.type2Rowid].includes(8);
+    const current = await save();
+    const medic = current.roster.find(member => member.jobId === "heal" && ghost(member));
+    let scout = medic ?? current.roster.find(member => !member.buildingId && ghost(member));
+    for (let attempt = 0; !scout && attempt < 20; attempt++) {
+      await energy(2, false, "frontier");
+      await tap(button(/탐험/));
+      await heading("야생 탐험").waitFor();
+      const target = await scanForType("고스트");
+      if (target) scout = await identify(target);
+      else { await base(); totals.hunts++; }
+    }
+    assert.ok(scout, "An available Ghost is needed for recon");
+    operations.ghostId = scout.id;
     const before = await energy(1, false, "frontier");
-    const medic = before.roster.find(member => member.jobId === "heal");
-    assert.ok(medic && [medic.pokemon.type1Rowid, medic.pokemon.type2Rowid].includes(8), "The clinic Ghost is needed for recon");
     const clinic = page.getByRole("dialog", { name: "치료소 · 2번 부지" });
     const openClinic = () => tap(button("2번 부지 치료소 관리"));
-    await openClinic();
-    await tap(button(`${medic.pokemon.nameKr} 회수`, clinic));
-    await close(clinic);
+    if (medic) {
+      await openClinic();
+      await tap(button(`${medic.pokemon.nameKr} 회수`, clinic));
+      await close(clinic);
+    }
 
     await map();
     await focus(id);
     if (!spot(await save(), id).scouted) await tap(button(/정찰하기/));
-    await page.getByLabel("파견할 고스트").selectOption(medic.id);
+    await page.getByLabel("파견할 고스트").selectOption(scout.id);
     await tap(button(/고스트 첩보 파견/));
     await page.getByText(/고스트 첩보 진행 중/).waitFor();
     const sent = await save();
@@ -1331,17 +1345,19 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     assert.deepEqual(opponents, records.map(pokemon => pokemon.nameKr));
     await base();
 
-    const ready = await energy(1, false, "frontier");
-    await openClinic();
-    await tap(button(/회복 아이템 생산/, clinic));
-    await selectMember(clinic, medic.id);
-    await tap(button(/직무 배치 · 행동력/, clinic));
-    await close(clinic);
-    const staffed = await save();
-    assert.equal(staffed.energy, ready.energy - 1);
-    operations.clinicEnergy++;
-    settlements.assignments++;
-    if (staffed.roster.find(member => member.id === medic.id).departurePending) await maintainFavor(staffed);
+    if (medic) {
+      const ready = await energy(1, false, "frontier");
+      await openClinic();
+      await tap(button(/회복 아이템 생산/, clinic));
+      await selectMember(clinic, medic.id);
+      await tap(button(/직무 배치 · 행동력/, clinic));
+      await close(clinic);
+      const staffed = await save();
+      assert.equal(staffed.energy, ready.energy - 1);
+      operations.clinicEnergy++;
+      settlements.assignments++;
+      if (staffed.roster.find(member => member.id === medic.id).departurePending) await maintainFavor(staffed);
+    }
 
     // Resolve one live warning before the scheduled assault can remove its source.
     if (!operations.defenseEnergy && await page.locator("#base-intrusion-warning").count()) {
@@ -1352,12 +1368,13 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     const campaign = await save();
     const entryOrder = campaign.entryOrder;
     const predictedLevel = 3 + region * 5 + Math.floor(campaign.mapSnapshot.filter(site =>
-      site.owner === "player" && routes[region].includes(site.id)).length / 2);
+      site.owner === "player" && routes[region].includes(site.id)).length / 2) +
+      Math.min(3, Math.floor((campaign.turnCount - (campaign.regionOpenedTurns?.[region + 1] ?? campaign.turnCount)) / 5));
     const party = entryOrder.map(id => campaign.roster.find(member => member.id === id));
     const lead = party.reduce((best, candidate) => memberScore(candidate, records[0], predictedLevel) >
       memberScore(best, records[0], predictedLevel) ? candidate : best);
     await setParty([lead.id, ...entryOrder.filter(id => id !== lead.id)]);
-    const entry = { id, source, turn: scouted.turnCount, scout: medic.pokemon.nameKr, opponents,
+    const entry = { id, source, turn: scouted.turnCount, scout: scout.pokemon.nameKr, opponents,
       originalLead: party[0].pokemon.nameKr, lead: lead.pokemon.nameKr };
     operations.reports.push(entry);
     return { entryOrder, entry };
@@ -1522,14 +1539,20 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     productionCrew = { researcher, miner, crafter };
   }
 
-  async function finishOutpostCraft(before) {
-    const { researcher, miner, crafter } = productionCrew;
-    await tap(button(/포켓몬 \d/));
-    await selectMember(pc(), researcher.id);
-    const row = pc().getByRole("listitem").filter({ hasText: "기합의띠" });
+  async function craftAndEquipSash(memberId) {
+    await tap(button("자원"));
+    const resources = page.getByRole("dialog", { name: /자원 현황/ });
+    await tap(resources.getByText("지닌 도구", { exact: true }));
+    await resources.getByLabel("장착할 포켓몬").selectOption(memberId);
+    const row = resources.getByRole("listitem").filter({ hasText: "기합의띠" });
     await tap(button("제작 3", row));
     await tap(button("장착", row));
-    await close(pc());
+    await close(resources);
+  }
+
+  async function finishOutpostCraft(before) {
+    const { researcher, miner, crafter } = productionCrew;
+    await craftAndEquipSash(researcher.id);
     const equipped = await save();
     assert.equal(equipped.resources.tool, before.resources.tool - 3);
     assert.equal(equipped.roster.find(member => member.id === researcher.id).heldItem, "focus_sash");
@@ -1573,12 +1596,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       favor.material += production.lastLog.filter(line => line.includes("부품 제작"))
         .reduce((used, line) => used + Number(line.match(/재료 −(\d+)/)?.[1] ?? 0), 0);
     }
-    await tap(button(/포켓몬 \d/));
-    await selectMember(pc(), registeelId);
-    const row = pc().getByRole("listitem").filter({ hasText: "기합의띠" });
-    await tap(button("제작 3", row));
-    await tap(button("장착", row));
-    await close(pc());
+    await craftAndEquipSash(registeelId);
     const equipped = await save();
     assert.equal(equipped.roster.find(member => member.id === registeelId).heldItem, "focus_sash");
     assert.equal(equipped.resources.items.focus_sash, 0);
@@ -1875,12 +1893,13 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     const prior = totals.candies;
     await grow(thirdStarterId, level);
     assert.equal(totals.candies - prior, candy);
-    await tap(button(/포켓몬 \d/));
+    const updated = await viewTactics("ne-02");
+    await updated.types.selectOption("6");
+    await tap(button("PC에서 약점 기술 확인", updated.tactics));
     await tap(pc.locator(`[data-install-pick="${thirdStarterId}"]`));
-    await tap(pc.getByText("약점 기술 확인", { exact: true }));
-    await pc.getByLabel("상대 타입").selectOption("6");
     await pc.getByText("현재 약점 기술 · 물대포").waitFor();
     await close(pc);
+    await base();
     const decision = { seed, guide: "pc", site: "ne-02", level, candy, energy: energyCost,
       turns: (await save()).turnCount - before.turnCount };
     guidance.push(decision);
@@ -2079,13 +2098,14 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       await energy(2);
       const trained = await save();
       if (strategy === "moveThreshold") {
-        await tap(button(/포켓몬 \d/));
+        const { tactics, types } = await viewTactics(audit.site);
+        await types.selectOption("6");
+        await tap(button("PC에서 약점 기술 확인", tactics));
         const pc = page.getByRole("dialog", { name: /보유 포켓몬/ });
         await tap(pc.locator(`[data-install-pick="${thirdStarterId}"]`));
-        await pc.getByText("약점 기술 확인", { exact: true }).click();
-        await pc.getByLabel("상대 타입").selectOption("6");
         await pc.getByText("현재 약점 기술 · 물대포").waitFor();
         await close(pc);
+        await base();
       }
       const candySpent = totals.candies - startCandy;
       budgets.set(strategy, candySpent);

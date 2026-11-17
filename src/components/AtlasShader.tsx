@@ -27,11 +27,12 @@ const survey = defineShader({
     let surface = mix(landAndSea.rgb, ocean.rgb, water * 0.83) + glint * vec3f(0.34, 0.67, 0.75);
 
     let distance = length((uv - scanCenter) * vec2f(aspect, 1.0));
-    let radius = 0.022 + sweepProgress * 0.20;
-    let rim = 1.0 - smoothstep(0.0008, 0.0045, abs(distance - radius));
-    let wake = (1.0 - smoothstep(0.0, 0.04, radius - distance)) * (1.0 - step(radius, distance));
-    let signal = (rim * 0.70 + wake * 0.23) * (1.0 - sweepProgress);
-    return vec4f(mix(surface, vec3f(0.52, 0.98, 0.73), signal), landAndSea.a);
+    let radius = 0.019 + sweepProgress * 0.20;
+    let rim = 1.0 - smoothstep(0.0007, 0.003, abs(distance - radius));
+    let echo = 1.0 - smoothstep(0.0005, 0.0022, abs(distance - radius * 0.74));
+    let wake = (1.0 - smoothstep(0.0, 0.028, radius - distance)) * (1.0 - step(radius, distance));
+    let signal = (rim * 0.63 + echo * 0.25 + wake * 0.15) * (1.0 - sweepProgress);
+    return vec4f(mix(surface, vec3f(1.0, 0.87, 0.57), signal), landAndSea.a);
   `,
 });
 

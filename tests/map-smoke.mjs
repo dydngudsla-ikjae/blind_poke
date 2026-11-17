@@ -109,7 +109,7 @@ try {
   await play.shot("desktop-trainer-report");
   await play.use(play.button(/거점 도전/));
   await play.heading("거점 배틀").waitFor();
-  assert.equal(await desktop.locator(".duel-arena .draft-scanner-status").textContent(), rival.nameKr);
+  assert.equal(await desktop.locator(".duel-opponent").textContent(), rival.nameKr);
   await win(desktop);
   await play.use(play.button("월드맵으로"));
   await play.heading("남부 거점").waitFor();
@@ -144,6 +144,10 @@ try {
     assert.equal(await touch.node("south").getAttribute("data-status"), "trainer");
     const view = mobile.locator(".atlas-viewport");
     const mobileBoard = mobile.locator(".atlas-board");
+    const reportToggle = touch.button(/보고 접기/);
+    await touch.use(reportToggle);
+    assert.equal(await touch.button(/보고 펴기/).getAttribute("aria-expanded"), "false");
+    await mobile.locator(".atlas-report-detail").waitFor({ state: "hidden" });
     await touch.use(touch.button("지도 확대"));
     await mobile.locator('.atlas-viewport[data-zoomed="true"]').waitFor();
     const before = await mobileBoard.getAttribute("style");
@@ -157,6 +161,7 @@ try {
     await mobile.waitForFunction(before => document.querySelector(".atlas-board").getAttribute("style") !== before, before);
     await touch.use(touch.node("west"));
     await mobile.locator('[data-node="west"][aria-pressed="true"]').waitFor();
+    assert.equal(await reportToggle.getAttribute("aria-expanded"), "true");
     await touch.use(touch.button(/정찰하기/));
     await touch.heading("서부 거점").waitFor();
     await touch.use(touch.button("지도 전체 보기"));
@@ -166,7 +171,7 @@ try {
     await touch.shot(`touch-${viewport.width}-trainer-report`);
     await touch.use(touch.button(/거점 도전/));
     await touch.heading("거점 배틀").waitFor();
-    assert.equal(await mobile.locator(".duel-arena .draft-scanner-status").textContent(), rival.nameKr);
+    assert.equal(await mobile.locator(".duel-opponent").textContent(), rival.nameKr);
     await mobile.close();
   }
 

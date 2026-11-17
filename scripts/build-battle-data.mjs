@@ -75,6 +75,7 @@ function moveRule(node, catalog) {
     if (!f.boosts || !["self", ...attacks].includes(f.target?.value)) return null;
   } else if (!(move.details.power > 0 || weightPower) || !attacks.has(f.target?.value)) return null;
   if (weightPower) rule.weightPower = true;
+  if (!isStatus && flags.contact) rule.contact = true;
   if (f.boosts) {
     if (!isStatus) return null;
     const changes = boosts(f.boosts);
@@ -134,12 +135,13 @@ function statusRule(node, catalog) {
   if (id === 173 && f.sleepUsable?.value && secondary?.volatileStatus?.value === "flinch" && chance) {
     return [id, { requiresSleep: "actor", secondary: { chance, flinch: true } }];
   }
-  return secondaryStatus && chance ? [id, { secondary: { chance, status: secondaryStatus } }] : null;
+  return secondaryStatus && chance ? [id, { ...(flags?.contact && { contact: true }), secondary: { chance, status: secondaryStatus } }] : null;
 }
 
-const [pokemon, moves, groupsCsv, learnCsv, source] = await Promise.all([
+const [pokemon, moves, groupsCsv, learnCsv, source, speciesCsv, formsCsv] = await Promise.all([
   local("pokemon"), local("move"), download(csvRoot + "version_groups.csv"),
   download(csvRoot + "pokemon_moves.csv"), download(moveSource),
+  download(csvRoot + "pokemon_species.csv"), download(csvRoot + "pokemon.csv"),
 ]);
 const pokemonIds = new Set(pokemon.map(mon => mon.pokemonRowid));
 const catalog = new Map(moves.map(move => [move.moveRowid, move]));
@@ -155,45 +157,86 @@ const rules = Object.fromEntries(Object.values(definitions).map(node => moveRule
 const statusRules = Object.fromEntries(Object.values(definitions).map(node => statusRule(node, catalog)).filter(Boolean));
 if (Object.keys(statusRules).length !== optionalStatusMoves.size) throw new Error("Unexpected status move coverage");
 const selected = new Map();
+const speciesByForm = new Map(csvRows(formsCsv).map(([id, , species]) => [Number(id), Number(species)]));
+const defaultForm = new Map(csvRows(formsCsv).filter(row => row[7] === "1").map(([id, , species]) => [Number(species), Number(id)]));
+const preEvolution = new Map(csvRows(speciesCsv).map(([id, , , parent]) => [Number(id), Number(parent)]));
+const defaults = new Set(defaultForm.values());
+const sourceRows = new Map();
 for (const [species, version, move, method, level, order] of csvRows(learnCsv)) {
   const id = Number(species);
   const preference = groups.get(Number(version));
-  if (method !== "1" || !pokemonIds.has(id) || preference === undefined) continue;
+  if (method !== "1" || preference === undefined) continue;
+  const supported = Number(level) > 0 && (Object.hasOwn(rules, move) || Object.hasOwn(statusRules, move));
+  const row = { move: Number(move), level: Number(level), order: Number(order) };
+  if (supported && defaults.has(id)) {
+    const key = id + ":" + version;
+    if (!sourceRows.has(key)) sourceRows.set(key, []);
+    sourceRows.get(key).push(row);
+  }
+  if (!pokemonIds.has(id)) continue;
   let entry = selected.get(id);
   if (!entry || preference > entry.preference) {
     entry = { preference, version: Number(version), rows: [] };
     selected.set(id, entry);
   }
-  if (entry.version === Number(version) && Number(level) > 0 && (Object.hasOwn(rules, move) || Object.hasOwn(statusRules, move))) {
-    entry.rows.push({ move: Number(move), level: Number(level), order: order ? Number(order) : 0 });
-  }
+  if (entry.version === Number(version) && supported) entry.rows.push(row);
 }
 const used = new Set([33, 153]);
 const statusLearnsets = {};
+const campaignUnlocks = {};
+const inheritedAttacks = {};
+const learnOrder = (a, b) => b.level - a.level || b.order - a.order || a.move - b.move;
 const learnsets = Object.fromEntries([...pokemonIds].sort((a, b) => a - b).map(id => {
-  const rows = selected.get(id)?.rows ?? [];
-  rows.sort((a, b) => b.level - a.level || b.order - a.order || a.move - b.move);
+  const entry = selected.get(id);
+  const rows = (entry?.rows ?? []).sort(learnOrder);
+  const unlocks = new Map();
+  const inherits = [];
+  for (let parent = preEvolution.get(speciesByForm.get(id)); parent; parent = preEvolution.get(parent)) {
+    const records = sourceRows.get(defaultForm.get(parent) + ":" + entry?.version) ?? [];
+    const parentLevels = new Map();
+    for (const { move, level } of [...records].sort(learnOrder)) {
+      const rule = rules[move] ?? statusRules[move];
+      const attack = catalog.get(move)?.details;
+      if (attack && attack.damageClass !== 1 && (attack.power > 0 || rule.weightPower) && !rule.requiresSleep && !rule.selfKO) {
+        inherits.push([move, level]);
+      }
+      parentLevels.set(move, level);
+    }
+    for (const [move, level] of parentLevels) if (!unlocks.has(move)) unlocks.set(move, level);
+  }
   const primary = [];
   const optional = [];
+  const overrides = new Map();
   for (const row of rows) {
     used.add(row.move);
     (Object.hasOwn(statusRules, row.move) ? optional : primary).push([row.move, row.level]);
+    const level = unlocks.get(row.move);
+    if (row.level === 1 && level > 1) overrides.set(row.move, level);
   }
   if (optional.length) statusLearnsets[id] = optional;
+  if (overrides.size) {
+    campaignUnlocks[id] = [...overrides];
+    if (inherits.length) inheritedAttacks[id] = inherits;
+    for (const [move] of inherits) used.add(move);
+  }
   return [id, primary];
 }));
 const battle = {
   sources: { pokeApi, showdown }, learnsets,
   statusLearnsets,
+  campaignUnlocks,
+  inheritedAttacks,
   moves: Object.fromEntries(Object.entries({ ...rules, ...statusRules }).filter(([id]) => used.has(Number(id)))),
 };
 if (!battle.moves[33] || !battle.moves[153]?.selfKO || !battle.moves[67]?.weightPower || selected.size < pokemonIds.size * .95) {
   throw new Error("Unexpected learnset or move rule coverage");
 }
-const lines = Object.entries(learnsets).map(([id, rows]) => "    " + JSON.stringify(id) + ": " + JSON.stringify(rows));
-const statusLines = Object.entries(statusLearnsets).map(([id, rows]) => "    " + JSON.stringify(id) + ": " + JSON.stringify(rows));
-const output = JSON.stringify({ ...battle, learnsets: null, statusLearnsets: null }, null, 2)
-  .replace('"learnsets": null', '"learnsets": {\n' + lines.join(",\n") + "\n  }")
-  .replace('"statusLearnsets": null', '"statusLearnsets": {\n' + statusLines.join(",\n") + "\n  }");
+const tables = { learnsets, statusLearnsets, campaignUnlocks, inheritedAttacks };
+let output = JSON.stringify({ ...battle, ...Object.fromEntries(Object.keys(tables).map(name => [name, null])) }, null, 2);
+for (const [name, table] of Object.entries(tables)) {
+  const key = JSON.stringify(name);
+  const lines = Object.entries(table).map(([id, rows]) => "    " + JSON.stringify(id) + ": " + JSON.stringify(rows));
+  output = output.replace(key + ": null", key + ": {\n" + lines.join(",\n") + "\n  }");
+}
 await writeFile(data("battle"), output + "\n", "utf8");
 console.log("Pinned learnsets: " + selected.size + "/" + pokemonIds.size + ", battle moves: " + Object.keys(battle.moves).length);

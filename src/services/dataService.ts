@@ -12,7 +12,10 @@ const statusKind = z.enum(BATTLE_STATUS_KINDS);
 const battleDataSchema = z.object({
   learnsets: levelMoves,
   statusLearnsets: levelMoves.optional(),
+  campaignUnlocks: levelMoves.optional(),
+  inheritedAttacks: levelMoves.optional(),
   moves: z.record(z.string(), z.object({
+    contact: z.literal(true).optional(),
     priority: z.number().int().optional(),
     boosts: boost.optional(),
     secondary: z.object({
