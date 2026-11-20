@@ -8,12 +8,14 @@ import {
 } from "../domain/battle";
 import { worldMapNodes } from "../domain/worldMap";
 import { statusLabels } from "../domain/battleStatus";
+import { GROWTH_ITEM_ENERGY_COST } from "../domain/economy";
 import { suppliedTerritories, TERRITORY_GOLD } from "../domain/territorySupply";
 import { useGame } from "../game/GameProvider";
 import { ART, SPRITE } from "../game/gameHelpers";
 import type { BattleSetup } from "../game/gameTypes";
 import { battleEntries } from "../game/territoryBattle";
 import { describeFirstVictoryReward } from "../game/campaign";
+import { PcPanel } from "./BasePanels";
 import transitionFieldView from "./transitionFieldView";
 import InheritanceChoice from "./InheritanceChoice";
 import "./BattleScreen.css";
@@ -23,6 +25,18 @@ const moveColors: Record<string, string> = {
   불꽃: "#ffab75", 물: "#9bd8ff", 풀: "#bfe58e", 전기: "#f7dc82", 얼음: "#b5edf3",
   독: "#ddade9", 에스퍼: "#ffaecb", 고스트: "#ccbbf7", 땅: "#dac195",
 };
+
+function roundReading(step: BattleStep) {
+  const { strike } = step;
+  const side: BattleSide | "settlement" = strike?.side ?? step.actor ?? "settlement";
+  const result = strike && (strike.damage > 0 ? `${strike.damage} 피해${strike.fainted ? " · 기절" : ""}`
+    : strike.outcome === "miss" ? "빗나감" : strike.outcome === "immune" ? "효과 없음" : undefined);
+  const text = strike && result ? `${step.state.teams[strike.side][step.state.active[strike.side]].name}의 ${strike.move.name}`
+    : step.lines.join(" ");
+  return { side, text, result };
+}
+
+const readingLabels = { player: "아군", enemy: "상대", settlement: "정산" };
 
 function Fighter({ mon, side, action, selected, typeLabel }: {
   mon: Combatant; side: BattleSide; action: string | undefined; selected: string; typeLabel: string;
@@ -65,9 +79,10 @@ function Duel({ setup }: { setup: BattleSetup }) {
     }),
   ));
   const [reward] = useState(() => setup.firstVictory ? describeFirstVictoryReward(state) : "");
+  const [rewardPcOpen, setRewardPcOpen] = useState(false);
   const [logs, setLogs] = useState(["양쪽 포켓몬이 대치합니다."]);
-  const [roundReport, setRoundReport] = useState(logs[0]);
-  const [exchange, setExchange] = useState<{ steps: BattleStep[]; index: number } | null>(null);
+  const [roundReport, setRoundReport] = useState<{ round: number; readings: ReturnType<typeof roundReading>[] }>();
+  const [exchange, setExchange] = useState<{ steps: BattleStep[]; index: number; round: number; replacement: boolean } | null>(null);
   const [switching, setSwitching] = useState(false);
   const [reduced, setReduced] = useState(() => matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [compact, setCompact] = useState(() => matchMedia("(max-width: 790px)").matches);
@@ -85,6 +100,7 @@ function Duel({ setup }: { setup: BattleSetup }) {
   const step = exchange?.steps[exchange.index];
   const strike = step?.strike;
   const result = battle.phase === "command" || battle.phase === "replacement" ? null : battle.phase;
+  const firstWin = result === "win" && Boolean(reward) && state.territories[setup.territoryId]?.owner === "player";
   const isolatedVictory = result === "win" && territory && territory.region > 1 && !suppliedTerritories(state.territories).has(territory.id);
   const selectingAlly = switching || battle.phase === "replacement";
   const round = battle.round;
@@ -135,7 +151,8 @@ function Duel({ setup }: { setup: BattleSetup }) {
         return;
       }
       if (step.state.phase === "win") dispatch({ type: "CLAIM_TERRITORY", territoryId: setup.territoryId });
-      setRoundReport(exchange.steps.map(action => action.lines.join(" ")).filter(Boolean).join(" "));
+      if (!exchange.replacement) setRoundReport({ round: exchange.round,
+        readings: exchange.steps.filter(action => action.lines.length).map(roundReading) });
       commandPending.current = false;
       setExchange(null);
     }, reduced || !step.strike ? 0 : step.strike.outcome === "blocked" ? 140 : 320);
@@ -150,7 +167,7 @@ function Duel({ setup }: { setup: BattleSetup }) {
     if (action.kind === "cure") dispatch({ type: "USE_BATTLE_CURE", territoryId: setup.territoryId, round: battle.round });
     focusAction.current = fromKeyboard;
     setSwitching(false);
-    setExchange({ steps, index: 0 });
+    setExchange({ steps, index: 0, round: battle.round, replacement: battle.phase === "replacement" });
   }
 
   function returnToMap() {
@@ -231,15 +248,36 @@ function Duel({ setup }: { setup: BattleSetup }) {
                 <span>턴</span> <b>{String(round).padStart(2, "0")}</b>
               </p>
             </header>
+            <div className="duel-latest" role="status" aria-label="직전 배틀 기록" data-round={roundReport?.round}>
+              {roundReport && <>
+                <b>직전 {roundReport.round}턴</b>
+                <div className="duel-round-readings">
+                  {roundReport.readings.map(({ side, text, result }, index) => (
+                    <div className="duel-round-reading" data-side={side} key={index}>
+                      <span>{readingLabels[side]}</span><span title={text}>{text}</span>{result && <strong>{result}</strong>}
+                    </div>
+                  ))}
+                </div>
+              </>}
+            </div>
             {result ? (
               <div className="duel-outcome" data-result={result}>
                 <div>
                   <h2 ref={outcome} tabIndex={-1}>거점 배틀 {outcomeNames[result]}</h2>
                   <p>{result === "win" ? `${territory?.name ?? "거점"} 확보 · ${isolatedVictory ? "보급로 연결 필요" : `매 턴 자금 +${TERRITORY_GOLD}`}` : "포켓몬을 데리고 월드맵으로 돌아갑니다."}</p>
-                  {result === "win" && reward && <p>첫 승리 보상 · {reward}</p>}
+                  {result === "win" && reward && <p className="duel-reward-line">첫 승리 보상 · {reward}</p>}
+                  {firstWin && state.resources.candy > 0 && (
+                    <p className="duel-reward-help">
+                      {state.energy < GROWTH_ITEM_ENERGY_COST ? "행동력이 회복되면 사탕을 쓸 수 있습니다."
+                        : `경험치 사탕을 먹이는 데 행동력 ${GROWTH_ITEM_ENERGY_COST}이 듭니다.`} 다음 거점을 정찰한 뒤 써도 됩니다.
+                    </p>
+                  )}
                   {result === "win" && <InheritanceChoice siteId={setup.territoryId} />}
                 </div>
-                <button className="duel-continue" onClick={returnToMap}>월드맵으로 <span aria-hidden="true">→</span></button>
+                <div className="duel-outcome-actions">
+                  {firstWin && <button className="duel-switch" type="button" aria-haspopup="dialog" onClick={() => setRewardPcOpen(true)}>포켓몬 살피기</button>}
+                  <button className="duel-continue" type="button" onClick={returnToMap}>월드맵으로 <span aria-hidden="true">→</span></button>
+                </div>
               </div>
             ) : selectingAlly ? (
               <>
@@ -308,14 +346,14 @@ function Duel({ setup }: { setup: BattleSetup }) {
             )}
           </div>
           <section className="duel-record" aria-label="전투 기록">
-            <p className="duel-latest" aria-live={compact ? "polite" : "off"}>{roundReport}</p>
             <details open={!compact}>
               <summary>전투 기록</summary>
-              <ol aria-live={compact ? "off" : "polite"}>{logs.map((line, index) => <li key={index}>{line}</li>)}</ol>
+              <ol>{logs.map((line, index) => <li key={index}>{line}</li>)}</ol>
             </details>
           </section>
         </div>
       </div>
+      {firstWin && rewardPcOpen && <PcPanel onClose={() => setRewardPcOpen(false)} />}
     </section>
   );
 }

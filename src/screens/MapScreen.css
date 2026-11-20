@@ -84,6 +84,7 @@
 .atlas-routes [data-owned-route="true"] { stroke: #a8e9c5; stroke-width: 2.1; }
 .atlas-routes [data-crossing="true"] { stroke-dasharray: 2 4; }
 .atlas-routes [data-isolated-route="true"] { stroke: #ffbd87; stroke-width: 2; stroke-dasharray: 2 4; }
+.atlas-routes [data-supply-preview="true"] { stroke: #ffe19b; stroke-width: 2.5; stroke-dasharray: 5 4; }
 .atlas-routes .atlas-supply-flow {
   stroke: #fff5ca;
   stroke-width: 2.5;
@@ -255,6 +256,9 @@
 .atlas-scout:disabled { opacity: .55; cursor: default; }
 .atlas-scout small { margin-left: auto; margin-right: 8px; font: 600 11px var(--field-mono); }
 .atlas-battle-note { color: var(--field-muted); font-size: 12px; }
+.atlas-charge-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.atlas-charge-options:empty { display: none; }
+.atlas-charge-options .base-button { min-height: 44px; }
 .atlas-scout span { font: 600 18px/1 var(--field-mono); }
 .atlas-factions { min-width: 0; padding-top: 8px; border-top: 1px solid var(--field-line); }
 .atlas-report .atlas-factions h3 { margin-bottom: 6px; color: var(--field-muted); font: 700 12px/1.4 var(--field-text); }
@@ -267,6 +271,7 @@
 .atlas-report .atlas-supply { display: flex; flex-wrap: wrap; gap: 2px 10px; }
 .atlas-supply[data-supply="supplied"] strong { color: var(--field-mint); }
 .atlas-supply[data-supply="isolated"] strong { color: #8e411e; }
+.atlas-supply-plan p { word-break: keep-all; }
 .atlas-factions button {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -407,6 +412,12 @@ html[data-field-transition="map"]::view-transition-new(atlas-report) { animation
   font-weight: 700;
 }
 .atlas-tactics-body { display: grid; gap: 8px; }
+.atlas-opening { gap: 0; }
+.atlas-opening ol { display: grid; margin: 7px 0 0; padding: 0; list-style: none; }
+.atlas-opening li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; border-block-start: 1px solid #77683f55; }
+.atlas-opening li div { display: grid; gap: 2px; min-width: 0; }
+.atlas-opening li .base-button { flex: none; min-width: 72px; }
+.atlas-opening li .base-button[aria-disabled="true"] { background: #4d5432; }
 .atlas-tactics-body select { min-height: 44px; }
 .atlas-frontier select { min-height: 44px; }
 .atlas-frontier ol { margin: 0; padding-inline-start: 24px; }

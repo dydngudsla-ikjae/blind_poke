@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import farm from "../../assets/base-farm.webp";
 import restaurant from "../../assets/base-restaurant.webp";
 import dojo from "../../assets/base-dojo.webp";
@@ -9,7 +9,7 @@ import EntryModal from "../components/EntryModal";
 import { NewGameDialog } from "../components/GameNotice";
 import PokemonBattleProfile, { PokemonTypeBadges } from "../components/PokemonBattleProfile";
 import { BASE_CONSTRUCTION_TURNS, MAX_BUILD_SPEED_WORKERS, constructionTurns, projectedConstructionTurns, type BuildingType } from "../domain/construction";
-import { canUseGrowthItem, ENERGY_CHARGE_COST, ENERGY_CHARGE_GAIN, GROWTH_ITEMS, GROWTH_ITEM_ENERGY_COST, HELD_ITEMS, HELD_ITEM_COST, levelExperienceCost, RESOURCE_LABELS, turnsUntilDepartureWarning, type GrowthItem, type HeldItemId } from "../domain/economy";
+import { canUseGrowthItem, departureWarnings, ENERGY_CHARGE_COST, ENERGY_CHARGE_GAIN, GROWTH_ITEMS, GROWTH_ITEM_ENERGY_COST, HELD_ITEMS, HELD_ITEM_COST, levelExperienceCost, RESOURCE_LABELS, type GrowthItem, type HeldItemId } from "../domain/economy";
 import { effectiveAttack, pickMoveset } from "../domain/battle";
 import { isOnFrontierDuty } from "../domain/frontierOperations";
 import { canOperateSettlement, clearingSiteOf, HOME_SITE, settlementAt, settlementName } from "../domain/settlements";
@@ -37,28 +37,35 @@ type ResourceKey = keyof Omit<ResourceState, "items">;
 export type BasePanel =
   | { kind: "build"; plot: number }
   | { kind: "construction"; buildingId: string }
-  | { kind: "facility"; buildingId: string }
+  | { kind: "facility"; buildingId: string; jobId?: JobId; memberId?: string }
   | { kind: "clearing"; plot: number }
-  | { kind: "pc"; memberId?: string }
+  | { kind: "pc"; memberId?: string; prioritizeWarnings?: boolean }
   | { kind: "entry" | "shop" | "resources" | "log" | "trainer" | "goals" | "settings" };
 
 function Workers({
-  roster, selected, onToggle,
+  roster, selected, onToggle, warningTurns,
 }: {
   roster: RosterMember[];
   selected: string[];
   onToggle: (id: string) => void;
+  warningTurns?: ReadonlyMap<string, number>;
 }) {
   if (!roster.length) return <p className="base-help">배치할 수 있는 포켓몬이 없습니다.</p>;
   return (
     <div className="base-member-grid">
-      {roster.map(member => (
-        <button key={member.id} type="button" className="base-member" data-install-pick={member.id}
-          aria-pressed={selected.includes(member.id)} onClick={() => onToggle(member.id)}>
-          <img src={SPRITE(member.pokemon)} alt="" />
-          <span>{member.pokemon.nameKr}</span>
-        </button>
-      ))}
+      {roster.map(member => {
+        const warning = warningTurns?.get(member.id);
+        return (
+          <button key={member.id} type="button" className="base-member" data-install-pick={member.id}
+            aria-pressed={selected.includes(member.id)} onClick={() => onToggle(member.id)}>
+            <img src={SPRITE(member.pokemon)} alt="" />
+            <span>{member.pokemon.nameKr}</span>
+            {warning !== undefined && (
+              <small className="base-member-warning" data-imminent={warning === 0}>{warning === 0 ? "다음 턴 이탈" : `${warning}턴 뒤 경고`}</small>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -214,34 +221,80 @@ function facilityTotals(state: GameState, buildingId: string, production: Return
   return totals;
 }
 
-function FacilityComparison({ before, after, buildingId, previous, projected }: {
-  before: GameState; after: GameState; buildingId: string;
-  previous: ReturnType<typeof forecastProduction>; projected: ReturnType<typeof forecastProduction>;
-}) {
+function facilityChanges(before: GameState, after: GameState, buildingId: string,
+  previous: ReturnType<typeof forecastProduction>, projected: ReturnType<typeof forecastProduction>) {
   const oldTotals = facilityTotals(before, buildingId, previous);
   const newTotals = facilityTotals(after, buildingId, projected);
   const keys = [...new Set([...Object.keys(oldTotals), ...Object.keys(newTotals)])] as ResourceKey[];
   return keys.flatMap(key => {
     const old = oldTotals[key];
     const next = newTotals[key];
-    return (["produced", "consumed"] as const).filter(kind => old?.[kind] !== undefined || next?.[kind] !== undefined).map(kind => (
-      <span key={key + kind} data-improves={kind === "produced" && (next?.[kind] ?? 0) > (old?.[kind] ?? 0)}>
-        {RESOURCE_LABELS[key]} {kind === "produced" ? "산출" : "소비"} <b>{old?.[kind] ?? 0} → {next?.[kind] ?? 0}</b>
-      </span>
-    ));
+    return (["produced", "consumed"] as const).filter(kind => old?.[kind] !== undefined || next?.[kind] !== undefined)
+      .map(kind => ({ key, kind, from: old?.[kind] ?? 0, to: next?.[kind] ?? 0 }));
   });
+}
+
+function FacilityComparison({ changes }: { changes: ReturnType<typeof facilityChanges> }) {
+  return changes.map(({ key, kind, from, to }) => (
+    <span key={key + kind} data-improves={kind === "produced" && to > from}>
+      {RESOURCE_LABELS[key]} {kind === "produced" ? "산출" : "소비"} <b>{from} → {to}</b>
+    </span>
+  ));
+}
+
+function SharedProductionComparison({ before, after, targetId, formerId, previous, projected }: {
+  before: GameState; after: GameState; targetId: string; formerId?: string;
+  previous: ReturnType<typeof forecastProduction>; projected: ReturnType<typeof forecastProduction>;
+}) {
+  const resources = (Object.keys(RESOURCE_LABELS) as ResourceKey[]).filter(key => previous.resources[key] !== projected.resources[key]);
+  const affectedIds = new Set<string>();
+  for (const { id, buildingId } of before.roster) {
+    if (!buildingId || buildingId === targetId || buildingId === formerId) continue;
+    const old = previous.workers.get(id);
+    const next = projected.workers.get(id);
+    if (old?.produced !== next?.produced || old?.consumed !== next?.consumed) affectedIds.add(buildingId);
+  }
+  const affected = before.buildings.flatMap(building => {
+    if (!affectedIds.has(building.id)) return [];
+    const changes = facilityChanges(before, after, building.id, previous, projected).filter(change => change.from !== change.to);
+    return changes.length ? [{ building, changes }] : [];
+  });
+
+  return (
+    <>
+      <div className="base-shared-stock" role="group" aria-label="다음 턴 공동 재고">
+        <strong>다음 턴 공동 재고</strong>
+        {resources.length ? resources.map(key => (
+          <span key={key}>{RESOURCE_LABELS[key]} <b>{previous.resources[key]} → {projected.resources[key]}</b></span>
+        )) : <span>배치 전후 차이 없음</span>}
+      </div>
+      {affected.length > 0 && (
+        <details className="base-weakness base-linked-production">
+          <summary>함께 바뀌는 시설 {affected.length}곳</summary>
+          {affected.map(({ building, changes }) => (
+            <div key={building.id}>
+              <strong>{settlementName(building.siteId ?? HOME_SITE)} · {buildings[building.type as BuildingType]?.label ?? "시설"} · {building.plotIndex + 1}번 부지</strong>
+              <FacilityComparison changes={changes} />
+            </div>
+          ))}
+        </details>
+      )}
+    </>
+  );
 }
 
 function growthCost(candy: number) {
   return `사탕 ${candy}개 · 행동력 ${candy * GROWTH_ITEM_ENERGY_COST}`;
 }
 
-function FacilityPanel({ building, onClose }: { building: BuildingState; onClose: () => void }) {
+function FacilityPanel({ building, onClose, initialJobId, initialMemberId }: {
+  building: BuildingState; onClose: () => void; initialJobId?: JobId; initialMemberId?: string;
+}) {
   const { state, data, dispatch } = useGame();
   const canOperate = canOperateSettlement(state, building.siteId);
   const jobs = canOperate ? jobIds.filter(id => jobDefinitions[id].building === building.type) : [];
-  const [jobId, setJobId] = useState<JobId | undefined>(jobs[0]);
-  const [selection, setSelection] = useState<string>();
+  const [jobId, setJobId] = useState<JobId | undefined>(initialJobId && jobs.includes(initialJobId) ? initialJobId : jobs[0]);
+  const [selection, setSelection] = useState(initialMemberId);
   const production = forecastProduction(state);
   const workers = state.roster.filter(member => member.buildingId === building.id);
   const researchCount = building.type === "dojo" ? researcherCount(workers, building.id) : 0;
@@ -329,18 +382,21 @@ function FacilityPanel({ building, onClose }: { building: BuildingState; onClose
                   {staged && projected && (
                     <div className="base-staffing-forecast" aria-live="polite">
                       <strong>현재 {filled}마리 → 배치 후 {staged.roster.filter(member => member.buildingId === building.id && member.jobId).length}마리</strong>
-                      <FacilityComparison before={state} after={staged} buildingId={building.id} previous={production} projected={projected} />
+                      <FacilityComparison changes={facilityChanges(state, staged, building.id, production, projected)} />
                       {projected.storageCap !== production.storageCap && <span>저장 상한 {production.storageCap} → {projected.storageCap}</span>}
                       {candidateReading && <span>후보 기본 산출 {productionNumber.format(candidateReading.rate)} · 다음 턴 {candidateReading.produced}개
                         {candidateReading.materialLimited ? " · 재료 부족" : candidateReading.storageLimited ? " · 저장 상한" :
                           candidateReading.rate % 1 !== 0 ? " · 소수점 이월" : ""}</span>}
                       {former && <><strong>{settlementName(former.siteId ?? HOME_SITE)} · {former.plotIndex + 1}번 부지에서 이동</strong>
-                        <FacilityComparison before={state} after={staged} buildingId={former.id} previous={production} projected={projected} /></>}
+                        <FacilityComparison changes={facilityChanges(state, staged, former.id, production, projected)} /></>}
+                      <SharedProductionComparison before={state} after={staged} targetId={building.id} formerId={former?.id}
+                        previous={production} projected={projected} />
                     </div>
                   )}
                   <button className="base-button base-next base-assign-confirm"
                     disabled={!selected || researchFull || (selected.buildingId === building.id && selected.jobId === jobId) || state.energy < cost}
                     onClick={() => { if (assignment) dispatch(assignment); }}>직무 배치 {selected && `· 행동력 ${cost}`}</button>
+                  {selected && state.energy < cost && <p className="base-help">행동력이 부족합니다. 다음 턴이나 충전권으로 회복하세요.</p>}
                 </>
               ) : (
                 <p className="base-help">{state.roster.some(member => hasPokemonType(member.pokemon, job.typeId))
@@ -431,15 +487,53 @@ function WeaknessForecast({ member, initialTypes }: { member: RosterMember; init
   );
 }
 
-export function PcPanel({ onClose, initialMemberId, initialTargetTypes }: {
-  onClose: () => void; initialMemberId?: string; initialTargetTypes?: number[];
+function CandyBatch({ member }: { member: RosterMember }) {
+  const { state, dispatch } = useGame();
+  const [choice, setChoice] = useState<number | null>(null);
+  const applied = useRef(false);
+  const previewId = useId();
+  const max = Math.floor(Math.min(state.resources.candy, state.energy / GROWTH_ITEM_ENERGY_COST));
+  if (max < 2) return null;
+  const count = choice ?? max;
+  const ready = count >= 2 && canUseGrowthItem(state, member, "candy", count);
+  const preview = ready ? GROWTH_ITEMS.candy.effect(member, count) : null;
+
+  return (
+    <details className="base-weakness base-candy-batch">
+      <summary>사탕 여러 개 먹이기</summary>
+      <div className="base-candy-options">
+        <label>사탕 수량 <select value={ready ? count : 0} onChange={event => {
+          applied.current = false;
+          setChoice(Number(event.currentTarget.value));
+        }}>
+          <option value={0}>선택</option>
+          {Array.from({ length: max - 1 }, (_, index) => <option key={index + 2} value={index + 2}>{index + 2}개</option>)}
+        </select></label>
+        <button className="base-button" type="button" disabled={!ready} aria-describedby={ready ? previewId : undefined} onClick={() => {
+          if (!ready || applied.current) return;
+          applied.current = true;
+          setChoice(0);
+          dispatch({ type: "USE_GROWTH_ITEM", item: "candy", memberId: member.id, count });
+        }}>{ready ? `사탕 ${count}개 먹이기` : "선택한 사탕 먹이기"}</button>
+      </div>
+      <p className="base-help" id={previewId} aria-live="polite">{preview &&
+        `행동력 ${count * GROWTH_ITEM_ENERGY_COST} · 사용 후 Lv.${preview.level} · 경험치 ${preview.exp}/${levelExperienceCost(preview.level)}`}</p>
+    </details>
+  );
+}
+
+export function PcPanel({ onClose, initialMemberId, initialTargetTypes, prioritizeWarnings = false }: {
+  onClose: () => void; initialMemberId?: string; initialTargetTypes?: number[]; prioritizeWarnings?: boolean;
 }) {
   const { state, data, dispatch } = useGame();
   const [selected, setSelected] = useState(initialMemberId ?? state.roster[0]?.id);
   const member = state.roster.find(item => item.id === selected);
   const availableRoles = member ? jobIds.filter(id => hasPokemonType(member.pokemon, jobDefinitions[id].typeId))
     .map(id => jobDefinitions[id].name) : [];
-  const warningIn = member ? turnsUntilDepartureWarning(member) : null;
+  const warnings = departureWarnings(state.roster);
+  const warningTurns = new Map(warnings.map(item => [item.member.id, item.turns]));
+  const warningIn = member ? warningTurns.get(member.id) : undefined;
+  const roster = prioritizeWarnings ? [...warnings.map(item => item.member), ...state.roster.filter(item => !warningTurns.has(item.id))] : state.roster;
   const included = member ? state.entryOrder.includes(member.id) : false;
   const facility = state.buildings.find(building => building.id === member?.buildingId);
   const clearingSite = member && clearingSiteOf(state, member.id);
@@ -468,10 +562,10 @@ export function PcPanel({ onClose, initialMemberId, initialTargetTypes }: {
             </div>
           )}
           {warningIn === 0 && <p className="base-supply-warning" role="status">다음 턴 이탈 예정 · 음식이나 회복 아이템을 사용하거나 자원에서 기합의띠를 장착하세요.</p>}
-          {warningIn !== null && warningIn > 0 && warningIn <= 5 && <p className="base-help">이탈 경고까지 {warningIn}턴</p>}
+          {warningIn !== undefined && warningIn > 0 && <p className="base-help">이탈 경고까지 {warningIn}턴</p>}
           {member?.heldItem === "focus_sash" && <p className="base-help" role="status">기합의띠로 이탈 방지 중</p>}
           <div className="base-pc-roster" role="group" aria-label="동료 선택">
-            {state.roster.length ? <Workers roster={state.roster} selected={selected ? [selected] : []} onToggle={setSelected} />
+            {roster.length ? <Workers roster={roster} selected={selected ? [selected] : []} onToggle={setSelected} warningTurns={warningTurns} />
               : <p className="base-help">보유 포켓몬이 없습니다. 탐험에서 새 동료를 포획할 수 있습니다.</p>}
           </div>
         </div>
@@ -497,6 +591,7 @@ export function PcPanel({ onClose, initialMemberId, initialTargetTypes }: {
                   onClick={() => dispatch({ type: "USE_GROWTH_ITEM", memberId: member.id, item })}>{GROWTH_ITEMS[item].action}</button>
               ))}
             </div>
+            <CandyBatch key={member.id} member={member} />
           </section>
         )}
       </div>
@@ -530,6 +625,32 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
       </BaseDialog>
       {confirm && <NewGameDialog onClose={() => setConfirm(false)} onConfirm={startNewGame} />}
     </>
+  );
+}
+
+export function QuickChargeButton({ requiredEnergy, nextAction }: {
+  requiredEnergy: number;
+  nextAction: RefObject<HTMLButtonElement | null>;
+}) {
+  const { state, dispatch } = useGame();
+  const ordered = useRef(false);
+  const needsEnergy = state.energy < requiredEnergy;
+
+  useEffect(() => {
+    if (!ordered.current || needsEnergy) return;
+    ordered.current = false;
+    nextAction.current?.focus({ preventScroll: true });
+  }, [needsEnergy, nextAction]);
+
+  if (!needsEnergy || state.resources.gold < ENERGY_CHARGE_COST) return null;
+  const gained = Math.min(ENERGY_CHARGE_GAIN, ENERGY_PER_TURN - state.energy);
+  return (
+    <button className="base-button field-charge-buy" type="button" onClick={() => {
+      ordered.current = true;
+      dispatch({ type: "BUY_ENERGY_CHARGE", expectedEnergy: state.energy });
+    }}>
+      충전권 구매 <small>자금 {ENERGY_CHARGE_COST} · 행동력 +{gained}</small>
+    </button>
   );
 }
 
@@ -615,10 +736,11 @@ export function BasePanels({ panel, siteId = HOME_SITE, onClose }: { panel: Base
   }
   if (panel.kind === "facility") {
     const building = state.buildings.find(item => item.id === panel.buildingId);
-    return building?.status === "active" ? <FacilityPanel building={building} onClose={onClose} /> : null;
+    return building?.status === "active" ? <FacilityPanel building={building} onClose={onClose}
+      initialJobId={panel.jobId} initialMemberId={panel.memberId} /> : null;
   }
   if (panel.kind === "clearing") return <ClearingPanel plot={panel.plot} siteId={siteId} onClose={onClose} />;
-  if (panel.kind === "pc") return <PcPanel initialMemberId={panel.memberId} onClose={onClose} />;
+  if (panel.kind === "pc") return <PcPanel initialMemberId={panel.memberId} prioritizeWarnings={panel.prioritizeWarnings} onClose={onClose} />;
   if (panel.kind === "goals") return <CampaignGoals onClose={onClose} />;
   if (panel.kind === "settings") return <SettingsPanel onClose={onClose} />;
   if (panel.kind === "trainer") {

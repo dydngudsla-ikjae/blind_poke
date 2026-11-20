@@ -48,6 +48,13 @@ export function turnsUntilDepartureWarning(member: RosterMember) {
   return Number.isFinite(turns) ? turns : null;
 }
 
+export function departureWarnings(roster: readonly RosterMember[]) {
+  return roster.flatMap(member => {
+    const turns = turnsUntilDepartureWarning(member);
+    return turns !== null && turns <= 5 ? [{ member, turns }] : [];
+  }).sort((a, b) => a.turns - b.turns);
+}
+
 export function advanceMemberFavor(member: RosterMember) {
   const restored = member.heldItem === "leftovers" ? Math.min(member.favCeil, member.favor + 2) : member.favor;
   const favor = Math.max(member.favFloor, restored - favorDecay(member));
@@ -67,6 +74,8 @@ export const GROWTH_ITEMS = {
 } as const;
 export type GrowthItem = keyof typeof GROWTH_ITEMS;
 
-export function canUseGrowthItem(state: { energy: number; resources: ResourceState }, member: RosterMember, item: GrowthItem) {
-  return Object.hasOwn(GROWTH_ITEMS, item) && state.energy >= GROWTH_ITEM_ENERGY_COST && state.resources[item] >= 1 && GROWTH_ITEMS[item].canImprove(member);
+export function canUseGrowthItem(state: { energy: number; resources: ResourceState }, member: RosterMember, item: GrowthItem, count = 1) {
+  if (!Number.isSafeInteger(count) || count < 1 || (item !== "candy" && count !== 1)) return false;
+  return Object.hasOwn(GROWTH_ITEMS, item) && state.energy >= GROWTH_ITEM_ENERGY_COST * count &&
+    state.resources[item] >= count && GROWTH_ITEMS[item].canImprove(member);
 }

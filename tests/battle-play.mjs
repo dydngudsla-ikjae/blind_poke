@@ -250,7 +250,7 @@ export async function playCampaignBattle(page, limit = 240, trace = false, tacti
   throw new Error(`Battle exceeded ${limit} commands: ${JSON.stringify(result)}`);
 }
 
-export async function playBattle(page, { limit = 220, manualSwitch = false, recordMoves = false } = {}) {
+export async function playBattle(page, { limit = 220, manualSwitch = false, recordMoves = false, activate = button => button.click() } = {}) {
   const enemy = page.locator('.duel-vitals[data-side="enemy"]');
   const player = page.locator('.duel-vitals[data-side="player"]');
   const result = page.locator(".duel-outcome");
@@ -282,7 +282,7 @@ export async function playBattle(page, { limit = 220, manualSwitch = false, reco
       const slots = await available.evaluateAll(buttons => buttons.map(button => Number(button.dataset.switchIndex)));
       assert.ok(slots.length);
       const ratings = slots.map(slot => memberScore(team[slot], defender, enemyLevel));
-      await available.nth(ratings.indexOf(Math.max(...ratings))).click();
+      await activate(available.nth(ratings.indexOf(Math.max(...ratings))));
     }
 
     if (await available.count()) {
@@ -302,7 +302,7 @@ export async function playBattle(page, { limit = 220, manualSwitch = false, reco
     const switchButton = page.getByRole("button", { name: "교체", exact: true });
     if (manualSwitch && !switches && !replacements && await switchButton.count() &&
       team.slice(1).some(member => memberScore(member, defender, enemyLevel) > best * 1.6 + .5)) {
-      await switchButton.click();
+      await activate(switchButton);
       await chooseAlly();
       switches++;
       continue;
@@ -320,7 +320,7 @@ export async function playBattle(page, { limit = 220, manualSwitch = false, reco
     const action = name + " · " + catalog.get(id).nameKr;
     if (recordMoves) moveOrder.push(action);
     chosenMoves.set(action, (chosenMoves.get(action) ?? 0) + 1);
-    await commands.nth(selected).click();
+    await activate(commands.nth(selected));
     choices++;
   }
   throw new Error("Battle exceeded " + limit + " commands against " + enemyLabel);

@@ -54,8 +54,8 @@ export default function HuntOptics({ target, image, imageAspect, imagePositionY 
           </Suspense>
         )}
       </div>
-      <div className="hunt-optics-housing">
-        <div className="hunt-optics-rim" />
+      <div className="hunt-optics-housing field-optic-bezel">
+        <div className="field-optic-rim" />
         <div className="hunt-optics-focus-mark" />
       </div>
     </div>

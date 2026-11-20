@@ -1,18 +1,20 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { preload } from "react-dom";
 import atlas from "../../assets/observatory-atlas.webp";
 import chart from "../../assets/field-chart.webp";
 import arena from "../../assets/observatory-battle.webp";
 import useFieldMotion from "../components/useFieldMotion";
+import EntryModal from "../components/EntryModal";
 import { worldMapNodes } from "../domain/worldMap";
 import { activeDefensePreparation, activeIntrusion, activeObservation } from "../domain/frontierOperations";
-import { MAX_LOYALTY, suppliedTerritories, TERRITORY_GOLD } from "../domain/territorySupply";
+import { forecastSupplyRoute, isolatedTurnsRemaining, MAX_LOYALTY, suppliedTerritories, TERRITORY_GOLD } from "../domain/territorySupply";
 import { describeFirstVictoryReward, hasFirstVictory, REGION_NAMES, regionProgress } from "../game/campaign";
 import { useGame } from "../game/GameProvider";
 import type { TerritoryState } from "../game/gameTypes";
 import { BATTLE_ENERGY_COST, battleEntries, canScoutTerritory, canTargetTerritory, prepareTerritoryBattle, territoryEnemyLevel, trainerGrowth } from "../game/territoryBattle";
 import { territoryFaction } from "../game/territoryFactions";
 import { atlasNodes, atlasRoutes } from "./atlasRoutes";
+import { BasePanels, QuickChargeButton } from "./BasePanels";
 import { trainerPortrait } from "./TrainerRevealScreen";
 import transitionFieldView from "./transitionFieldView";
 import TerritoryReadiness from "./TerritoryReadiness";
@@ -48,16 +50,24 @@ export default function MapScreen() {
   const [selectedId, setSelectedId] = useState(() => state.mapFocusId && atlasNodes.has(state.mapFocusId) ? state.mapFocusId : "home");
   const [view, setView] = useState(overview);
   const [reportOpen, setReportOpen] = useState(true);
+  const [panel, setPanel] = useState<"entry" | "shop" | null>(null);
   const [scannedId, setScannedId] = useState<string | null>(null);
   const drag = useRef<{ id: number; x: number; y: number; start: typeof overview } | null>(null);
   const markerTouch = useRef<{ id: number; x: number; y: number } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const report = useRef<HTMLHeadingElement>(null);
+  const challengeCommand = useRef<HTMLButtonElement>(null);
+  const reportFocus = useRef(false);
   const viewport = useRef<HTMLDivElement>(null);
   const showEffects = useFieldMotion();
 
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => { if (scannedId) report.current?.focus({ preventScroll: true }); }, [scannedId]);
+  useLayoutEffect(() => {
+    if (!reportFocus.current) return;
+    reportFocus.current = false;
+    report.current?.focus();
+  }, [selectedId, reportOpen]);
 
   const territory = state.territories[selectedId];
   const selected = atlasNodes.get(selectedId)!;
@@ -91,7 +101,7 @@ export default function MapScreen() {
   const status = territoryStatus(territory, canScoutTerritory(state, selectedId));
   const opposition = status === "trainer" || status === "free";
   const training = !hasFirstVictory(state);
-  const opponentLevel = opposition ? territoryEnemyLevel(state, selected.region, selectedId) : null;
+  const opponentLevel = opposition && !training ? territoryEnemyLevel(state, selected.region, selectedId) : null;
   const growth = opposition && !training ? trainerGrowth(state, selectedId, selected.region) : null;
   const territoryName = status === "scoutable" || status === "unknown" ? "미확인 거점" : selected.name;
   const trainer = status === "owned" ? player : observedRivals.get(selectedId)?.trainer;
@@ -100,8 +110,16 @@ export default function MapScreen() {
   const supply = status === "owned" && selected.region > 1 ? supplied.has(selectedId) ? "supplied" : "isolated" : undefined;
   const portrait = trainer && trainerPortrait(trainer.id);
   const canChallenge = canTargetTerritory(state, selectedId);
-  const battleUnavailable = battleEntries(state).length === 0 ? "본거지에서 전투 엔트리를 편성하세요."
-    : state.energy < BATTLE_ENERGY_COST ? "행동력이 부족합니다." : null;
+  const showSupplyPlan = selected.region > 1 && (supply === "isolated" || (opposition && canChallenge));
+  const supplyPlan = useMemo(() => showSupplyPlan ? forecastSupplyRoute(state.territories, selectedId, supplied) : null,
+    [showSupplyPlan, selectedId, state.territories, supplied]);
+  const nextSupplySite = supplyPlan?.missing[0];
+  const supplyPath = supplyPlan?.path ?? [];
+  const previewRoutes = new Set(supplyPath.slice(1).map((id, index) => [supplyPath[index], id].sort().join("|")));
+  const needsEntry = battleEntries(state).length === 0;
+  const energyShort = state.energy < BATTLE_ENERGY_COST;
+  const battleUnavailable = needsEntry && state.roster.length === 0 ? "탐험에서 동료를 포획하세요."
+    : !needsEntry && energyShort ? "행동력이 부족합니다." : null;
   const description = {
     owned: "현재 확보한 거점입니다.",
     scoutable: selected.region === 1 ? "확보한 거점에서 이어지는 길입니다. 정찰하면 이름과 점유 상태를 확인할 수 있습니다."
@@ -195,9 +213,10 @@ export default function MapScreen() {
 
   function selectKnownSite(id: string) {
     const node = atlasNodes.get(id)!;
+    if (id === selectedId && reportOpen) report.current?.focus();
+    else reportFocus.current = true;
     selectSite(id);
     keepNodeVisible(node.x, node.y);
-    requestAnimationFrame(() => report.current?.focus());
   }
 
   function selectSite(id: string) {
@@ -263,6 +282,7 @@ export default function MapScreen() {
                       <path d={route.path} vectorEffect="non-scaling-stroke"
                       data-route={route.key} data-crossing={route.crossing}
                       data-owned-route={suppliedRoute}
+                      data-supply-preview={previewRoutes.has(route.key)}
                       data-isolated-route={bothOwned && !supplied.has(route.from) && !supplied.has(route.to)}
                       data-route-state={unlocked ? isSelected ? "selected" : direct ? "reachable" : "open" : "locked"} />
                       {suppliedRoute && showEffects && <path className="atlas-supply-flow" d={route.path} vectorEffect="non-scaling-stroke" />}
@@ -336,12 +356,26 @@ export default function MapScreen() {
                 )}
                 {description && <p>{description}</p>}
                 {opponentLevel !== null && <p className="atlas-readiness">
-                  예상 수비 레벨 <b>{training ? "Lv.2" : `Lv.${opponentLevel}–${opponentLevel + 1}`}</b>
+                  예상 수비 레벨 <b>Lv.{opponentLevel}–{opponentLevel + 1}</b>
                   {status === "trainer" && growth && (growth.nextIn === null ? ` · 성장 +${growth.bonus} (상한)`
                     : ` · 성장 +${growth.bonus} · 다음 강화까지 ${growth.nextIn}턴`)}
                 </p>}
                 {canChallenge && !hasFirstVictory(state) && <p>첫 승리 보상 · {describeFirstVictoryReward(state)}</p>}
               </div>
+              {showSupplyPlan && (
+                <section className="atlas-readiness atlas-supply-plan" aria-label="보급로 전망">
+                  {supply === "isolated" ? <p>미점령 전환까지 <strong>{isolatedTurnsRemaining(territory.loyalty)}턴</strong></p>
+                    : <p><strong>{supplyPlan && !nextSupplySite ? "확보하면 보급 연결" : "확보하면 고립"}</strong></p>}
+                  {supplyPlan && nextSupplySite && (
+                    <>
+                      <p>{supply === "isolated" ? "보급을 복구하려면" : "확보한 뒤 보급하려면"} 거점 {supplyPlan.missing.length}곳을 더 확보하세요.</p>
+                      <button className="base-button" type="button" onClick={() => selectKnownSite(nextSupplySite)}>보급로 첫 거점 보기</button>
+                    </>
+                  )}
+                  {!supplyPlan && <p>현재 열린 지역에서 이어지는 보급로가 없습니다.</p>}
+                  {supplyPlan && !nextSupplySite && !supply && <p>턴당 자금 +{TERRITORY_GOLD}</p>}
+                </section>
+              )}
               {status === "scoutable" && (
                 <button className="atlas-scout" data-scout={selectedId} onClick={() => {
                   if (!canScoutTerritory(state, selectedId)) return;
@@ -372,11 +406,23 @@ export default function MapScreen() {
               {canChallenge && (
                 <>
                   {territory.scouted && <TerritoryReadiness key={selectedId} territoryId={selectedId} />}
-                  <button className="atlas-scout" disabled={Boolean(battleUnavailable)} onClick={startBattle}
+                  {needsEntry && state.roster.length > 0 && (
+                    <button className="atlas-scout" type="button" aria-haspopup="dialog" onClick={() => setPanel("entry")}>
+                      엔트리 편성 <span aria-hidden="true">→</span>
+                    </button>
+                  )}
+                  <button ref={challengeCommand} className="atlas-scout" disabled={needsEntry || energyShort} onClick={startBattle}
                     onPointerEnter={() => preload(arena, { as: "image" })} onFocus={() => preload(arena, { as: "image" })}>
                     거점 도전 <small>행동력 {BATTLE_ENERGY_COST}</small><span aria-hidden="true">→</span>
                   </button>
-                  {battleUnavailable && <p className="atlas-battle-note">{battleUnavailable}</p>}
+                  {battleUnavailable && <p className="atlas-battle-note" id="atlas-battle-note">{battleUnavailable}</p>}
+                  {!needsEntry && (
+                    <div className="atlas-charge-options">
+                      <QuickChargeButton requiredEnergy={BATTLE_ENERGY_COST} nextAction={challengeCommand} />
+                      {energyShort && <button className="base-button" type="button" aria-describedby="atlas-battle-note" aria-haspopup="dialog"
+                        onClick={() => setPanel("shop")}>충전권 확인</button>}
+                    </div>
+                  )}
                 </>
               )}
               <section className="atlas-factions" aria-labelledby="atlas-factions-title">
@@ -432,6 +478,8 @@ export default function MapScreen() {
           </p>
         </footer>
       </div>
+      {panel === "entry" && <EntryModal onClose={() => setPanel(null)} />}
+      {panel === "shop" && <BasePanels panel={{ kind: "shop" }} onClose={() => setPanel(null)} />}
     </section>
   );
 }

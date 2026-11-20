@@ -5,6 +5,8 @@ import type { BuildingType } from "../domain/construction";
 
 export type Screen = "draft" | "trainerReveal" | "base" | "hunt" | "identify" | "map" | "battle";
 
+export type FacilityOpening = { buildingId: string; memberId: string; jobId: JobId };
+
 export interface BattleSetup {
   territoryId: string;
   enemyName: string;
@@ -110,6 +112,7 @@ export interface GameState {
   clearing: ClearingOrder | null;
   outposts: Record<string, OutpostState>;
   siteViewId: string | null;
+  facilityOpening?: FacilityOpening;
   territories: Record<string, TerritoryState>;
   frontier: FrontierOperations;
   battle: BattleSetup | null;
@@ -136,11 +139,11 @@ export type GameAction =
   | { type: "RESOLVE_INHERITANCE"; siteId: string; buildingType: BuildingType | null }
   | { type: "START_HUNT"; typeId?: number }
   | { type: "START_COUNTER_HUNT"; territoryId: string; typeIds: number[] }
-  | { type: "END_HUNT" }
-  | { type: "USE_GROWTH_ITEM"; memberId: string; item: GrowthItem }
+  | { type: "END_HUNT"; opening?: FacilityOpening }
+  | { type: "USE_GROWTH_ITEM"; memberId: string; item: GrowthItem; count?: number }
   | { type: "CRAFT_HELD_ITEM"; item: HeldItemId }
   | { type: "EQUIP_HELD_ITEM"; memberId: string; item: HeldItemId }
-  | { type: "BUY_ENERGY_CHARGE" }
+  | { type: "BUY_ENERGY_CHARGE"; expectedEnergy?: number }
   | { type: "NEXT_TURN" }
   | { type: "CLAIM_DEX_REWARD"; threshold: number }
   | { type: "CLAIM_INHERITED_RESEARCH_REWARD" }

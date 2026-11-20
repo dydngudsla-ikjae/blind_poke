@@ -4,6 +4,7 @@ import { worldMapNodes } from "../domain/worldMap";
 import { describeFirstVictoryReward } from "./campaign";
 import { forecastProduction } from "../domain/production";
 import { enemyPartsSupply } from "../domain/frontierOperations";
+import { forecastSupplyRoute, isolatedTurnsRemaining, suppliedTerritories } from "../domain/territorySupply";
 import { gameSaveSchema, mapSnapshotSchema } from "../services/saveSchemas";
 import { createInitialState, gameReducer, isFreeWorker, restoreGameState } from "./gameReducer";
 import type { GameState } from "./gameTypes";
@@ -459,6 +460,25 @@ describe("game reducer",()=>{
         remaining.delete(site.id);
       }
     }
+  });
+  it("forecasts the fewest remaining captures to extend or restore the home supply route", () => {
+    const { territories } = restoreGameState({ v: 3, roster: [member()] }, worldMapNodes.map(({ id, region }) => ({
+      id, active: region <= 2, owner: region === 1 ? "player" : "unoccupied",
+    })));
+    expect(forecastSupplyRoute(territories, "nw-01")?.missing).toEqual([]);
+    expect(forecastSupplyRoute(territories, "nw-10")).toMatchObject({
+      path: ["island", "nw-01", "nw-04", "nw-07", "nw-10"], missing: ["nw-01", "nw-04", "nw-07"],
+    });
+    territories["nw-04"].owner = "player";
+    territories["nw-07"].owner = "player";
+    expect(suppliedTerritories(territories).has("nw-07")).toBe(false);
+    expect(forecastSupplyRoute(territories, "nw-10")?.missing).toEqual(["nw-01"]);
+    territories["nw-01"].owner = "player";
+    expect(forecastSupplyRoute(territories, "nw-07")?.missing).toEqual([]);
+    territories["nw-01"].active = false;
+    expect(forecastSupplyRoute(territories, "nw-07")).toBeNull();
+    expect(forecastSupplyRoute(territories, "ne-01")).toBeNull();
+    expect([undefined, 65, 30, 0].map(isolatedTurnsRemaining)).toEqual([3, 2, 1, 1]);
   });
   it("preserves a legacy open region, loses isolated clusters in three turns and recovers when a route opens", () => {
     const legacy = restoreGameState({ v: 3, roster: [member()], storageCap: 100 }, [

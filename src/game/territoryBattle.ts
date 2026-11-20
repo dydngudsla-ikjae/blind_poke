@@ -6,6 +6,7 @@ import type { BattleSetup, GameState } from "./gameTypes";
 import { hasFirstVictory, regionProgress } from "./campaign";
 
 export const BATTLE_ENERGY_COST = 2;
+export const FIRST_BATTLE_LEVEL = 2;
 export const TRAINER_GROWTH = { interval: 5, limit: 3 };
 
 export function battleEntries(state: GameState) {
@@ -90,7 +91,7 @@ export function prepareTerritoryBattle(state: GameState, data: GameDataBundle, i
   if (!opponents) return null;
   const { node, enemyName, firstVictory, pool } = opponents;
   if (firstVictory) {
-    return { territoryId: id, enemyName, firstVictory, enemyTeam: [{ pokemonId: pool[0].pokemonRowid, level: 2 }] };
+    return { territoryId: id, enemyName, firstVictory, enemyTeam: [{ pokemonId: pool[0].pokemonRowid, level: FIRST_BATTLE_LEVEL }] };
   }
   const intel = state.frontier.intel[id];
   const revealed = intel && !intel.memberId ? intel.pokemonIds.map(pokemonId => pool.find(pokemon => pokemon.pokemonRowid === pokemonId)) : [];

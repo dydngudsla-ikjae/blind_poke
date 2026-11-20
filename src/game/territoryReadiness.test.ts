@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { buildCombatant, createBattle, resolveBattleTurn, TACKLE } from "../domain/battle";
 import type { GameDataBundle, PokemonRecord, RosterMember } from "../domain/types";
 import { createInitialState, gameReducer, restoreGameState } from "./gameReducer";
 import { huntCandidates } from "./gameHelpers";
 import { prepareTerritoryBattle } from "./territoryBattle";
-import { counterHuntPool, nextWeaknessMove, territoryPreparation, territoryTactics, uncoveredTerritoryTypes } from "./territoryReadiness";
+import { counterHuntPool, firstBattleBrief, nextWeaknessMove, territoryPreparation, territoryTactics, uncoveredTerritoryTypes } from "./territoryReadiness";
 import { nextResearchIncrease } from "../domain/production";
 
 const species = (pokemonRowid: number, nameKr: string, type1Rowid: number, type2Rowid?: number): PokemonRecord => ({
@@ -44,6 +45,38 @@ function frontier(scouted = true) {
 }
 
 describe("starting region counter preparation", () => {
+  it("previews the first scouted battle from equipped attacks and actual stats without drawing RNG", () => {
+    const state = frontier(false);
+    state.territories.southwest.owner = "unoccupied";
+    const weak = { ...member("a", totodile), iv: { atk: -15 } };
+    const strong = { ...member("b", poochyena), iv: { atk: 15 } };
+    state.roster = [weak, strong, member("c", halfGhost)];
+    state.entryOrder = ["a", "b", "c"];
+    expect(firstBattleBrief(state, benchmark, "south")).toBeNull();
+    state.territories.south.scouted = true;
+    const rng = vi.spyOn(Math, "random");
+    try {
+      const brief = firstBattleBrief(state, benchmark, "south")!;
+      const [{ pokemonId, level }] = prepareTerritoryBattle(state, benchmark, "south")!.enemyTeam;
+      expect(brief.enemy.pokemon.pokemonRowid).toBe(pokemonId);
+      expect(brief.enemy.level).toBe(level);
+      const [lead, reserve, noAttack] = brief.entries;
+      expect(lead.best?.move.id).toBe(TACKLE.id);
+      expect(reserve.best!.damage).toBeGreaterThan(lead.best!.damage);
+      expect(noAttack.best).toBeNull();
+      const enemy = { ...buildCombatant({ pokemon: caterpie, level }, benchmark, "foe"), moves: [TACKLE] };
+      const battle = createBattle([buildCombatant(strong, benchmark, "ally")], [enemy]);
+      const hit = resolveBattleTurn(battle, { kind: "move", moveId: reserve.best!.move.id }, benchmark, () => 0)
+        .find(step => step.strike?.side === "player");
+      expect(hit?.strike?.damage).toBe(reserve.best!.damage);
+      expect(rng).not.toHaveBeenCalled();
+    } finally {
+      rng.mockRestore();
+    }
+    state.territories.southwest.owner = "player";
+    expect(firstBattleBrief(state, benchmark, "south")).toBeNull();
+  });
+
   it("derives risks from the real encounter pool without changing RNG or revealing an unscouted site", () => {
     const rng = vi.spyOn(Math, "random").mockReturnValue(0);
     try {
@@ -97,6 +130,22 @@ describe("starting region counter preparation", () => {
     expect(group?.threats[0]).toMatchObject({ typeId: 5, weak: [{ id: "a" }, { id: "b" }], switches: [{ member: { id: "c" }, multiplier: 0 }] });
     data.battle.learnsets["769"] = [[89, 6]];
     expect(territoryTactics(state, data, "south").find(group => group.key === "5-8")?.threats).toEqual([]);
+  });
+
+  it("flags insufficient opening damage across all effective PP without counting immune moves", () => {
+    const state = frontier();
+    state.roster = [member("a", poochyena), member("b", frillish)];
+    state.entryOrder = ["a", "b"];
+    const scarce = { ...benchmark, moves: benchmark.moves.map(move => move.moveRowid === 55
+      ? { ...move, details: { ...move.details, pp: 1 } } : move) };
+    const analysis = (data: GameDataBundle) => territoryTactics(state, data, "south").find(group => group.key === "5-8");
+    const risky = analysis(scarce);
+    expect(risky?.ppShortfall).toBe(true);
+    expect(risky?.attacks).toMatchObject([{ member: { id: "a" }, effectivePp: 0 }, { member: { id: "b" }, effectivePp: 1 }]);
+    expect(analysis(benchmark)?.ppShortfall).toBe(false);
+    state.entryOrder = ["a"];
+    expect(analysis(scarce)?.ppShortfall).toBe(false);
+    expect(uncoveredTerritoryTypes(state, scarce, "south").map(group => group.key)).toContain("5-8");
   });
 
   it("finds the first research level that increases output with the current held item", () => {

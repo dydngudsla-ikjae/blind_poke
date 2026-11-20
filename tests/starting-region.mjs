@@ -14,10 +14,12 @@ const scenarios = [
   { seed: 226, picks: [1, 0, 2] },
 ];
 const usePreparation = process.argv.includes("--prepare");
+const reviewPp = process.argv.includes("--review-pp");
 const holdEncounter = process.argv.includes("--hold-encounter");
 const baselineData = holdEncounter || process.argv.includes("--baseline-data");
-const requestedSeeds = process.argv.slice(2).filter(arg => !["--prepare", "--hold-encounter", "--baseline-data"].includes(arg)).map(Number);
+const requestedSeeds = process.argv.slice(2).filter(arg => !["--prepare", "--review-pp", "--hold-encounter", "--baseline-data"].includes(arg)).map(Number);
 assert.ok(!holdEncounter || usePreparation, "Use --hold-encounter with --prepare");
+assert.ok(!reviewPp || usePreparation && !baselineData && requestedSeeds.length === 1 && requestedSeeds[0] === 19, "Use --review-pp with --prepare 19 on current battle data");
 assert.ok(requestedSeeds.every(seed => scenarios.some(scenario => scenario.seed === seed)), "Unknown campaign seed");
 const selected = requestedSeeds.length ? scenarios.filter(scenario => requestedSeeds.includes(scenario.seed)) : scenarios;
 const readData = async file => JSON.parse(await readFile(new URL(`../data/${file}.json`, import.meta.url), "utf8"));
@@ -27,8 +29,9 @@ const speciesById = new Map(pokemon.map(record => [record.pokemonRowid, record])
 const server = await preview({ preview: { host: "127.0.0.1", port: 0 }, logLevel: "error" });
 const url = server.resolvedUrls.local[0];
 let browser;
+const ppReplay = {};
 
-async function play({ seed, picks }) {
+async function play({ seed, picks }, saveFirstCandy = false) {
   const page = await browser.newPage({ reducedMotion: "reduce" });
   if (baselineData) await useHistoricalBattleData(page);
   page.setDefaultTimeout(10000);
@@ -120,6 +123,10 @@ async function play({ seed, picks }) {
         if (!spot(ready, id).scouted) await button(/정찰하기/).click();
         if (usePreparation && seed === 19 && id === "east" && !counter) {
           const encounterRng = holdEncounter ? await page.evaluate(() => window.campaignRngState) : null;
+          if (reviewPp) {
+            if (saveFirstCandy) await page.evaluate(draw => { window.campaignRngState = draw; }, ppReplay.huntDraw);
+            else ppReplay.huntDraw = await page.evaluate(() => window.campaignRngState);
+          }
           const readiness = page.getByRole("region", { name: "도전 전 확인" });
           await readiness.getByText(/고스트/).first().waitFor();
           const combos = readiness.locator("select");
@@ -134,6 +141,10 @@ async function play({ seed, picks }) {
           preparationEnergy += ready.energy - captured.energy;
           assert.equal(captured.roster.length, ready.roster.length + 1);
           counter = captured.roster.at(-1);
+          if (reviewPp) {
+            if (saveFirstCandy) assert.deepEqual(counter, ppReplay.counter);
+            else ppReplay.counter = counter;
+          }
           await button("엔트리 편성", readiness).click();
           const entry = page.getByRole("dialog", { name: /전투 엔트리 편성/ });
           await entry.locator(`[data-pc-member="${counter.id}"]`).click();
@@ -150,8 +161,83 @@ async function play({ seed, picks }) {
           // The comparison holds the encounter draw fixed while all preparation runs through the UI.
           if (encounterRng !== null) await page.evaluate(value => { window.campaignRngState = value; }, encounterRng);
         }
+        const watchPp = reviewPp && id === "east";
+        if (watchPp) {
+          const tactics = page.locator(".atlas-tactics").filter({ hasText: "상성·교대 분석" });
+          await tactics.getByText("상성·교대 분석", { exact: true }).press("Enter");
+          const types = tactics.getByLabel("정찰한 상대 후보 타입");
+          const flyingGhost = types.locator('optgroup[label="유효 공격 PP 부족 가능"]').getByRole("option", { name: /비행.*고스트|고스트.*비행/ });
+          await types.selectOption(await flyingGhost.getAttribute("value"));
+          const attacks = tactics.getByRole("list", { name: "아군 공격 상성" });
+          await attacks.getByText(/라프라스.*물대포.*유효 PP 합계 25/).waitFor();
+          assert.equal(await attacks.getByText(/유효 PP 합계 0$/).count(), 3);
+          assert.ok(!(await tactics.innerText()).includes("흔들풍손"));
+          const warning = tactics.getByRole("status");
+          await warning.getByText("유효 공격 PP 부족 가능").waitFor();
+          await types.selectOption({ label: "얼음" });
+          assert.equal(await tactics.getByRole("status").count(), 0);
+          await types.selectOption(await flyingGhost.getAttribute("value"));
+          const warningText = await warning.innerText();
+          const readings = await attacks.getByRole("listitem").allTextContents();
+          await button("PC에서 약점 기술 확인", tactics).press("Enter");
+          const pc = page.getByRole("dialog", { name: /보유 포켓몬/ });
+          await pc.getByRole("heading", { name: "라프라스 Lv.1" }).waitFor();
+          const forecast = await pc.locator('.base-weakness [aria-live="polite"]').innerText();
+          if (saveFirstCandy) {
+            assert.equal(ready.resources.candy, 1);
+            await button("사탕 먹이기", pc).click();
+            await pc.getByRole("heading", { name: "라프라스 Lv.2" }).waitFor();
+          }
+          await page.keyboard.press("Escape");
+          const prepared = await save();
+          assert.equal(prepared.energy, ready.energy - Number(saveFirstCandy));
+          assert.equal(prepared.resources.candy, ready.resources.candy - Number(saveFirstCandy));
+          assert.equal(prepared.turnCount, ready.turnCount);
+          assert.deepEqual(prepared.entryOrder, ready.entryOrder);
+          ready = prepared;
+          if (saveFirstCandy) {
+            assert.equal(ready.turnCount, ppReplay.turn);
+            await page.evaluate(draw => { window.campaignRngState = draw; }, ppReplay.battleDraw);
+          } else {
+            ppReplay.turn = ready.turnCount;
+            ppReplay.battleDraw = await page.evaluate(() => window.campaignRngState);
+          }
+          console.log(JSON.stringify({ saveFirstCandy, ppScout: readings, warning: warningText, forecast, energy: ready.energy, candy: ready.resources.candy }));
+        }
         await challenge().click();
-        const battle = await playBattle(page, { manualSwitch: true });
+        if (watchPp && !saveFirstCandy) {
+          await page.locator('.duel-vitals[data-side="enemy"] meter').evaluate(foe => {
+            window.ppReview = { startHp: foe.value };
+            const observer = new MutationObserver(() => {
+              const waterGun = document.querySelector('[data-move-id="55"]');
+              if (!waterGun?.textContent.includes("PP 0/25")) return;
+              const note = document.querySelector(".duel-counter-note");
+              if (!note) return;
+              window.ppReview.exhaustedHp = foe.value;
+              window.ppReview.note = note.textContent;
+              window.ppReview.struggle = Boolean(document.querySelector('[data-move-id="165"]'));
+              observer.disconnect();
+            });
+            observer.observe(document.querySelector(".duel-console"), { subtree: true, childList: true, characterData: true });
+          });
+        }
+        const { moveOrder, ...battle } = await playBattle(page, { manualSwitch: true, recordMoves: watchPp && saveFirstCandy });
+        if (watchPp && saveFirstCandy) {
+          assert.equal(battle.enemy, ppReplay.enemy);
+          assert.ok(battle.won && battle.choices < ppReplay.choices);
+          assert.ok(moveOrder.every(move => move === "라프라스 · 물대포"));
+          console.log(JSON.stringify({ saveFirstCandy, choices: battle.choices, switches: battle.switches,
+            replacements: battle.replacements, enemy: battle.enemy }));
+        } else if (watchPp) {
+          const read = await page.evaluate(() => window.ppReview);
+          assert.equal(read.startHp, 202);
+          assert.equal(read.exhaustedHp, 2);
+          assert.match(read.note, /기권하고 돌아가기/);
+          assert.equal(read.struggle, false);
+          ppReplay.enemy = battle.enemy;
+          ppReplay.choices = battle.choices;
+          console.log(JSON.stringify({ saveFirstCandy, ppBattle: read, battle }));
+        }
         battles.push({ site: id, turn: ready.turnCount, ...battle });
         await button("월드맵으로").click();
         await heading("월드맵").waitFor();
@@ -164,7 +250,7 @@ async function play({ seed, picks }) {
         if (battle.won && index === route.length - 1) break;
         await base();
         if (battle.won) {
-          if (index === 0) {
+          if (index === 0 && !saveFirstCandy) {
             await button(/포켓몬 \d/).click();
             const pc = page.getByRole("dialog", { name: /보유 포켓몬/ });
             await pc.locator(`[data-install-pick="${draft.roster[0].id}"]`).click();
@@ -226,6 +312,7 @@ try {
   browser = await chromium.launch({ channel: "chrome" });
   const results = [];
   for (const scenario of selected) results.push(await play(scenario));
+  if (reviewPp) assert.deepEqual(await play(selected[0], true), results[0]);
   assert.equal(new Set(results.map(result => result.trainer)).size, selected.length);
   assert.equal(new Set(results.map(result => result.starters)).size, selected.length);
   console.log("Starting region Chrome passed: " + selected.length + " fresh campaigns secured all ten sites and restored the clear after reload");

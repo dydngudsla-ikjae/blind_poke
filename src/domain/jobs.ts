@@ -1,4 +1,5 @@
 import type { BuildingState, PokemonRecord, ResourceState, RosterMember } from "./types";
+import type { BuildingType } from "./construction";
 
 export const MAX_PLOTS = 10;
 export const GROUND_TYPE = 5;
@@ -12,7 +13,7 @@ type Recipe = {
 };
 
 interface JobDefinition {
-  building: string;
+  building: BuildingType;
   name: string;
   typeId: number;
   description: string;

@@ -2,7 +2,7 @@ import type { BuildingState, GameDataBundle, ResourceState, RosterMember } from 
 import type { ClearingOrder, GameAction, GameState, OutpostState } from "./gameTypes";
 import { advanceMemberFavor, canUseGrowthItem, ENERGY_CHARGE_COST, ENERGY_CHARGE_GAIN, GROWTH_ITEMS, GROWTH_ITEM_ENERGY_COST, HELD_ITEM_COST, isHeldItemId, RESOURCE_LABELS } from "../domain/economy";
 import { BUILDING_TYPES, constructionTurns, isBuildingType, projectedConstructionTurns } from "../domain/construction";
-import { GROUND_TYPE, HUNT_ENERGY_COST, MAX_PLOTS, MAX_RESEARCH_WORKERS, hasPokemonType, isJobId, jobDefinitions, researcherCount, supportsJob } from "../domain/jobs";
+import { GROUND_TYPE, HUNT_ENERGY_COST, MAX_PLOTS, MAX_RESEARCH_WORKERS, hasPokemonType, isJobId, jobDefinitions, researcherCount, supportsJob, type JobId } from "../domain/jobs";
 import { forecastProduction } from "../domain/production";
 import { advanceTerritoryLoyalty, MAX_LOYALTY, suppliedTerritories } from "../domain/territorySupply";
 import { canOperateSettlement, clearingSiteOf, HOME_SITE, inheritanceCandidates, makeOutpost, outpostIsOwned,
@@ -187,6 +187,11 @@ export function canReassignWorker(state: GameState, member: RosterMember) {
     (!current || (current.status !== "constructing" && canOperateSettlement(state, current.siteId)));
 }
 
+export function canOfferJob(state: GameState, building: BuildingState, member: RosterMember, jobId: JobId) {
+  return canOperateSettlement(state, building.siteId) && isJobId(jobId) && supportsJob(building, member.pokemon, jobId) &&
+    canReassignWorker(state, member) && (jobId !== "research" || researcherCount(state.roster, building.id) < MAX_RESEARCH_WORKERS);
+}
+
 function setClearing(state: GameState, siteId: string, order: ClearingOrder | null): GameState {
   return siteId === HOME_SITE ? { ...state, clearing: order }
     : { ...state, outposts: { ...state.outposts, [siteId]: { ...state.outposts[siteId], clearing: order } } };
@@ -327,11 +332,9 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
     case "ASSIGN_JOB": {
       const member = state.roster.find(item => item.id === action.memberId);
       const building = state.buildings.find(item => item.id === action.buildingId);
-      if (!member || !building || !canOperateSettlement(state, building.siteId) || !isJobId(action.jobId) || !supportsJob(building, member.pokemon, action.jobId) ||
-        !canReassignWorker(state, member)) return state;
+      if (!member || !building || !canOfferJob(state, building, member, action.jobId)) return state;
       const cost = member.buildingId === building.id ? 0 : 1;
       if (state.energy < cost || (cost === 0 && member.jobId === action.jobId)) return state;
-      if (action.jobId === "research" && researcherCount(state.roster, building.id) >= MAX_RESEARCH_WORKERS) return state;
       const jobOrder = 1 + Math.max(0, ...state.roster.map(item => item.jobOrder ?? 0));
       return {...state,energy:state.energy-cost,roster:state.roster.map(item=>item===member?
         {...item,buildingId:building.id,jobId:action.jobId,jobOrder}:item)};
@@ -377,17 +380,24 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
         new Set(typeIds).size !== typeIds.length || typeIds.some(id => !Number.isInteger(id) || id < 1)) return state;
       return { ...state, screen:"hunt", energy:state.energy-HUNT_ENERGY_COST, huntTypeId:null, counterHunt:{ territoryId, typeIds } };
     }
-    case "END_HUNT":
+    case "END_HUNT": {
       if (state.screen !== "hunt" && state.screen !== "identify") return state;
+      const opening = state.screen === "identify" && !state.counterHunt ? action.opening : undefined;
+      const building = opening && state.buildings.find(item => item.id === opening.buildingId);
+      const member = opening && state.roster.find(item => item.id === opening.memberId && item.pokemon.pokemonRowid === state.selectedPokemonId);
+      const facilityOpening = opening && building && member && canOfferJob(state, building, member, opening.jobId) ? opening : undefined;
       return { ...state, screen:state.counterHunt ? "map" : "base", mapFocusId:state.counterHunt?.territoryId ?? state.mapFocusId,
+        siteViewId: facilityOpening ? building?.siteId ?? null : state.siteViewId, facilityOpening,
         selectedPokemonId:null, selectedTypeName:null, selectedScan:null, huntTypeId:null, counterHunt:null };
+    }
     case "USE_GROWTH_ITEM": {
-      const { item, memberId } = action;
+      const { item, memberId, count = 1 } = action;
       const member = state.roster.find(entry => entry.id === memberId);
-      if (!member || !canUseGrowthItem(state, member, item)) return state;
-      return { ...state, energy: state.energy - GROWTH_ITEM_ENERGY_COST,
-        resources: { ...state.resources, [item]: state.resources[item] - 1 },
-        roster: state.roster.map(entry => entry === member ? GROWTH_ITEMS[item].effect(entry) : entry) };
+      if (!member || !canUseGrowthItem(state, member, item, count)) return state;
+      const grown = item === "candy" ? GROWTH_ITEMS.candy.effect(member, count) : GROWTH_ITEMS[item].effect(member);
+      return { ...state, energy: state.energy - GROWTH_ITEM_ENERGY_COST * count,
+        resources: { ...state.resources, [item]: state.resources[item] - count },
+        roster: state.roster.map(entry => entry === member ? grown : entry) };
     }
     case "CRAFT_HELD_ITEM": {
       const { item } = action;
@@ -408,6 +418,7 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
         } : entry) };
     }
     case "BUY_ENERGY_CHARGE":
+      if (action.expectedEnergy !== undefined && action.expectedEnergy !== state.energy) return state;
       if (state.energy >= ENERGY_PER_TURN || state.resources.gold < ENERGY_CHARGE_COST) return state;
       return { ...state, energy: Math.min(ENERGY_PER_TURN, state.energy + ENERGY_CHARGE_GAIN),
         resources: { ...state.resources, gold: state.resources.gold - ENERGY_CHARGE_COST } };

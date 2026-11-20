@@ -92,6 +92,26 @@ describe("outpost construction", () => {
     expect(gameReducer(isolated, { type: "RELEASE_WORKER", buildingId: "remote", memberId: "mon-2" }).roster[0].buildingId).toBeNull();
   });
 
+  it("opens a supplied facility after exploration without assigning a worker or changing the counter-hunt return", () => {
+    const base = outpostCampaign(true);
+    const opening = { buildingId: "remote", memberId: "mon-1", jobId: "seed" as const };
+    const state: GameState = { ...base, screen: "identify", energy: 0, selectedPokemonId: 1,
+      buildings: [{ ...facility("remote", "farm", 0), siteId: "nw-01" }] };
+    const complete = { type: "END_HUNT" as const, opening };
+    const returned = gameReducer(state, complete);
+    expect(returned).toMatchObject({ screen: "base", siteViewId: "nw-01", facilityOpening: opening, energy: 0, selectedPokemonId: null });
+    expect(returned.roster).toBe(state.roster);
+    expect(returned.resources).toBe(state.resources);
+
+    const counter = { ...state, counterHunt: { territoryId: "south", typeIds: [8] } };
+    const map = gameReducer(counter, complete);
+    expect(map).toMatchObject({ screen: "map", mapFocusId: "south", counterHunt: null });
+    expect(map.facilityOpening).toBeUndefined();
+
+    const isolated = { ...state, territories: { ...state.territories, "nw-01": { ...state.territories["nw-01"], owner: "unoccupied" as const } } };
+    expect(gameReducer(isolated, complete).facilityOpening).toBeUndefined();
+  });
+
   it("preserves the building, releases its builder at loss and resumes only after recapture and reassignment", () => {
     const claimed = claimOutpost(outpostCampaign(true), "nw-04");
     const building = { ...facility("remote", "dojo", 1, "constructing"), siteId: "nw-04" };
@@ -375,6 +395,36 @@ describe("base operations", () => {
     const equipped = gameReducer(crafted, equip);
     expect(equipped).toMatchObject({ resources: { items: { choice_band: 0, lucky_egg: 1 } }, roster: [{ heldItem: "choice_band" }] });
     expect(gameReducer(equipped, equip)).toBe(equipped);
+  });
+
+  it("matches consecutive candy applications and rejects invalid or unaffordable quantities atomically", () => {
+    const base = createInitialState();
+    const state: GameState = { ...base, screen: "base", energy: 4,
+      roster: [{ ...worker("mon-1", 12), level: 2, exp: 35, favCeil: 96, heldItem: "lucky_egg" }],
+      resources: { ...base.resources, candy: 5, food: 5 } };
+    const candy = { type: "USE_GROWTH_ITEM" as const, item: "candy" as const, memberId: "mon-1" };
+    const batch = gameReducer(state, { ...candy, count: 3 });
+    const individual = [1, 2, 3].reduce(save => gameReducer(save, candy), state);
+    expect(batch).toEqual(individual);
+    expect(batch).toMatchObject({ energy: 1, resources: { candy: 2 }, roster: [{ level: 4, exp: 55, favCeil: 100 }] });
+    for (const count of [0, -1, 1.5, 5, Infinity, NaN]) expect(gameReducer(state, { ...candy, count })).toBe(state);
+    const scarce = { ...state, resources: { ...state.resources, candy: 2 } };
+    expect(gameReducer(scarce, { ...candy, count: 3 })).toBe(scarce);
+    expect(gameReducer(state, { ...candy, memberId: "missing", count: 3 })).toBe(state);
+    expect(gameReducer(state, { ...candy, item: "food", count: 2 })).toBe(state);
+  });
+
+  it("honors a field refill quote once and keeps normal shop purchases available", () => {
+    const base = createInitialState();
+    const state = { ...base, energy: 0, resources: { ...base.resources, gold: 20 } };
+    const quick = { type: "BUY_ENERGY_CHARGE" as const, expectedEnergy: 0 };
+    const charged = gameReducer(state, quick);
+    expect(charged).toEqual(gameReducer(state, { type: "BUY_ENERGY_CHARGE" }));
+    expect(charged).toMatchObject({ energy: 2, resources: { gold: 15 } });
+    expect(gameReducer(charged, quick)).toBe(charged);
+    expect(gameReducer(charged, { type: "BUY_ENERGY_CHARGE" })).toMatchObject({ energy: 4, resources: { gold: 10 } });
+    const short = { ...state, resources: { ...state.resources, gold: 4 } };
+    expect(gameReducer(short, quick)).toBe(short);
   });
 
   it("restores paused v1 construction and spends neither its remaining time nor energy on cancel", () => {

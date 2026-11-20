@@ -4,52 +4,9 @@
 
 .hunt-view h1:focus { outline: none; }
 
-.hunt-lens-guides {
-  position: absolute;
-  inset: var(--scope-inset);
-  pointer-events: none;
-  background:
-    linear-gradient(#ddf7df95, #ddf7df95) center top / 1px 8px no-repeat,
-    linear-gradient(#ddf7df95, #ddf7df95) center bottom / 1px 8px no-repeat,
-    linear-gradient(#ddf7df95, #ddf7df95) left center / 8px 1px no-repeat,
-    linear-gradient(#ddf7df95, #ddf7df95) right center / 8px 1px no-repeat;
-}
-
-.hunt-view .draft-shader { opacity: 0; }
-.hunt-view .draft-shader.is-ready { opacity: 1; }
-
-.hunt-target .draft-signal-art {
-  opacity: .72;
-  filter: brightness(1.40) drop-shadow(0 0 8px #d4f5c76b);
-}
-.hunt-target[data-locked="true"] .draft-signal-art { opacity: 1; }
-.hunt-target:focus-visible { outline-offset: -4px; }
-
-.hunt-target[data-locked="true"] .scanner-contact {
-  --contact-size: clamp(78px, 8.5vw, 128px);
-}
-
-.hunt-readout {
-  position: absolute;
-  z-index: 4;
-  right: var(--scope-inset);
-  bottom: var(--scope-inset);
-  width: clamp(235px, 21vw, 306px);
-  padding: 12px 14px 14px;
-  border: 1px solid #73907e80;
-  border-top: 3px solid var(--field-line);
-  background: linear-gradient(155deg, #193528f2, #09140ef5);
-  box-shadow: inset 0 1px #a2cbad7a, 0 6px 25px #09110cb5;
-  pointer-events: none;
-}
-
-.hunt-readout[data-locked="true"] { border-top-color: var(--field-mint); }
-.hunt-readout h2 { margin: 0 0 8px; font-size: 15px; line-height: 1.2; }
-.hunt-readout:not([data-locked="true"]) h2 { color: var(--field-muted); }
-
 .hunt-controls {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 8px 18px;
   min-height: 61px;
@@ -76,61 +33,6 @@
 .hunt-return:focus-visible { outline: 2px solid var(--field-mint); outline-offset: 2px; }
 .hunt-return span { color: var(--field-mint); font: 600 17px/1 var(--field-mono); }
 
-@media (prefers-reduced-motion: no-preference) {
-  .hunt-target[data-locked="true"] .scanner-contact { animation: hunt-acquire 200ms ease-out both; }
-  .hunt-view .draft-shader { transition: opacity 180ms ease-out; }
-}
-
-@keyframes hunt-acquire {
-  from { transform: translate(-50%, -50%) scale(1.32); opacity: .45; }
-  to { transform: translate(-50%, -50%); opacity: 1; }
-}
-
-@media (max-width: 680px) {
-  .hunt-readout { right: 8px; bottom: 8px; left: 8px; width: auto; padding: 8px 10px 10px; }
-  .hunt-readout h2 { margin-bottom: 5px; }
-  .hunt-controls { grid-template-columns: auto 1fr; gap: 5px 10px; padding-inline: 0; }
-  .hunt-controls .draft-touch-hint { justify-self: end; }
-}
-.hunt-counter-note { color: var(--field-amber); font-size: 13px; }
-.hunt-target[data-counter="true"] .scanner-contact { outline: 1px solid var(--field-amber); outline-offset: 4px; }
-
-.hunt-instruments {
-  display: flex;
-  align-items: stretch;
-  justify-self: center;
-  padding: 2px;
-  border: 1px solid #675a3d;
-  border-radius: 6px;
-  background: #121c16;
-  box-shadow: inset 0 2px 3px #080c08;
-}
-
-.hunt-instruments button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  min-height: 44px;
-  padding: 0 11px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
-  color: #cbd1be;
-  font: var(--field-action-font);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.hunt-instruments button[aria-pressed="true"] {
-  border-color: #a28755;
-  background: linear-gradient(#574a31, #2c2b1e);
-  box-shadow: inset 0 1px #b89a594d, 0 2px 2px #0b100c;
-  color: #fff0c6;
-}
-.hunt-instruments button:focus-visible { outline: 2px solid #fee1a0; outline-offset: -3px; }
-.hunt-instruments img { width: 36px; height: 36px; object-fit: contain; }
-
 @property --hunt-optic-open {
   syntax: "<number>";
   initial-value: 1;
@@ -146,13 +48,12 @@
   pointer-events: none;
 }
 
-.hunt-optics-glass, .hunt-optics-shader { position: absolute; inset: 0; width: 100%; height: 100%; }
 .hunt-optics-glass {
+  position: absolute;
+  inset: 0;
   clip-path: circle(calc(var(--optics-opening) / 2) at var(--optics-x) var(--optics-seat-y));
   background: radial-gradient(ellipse at var(--optics-x) var(--optics-seat-y), transparent 6%, #cda7671c 45%, #1b170e3d 85%);
 }
-.hunt-optics-shader { opacity: 0; }
-.hunt-optics-shader[data-ready="true"] { opacity: 1; }
 
 .hunt-optics-housing {
   position: absolute;
@@ -161,30 +62,6 @@
   width: var(--optics-opening);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
-  border: clamp(5px, 1vw, 12px) solid #a17942;
-  border-top-color: #e1b979;
-  border-right-color: #9a713c;
-  border-bottom-color: #523618;
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 2px #251809,
-    0 0 0 5px #987042,
-    0 0 0 8px #372716,
-    0 0 26px 10px #0e100cba,
-    0 0 0 160vmax #100f0abd,
-    inset 0 0 0 2px #33210c,
-    inset 0 0 0 5px #e4b57570,
-    inset 0 0 31px 11px #261a1094;
-}
-
-.hunt-optics-rim {
-  position: absolute;
-  inset: -1px;
-  border-radius: 50%;
-  opacity: .85;
-  transform: rotate(calc(11deg * (1 - var(--optics-focus))));
-  background: repeating-conic-gradient(from -2deg, #f0c47d 0deg 1deg, #2b1b0d 1deg 2deg, transparent 2deg 10deg);
-  mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px) calc(100% - 2px), transparent calc(100% - 1px));
 }
 
 .hunt-optics-focus-mark {
@@ -214,44 +91,20 @@
   margin-left: calc(7px * (1 - var(--optics-focus)));
 }
 
-.hunt-optical-trace {
-  width: clamp(28px, 3.6vw, 49px);
-  aspect-ratio: 1;
-  border-inline: 1px solid #ffe7a9b5;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, #fff1b67d, #e0c78c2b 35%, transparent 66%);
-  box-shadow: 0 0 13px #f4cf6429;
-  pointer-events: none;
-}
+.hunt-optical-trace { width: clamp(28px, 3.6vw, 49px); }
 .hunt-target[data-locked="true"] .hunt-optical-trace { border-color: transparent; box-shadow: none; }
 .hunt-target[data-counter="true"] .hunt-optical-trace { outline: 1px dashed #ffdc8d; outline-offset: 3px; }
-.hunt-target:focus-visible:has(.hunt-optical-trace) { outline: 0; }
+.hunt-target:focus-visible { outline: 0; }
 .hunt-target:focus-visible .hunt-optical-trace { outline: 2px solid #fff1ba; outline-offset: 9px; }
 
-.hunt-station[data-instrument="optical"] .draft-mission {
-  border-left-color: #bd9255;
-  background: linear-gradient(90deg, #241a10f2, #21181098 74%, transparent);
-}
-.hunt-station[data-instrument="optical"] .draft-location { color: #ecd19c; }
-.hunt-station[data-instrument="optical"] .draft-scanner-status {
-  border-top-color: #a57e49;
-  color: #e6c896;
-  background: #2d2213ef;
-}
-.hunt-station[data-instrument="optical"] .draft-scanner-status[data-locked="true"] { color: #fff0bc; }
-.hunt-station[data-instrument="optical"] .draft-status-light { border-radius: 50%; }
-
-.hunt-station[data-instrument="optical"] .hunt-readout {
-  --field-muted: #654c32;
-  --field-mint: #4b5130;
-  --field-line: #9d7a5278;
+.hunt-readout {
+  position: absolute;
+  z-index: 4;
+  right: var(--scope-inset);
+  bottom: var(--scope-inset);
   width: clamp(248px, 24vw, 340px);
   padding: 14px 20px 19px;
-  border: 1px solid #bf9558;
-  border-radius: 5px 7px 4px 5px;
-  background: #edcf95 url("../../assets/field-journal-page.webp") center / 100% 100% no-repeat;
-  box-shadow: 0 3px #947143, 2px 9px 19px #171108c4;
-  color: #312114;
+  pointer-events: none;
 }
 .hunt-field-note-label {
   margin: 0 0 5px;
@@ -259,19 +112,22 @@
   font-size: 12px;
   font-weight: 750;
 }
-.hunt-station[data-instrument="optical"] .hunt-readout h2 {
+.hunt-readout h2 {
+  margin: 0 0 8px;
   color: #412819;
   font: 700 18px/1.2 "Batang", "바탕", serif;
 }
-.hunt-station[data-instrument="optical"] .hunt-counter-note { color: #70481c; }
-.hunt-station[data-instrument="optical"] .hunt-controls {
-  border-top-color: #957345;
-  background: linear-gradient(#302b1e, #1d1c13);
+.hunt-counter-note { color: #70481c; font-size: 13px; }
+.hunt-note-hint {
+  margin: 8px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--field-line);
+  color: var(--field-muted);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .hunt-optics { animation: hunt-raise-optics 470ms cubic-bezier(.2,.75,.19,1) both; }
-  .hunt-station[data-instrument="optical"] .hunt-readout {
+  .hunt-readout {
     animation: hunt-field-note-in 340ms 95ms cubic-bezier(.2,.7,.18,1) both;
   }
 }
@@ -285,16 +141,13 @@
 }
 
 @media (max-width: 680px) {
-  .hunt-controls { grid-template-columns: auto minmax(0, 1fr); }
-  .hunt-controls .draft-touch-hint { grid-column: 1 / -1; justify-self: center; }
-  .hunt-instruments { justify-self: end; }
-  .hunt-instruments button { gap: 3px; padding-inline: 6px; font-size: 12px; }
-  .hunt-instruments img { width: 25px; height: 25px; }
+  .hunt-controls { gap: 5px 10px; }
   .hunt-optics { --optics-diameter: clamp(235px, 78vw, 400px); }
-  .hunt-station[data-instrument="optical"] .hunt-view { min-height: clamp(430px, calc(100svh - 96px), 780px); }
-  .hunt-station[data-instrument="optical"] .hunt-readout {
+  .hunt-station .hunt-view { min-height: clamp(430px, calc(100svh - 61px), 780px); }
+  .hunt-readout {
     inset: auto 12px 11px;
     width: auto;
     padding: 9px 14px 12px;
   }
+  .hunt-readout h2 { margin-bottom: 5px; }
 }

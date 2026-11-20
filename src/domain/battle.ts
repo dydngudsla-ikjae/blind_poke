@@ -170,6 +170,7 @@ export type BattleAction = { kind: "move"; moveId: number } | { kind: "switch"; 
 export interface BattleStep {
   state: BattleState;
   lines: string[];
+  actor?: BattleSide;
   strike?: { side: BattleSide; move: BattleMove; damage: number; outcome: "hit" | "miss" | "immune" | "blocked"; fainted?: boolean };
 }
 
@@ -283,7 +284,7 @@ function act(state: BattleState, side: BattleSide, move: BattleMove | undefined,
   const lines: string[] = [];
   const { mon } = beforeMove(active(state, side), STRUGGLE, lines, random);
   if (!lines.length) lines.push(mon.name + "은(는) 기술을 쓰지 않았다.");
-  return { state: updateActive(state, side, mon), lines, flinch: false };
+  return { state: updateActive(state, side, mon), lines, actor: side, flinch: false };
 }
 
 function finishRound(state: BattleState): BattleStep {
@@ -358,7 +359,7 @@ export function resolveBattleTurn(state: BattleState, action: BattleAction, data
     const incoming = state.teams.player[action.index];
     if (!incoming || incoming.fainted || action.index === state.active.player) return steps;
     const switched = switchTo(state, "player", action.index);
-    steps.push({ state: { ...switched, phase: "command" }, lines: [incoming.name + ", 나서라!"] });
+    steps.push({ state: { ...switched, phase: "command" }, lines: [incoming.name + ", 나서라!"], actor: "player" });
     if (state.phase === "replacement") return steps;
     const response = act(switched, "enemy", selectEnemyMove(switched, data, random), data, random);
     return [...steps, response, finishRound(response.state)];
@@ -370,7 +371,8 @@ export function resolveBattleTurn(state: BattleState, action: BattleAction, data
     if (player.fainted || !player.status) return steps;
     const treated = updateActive(state, "player", { ...player, status: undefined });
     const response = act(treated, "enemy", selectEnemyMove(treated, data, random), data, random);
-    return [{ state: treated, lines: [`${player.name}의 ${statusLabels[player.status.kind]} 상태이상을 치료했다!`] }, response, finishRound(response.state)];
+    return [{ state: treated, lines: [`${player.name}의 ${statusLabels[player.status.kind]} 상태이상을 치료했다!`], actor: "player" },
+      response, finishRound(response.state)];
   }
   const playerMove = battleMoves(active(state, "player")).find(move => move.id === action.moveId && (move.pp > 0 || move.id === STRUGGLE.id));
   if (!playerMove) return steps;
@@ -387,7 +389,7 @@ export function resolveBattleTurn(state: BattleState, action: BattleAction, data
   steps.push(hit);
   state = hit.state;
   if (!active(state, first).fainted && !active(state, second).fainted) {
-    if (hit.flinch) steps.push({ state, lines: [active(state, second).name + "이(가) 풀죽어 움직이지 못했다!"] });
+    if (hit.flinch) steps.push({ state, lines: [active(state, second).name + "이(가) 풀죽어 움직이지 못했다!"], actor: second });
     else {
       const response = act(state, second, moves[second], data, random);
       state = response.state;

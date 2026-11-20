@@ -361,6 +361,23 @@ try {
   assert.equal(spot(opened, "nw-04").scouted, false);
   assert.equal(await desktop.report.getByText(/대표 거점|북서 1세력/).count(), 0);
   assert.ok(await desktop.button(/거점 도전/).isEnabled());
+  const supplyPlan = desktop.report.getByRole("region", { name: "보급로 전망" });
+  assert.equal(await supplyPlan.count(), 0);
+  await desktop.use(desktop.button(/정찰하기/));
+  await supplyPlan.getByText("확보하면 고립", { exact: true }).waitFor();
+  await supplyPlan.getByText(/거점 1곳을 더 확보/).waitFor();
+  const forecastRoute = key => desktop.page.locator(`[data-route="${key}"]`);
+  for (const edge of ["island|nw-01", "nw-01|nw-04"]) {
+    assert.equal(await forecastRoute(edge).getAttribute("data-supply-preview"), "true");
+    assert.equal(await forecastRoute(edge).getAttribute("data-owned-route"), "false");
+  }
+  const scouted04 = await desktop.read();
+  await desktop.use(desktop.button("보급로 첫 거점 보기"));
+  await desktop.heading("미확인 거점").waitFor();
+  assert.equal(await desktop.node("nw-01").getAttribute("aria-pressed"), "true");
+  assert.deepEqual(await desktop.read(), scouted04);
+  await desktop.use(desktop.button(/정찰하기/));
+  await supplyPlan.getByText("확보하면 보급 연결", { exact: true }).waitFor();
   const isolatedChoices = await desktop.win("nw-04", { receipt: /보급로 연결 필요/ });
   const stranded = await desktop.read();
   assert.deepEqual(spot(stranded, "nw-04"), { ...spot(opened, "nw-04"), owner: "player", trainerId: null, scouted: true, loyalty: 100 });
@@ -369,6 +386,7 @@ try {
   assert.equal(await desktop.node("nw-04").getAttribute("data-supply"), "isolated");
   await desktop.report.getByText("고립 · 보급 중단").waitFor();
   await desktop.report.getByText("턴당 자금 +0").waitFor();
+  await supplyPlan.getByText(/미점령 전환까지 3턴/).waitFor();
 
   const one = await desktop.turn();
   assert.equal(spot(one, "nw-04").loyalty, 65);
@@ -377,6 +395,11 @@ try {
   await desktop.map();
   assert.deepEqual(await desktop.read(), one);
   assert.equal(await desktop.node("nw-04").getAttribute("data-supply"), "isolated");
+  await desktop.use(desktop.node("nw-04"));
+  await supplyPlan.getByText(/미점령 전환까지 2턴/).waitFor();
+  await desktop.use(desktop.button("보급로 첫 거점 보기"));
+  await desktop.heading("북서 1거점").waitFor();
+  assert.ok(await desktop.heading("북서 1거점").evaluate(heading => document.activeElement === heading));
   const reconnectChoices = await desktop.win("nw-01", { receipt: /매 턴 자금 \+3/ });
   const connected = await desktop.read();
   assert.equal(spot(connected, "nw-04").loyalty, 65);
@@ -386,6 +409,8 @@ try {
   }
   await desktop.use(desktop.node("nw-04"));
   await desktop.report.getByText("보급 연결", { exact: true }).waitFor();
+  assert.equal(await supplyPlan.count(), 0);
+  assert.equal(await forecastRoute("nw-01|nw-04").getAttribute("data-supply-preview"), "false");
   await desktop.report.getByText("충성도 65/100").waitFor();
   await desktop.report.getByText("턴당 자금 +3").waitFor();
   await desktop.use(desktop.node("nw-02"));
@@ -405,15 +430,30 @@ try {
   await mobile.map();
   await mobile.use(mobile.node("nw-04"));
   await mobile.report.getByText("고립 · 보급 중단").waitFor();
+  const recovery = mobile.report.getByRole("region", { name: "보급로 전망" });
+  await recovery.getByText(/미점령 전환까지 3턴/).waitFor();
+  const routeShortcut = mobile.button("보급로 첫 거점 보기");
+  assert.ok((await routeShortcut.boundingBox())?.height >= 44);
+  await mobile.use(routeShortcut);
+  await mobile.heading("북서 1거점").waitFor();
+  assert.deepEqual(await mobile.read(), stranded);
   assert.ok(await mobile.page.evaluate(() => document.documentElement.scrollWidth === innerWidth));
   const nextTurn = mobile.page.locator("#nextTurn");
   for (const [turn, loyalty] of [65, 30, 0].entries()) {
     if (turn === 2) {
-      const warning = mobile.page.getByText(/다음 턴에 북서 4거점.*미점령/);
+      const notices = mobile.page.getByRole("region", { name: "다음 턴 경고" });
+      const warning = notices.getByText(/다음 턴에 북서 4거점.*미점령/);
       assert.equal(await warning.count(), 1, "The last safe turn warns before losing a territory");
       const descriptions = (await nextTurn.getAttribute("aria-describedby")).split(/\s+/);
       assert.ok(descriptions.includes(await warning.getAttribute("id")));
       assert.ok(descriptions.includes("base-gold-preview"));
+      const beforeShortcut = await mobile.read();
+      await mobile.use(notices.getByRole("button", { name: "보급로 보기" }));
+      await recovery.getByText(/미점령 전환까지 1턴/).waitFor();
+      const afterShortcut = await mobile.read();
+      assert.equal(afterShortcut.energy, beforeShortcut.energy);
+      assert.equal(afterShortcut.turnCount, beforeShortcut.turnCount);
+      assert.deepEqual(afterShortcut.mapSnapshot, beforeShortcut.mapSnapshot);
     }
     const snapshot = await mobile.turn();
     const site = spot(snapshot, "nw-04");

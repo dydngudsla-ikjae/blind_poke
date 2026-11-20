@@ -62,7 +62,7 @@ function GameSession({ data, children, slot, startNewGame }: {
   useEffect(() => {
     if (!state.roster.length && state.introPending !== false) return;
     const { screen, draftRound, selectedPokemonId, selectedTypeName, selectedScan, huntTypeId, counterHunt, territories,
-      battle, mapFocusId, siteViewId, message, factionDefenderIds, ...save } = state;
+      battle, mapFocusId, siteViewId, facilityOpening, message, factionDefenderIds, ...save } = state;
     const map = Object.entries(territories).map(([id, territory]) => ({ id, ...territory }));
     setSaveFailed(!writeGameSave(save, map));
   }, [state]);

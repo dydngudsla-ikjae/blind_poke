@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { preview } from "vite";
+import { worldMapNodes } from "../src/domain/worldMap.ts";
 
 const saveKey = "blindpoke-save-v1";
 const server = await preview({ preview: { host: "127.0.0.1", port: 0, strictPort: true }, logLevel: "error" });
@@ -154,6 +155,67 @@ async function verifyLegacyResearchStaff() {
   console.log("Research staffing Chrome smoke passed: v4 and reload preserve 4 researchers and settle 5 then 4 candies; admit at 2, block at 3");
 }
 
+async function verifySharedStaffing() {
+  const page = await openProfile({ touch: true });
+  await page.setViewportSize({ width: 320, height: 640 });
+  const base = baseControls(page, true);
+  const mapSnapshot = worldMapNodes.map(({ id, region }) => ({
+    id, active: region <= 2, owner: region === 1 || id === "nw-01" ? "player" : "unoccupied", scouted: true, trainerId: null,
+  }));
+  await page.evaluate(async ({ key, mapSnapshot }) => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const roster = [54, 7, 4, 1].map((id, index) => ({
+      id: `mon-${index + 1}`, pokemon: records.find(mon => mon.pokemonRowid === id),
+      level: 1, exp: 0, favor: 70, favFloor: 20, favCeil: 85, aptitude: 50, iv: {},
+      ...(index === 1 ? { buildingId: "building-3", jobId: "fruit" } : {}),
+      ...(index === 2 ? { buildingId: "building-2", jobId: "cook" } : {}),
+    }));
+    const buildings = [
+      { id: "building-1", type: "farm", plotIndex: 0 },
+      { id: "building-2", type: "restaurant", plotIndex: 1 },
+      { id: "building-3", type: "farm", plotIndex: 0, siteId: "nw-01" },
+    ].map(item => ({ ...item, status: "active", remainingTurns: 0 }));
+    localStorage.setItem(key, JSON.stringify({ v: 4, roster, energy: 5, plotCap: 2, storageCap: 50,
+      resources: { seed: 1, fruit: 0, food: 0 }, nextMemberId: 5, buildings, mapSnapshot }));
+  }, { key: saveKey, mapSnapshot });
+  await page.reload();
+  const openFarm = () => base.open("1번 부지 밭 관리", "밭 · 1번 부지");
+  let farm = await openFarm();
+  const before = await base.read();
+  await base.use(base.button(/열매 재배/, farm));
+  await base.use(farm.locator('[data-install-pick="mon-1"]'));
+  const stock = farm.getByRole("group", { name: "다음 턴 공동 재고" });
+  await stock.getByText("배치 전후 차이 없음", { exact: true }).waitFor({ timeout: 4000 });
+  const otherFacilities = farm.locator("details").filter({ hasText: /함께 바뀌는 시설/ });
+  await base.use(otherFacilities.getByText("함께 바뀌는 시설 1곳", { exact: true }));
+  await otherFacilities.getByText("북서 1거점 · 밭 · 1번 부지", { exact: true }).waitFor();
+  await otherFacilities.getByText(/열매 산출 1 → 0/).waitFor();
+  await base.close(farm);
+  assert.deepEqual(await base.read(), before);
+
+  farm = await openFarm();
+  await base.use(farm.locator('[data-install-pick="mon-4"]'));
+  for (const change of [/씨앗 0 → 2/, /열매 1 → 0/, /음식 0 → 1/]) await stock.getByText(change).waitFor();
+  await base.use(otherFacilities.getByText("함께 바뀌는 시설 2곳", { exact: true }));
+  await otherFacilities.getByText("본거지 · 레스토랑 · 2번 부지", { exact: true }).waitFor();
+  await otherFacilities.getByText(/음식 산출 0 → 1/).waitFor();
+  await otherFacilities.getByText(/열매 산출 1 → 2/).waitFor();
+  assert.ok(await farm.evaluate(element => element.scrollWidth <= element.clientWidth));
+  await base.use(base.button("직무 배치 · 행동력 1", farm));
+  await base.close(farm);
+  assert.equal((await base.read()).energy, before.energy - 1);
+  await base.turn();
+  const after = await base.read();
+  assert.equal(after.resources.seed, 2);
+  assert.equal(after.resources.fruit, 0);
+  assert.equal(after.resources.food, 1);
+  await page.reload();
+  await base.button("1번 부지 밭 관리").waitFor();
+  assert.deepEqual(await base.read(), after);
+  await page.close();
+  console.log("Shared staffing Chrome smoke passed: seed priority, outpost and kitchen forecasts, recorded stock and reload");
+}
+
 try {
   browser = await chromium.launch({ channel: "chrome" });
   const page = await openProfile();
@@ -245,7 +307,9 @@ try {
     sawEarlyWarning ||= await page.getByText(/이탈 경고까지 [1-5]턴/).isVisible();
     if (turn === warningTurn - 5) {
       dialog = await fresh.open(/포켓몬 \d/, /보유 포켓몬/);
-      await fresh.use(dialog.locator(`[data-install-pick="${tracked.id}"]`));
+      const trackedCard = dialog.locator(`[data-install-pick="${tracked.id}"]`);
+      await trackedCard.getByText("5턴 뒤 경고", { exact: true }).waitFor();
+      await fresh.use(trackedCard);
       await dialog.getByText(/이탈 경고까지 5턴/).waitFor();
       await fresh.close(dialog);
     }
@@ -365,9 +429,22 @@ try {
   await legacy.turn();
   await mobile.getByText("다음 턴 이탈 예정 · 이상해씨 외 2마리", { exact: true }).waitFor();
   await mobile.reload();
+  const nextTurnNotice = mobile.getByRole("region", { name: "다음 턴 경고" });
+  const nextTurnAction = mobile.getByRole("button", { name: "다음 턴", exact: true });
+  await nextTurnNotice.getByText("다음 턴 이탈 예정 · 이상해씨 외 2마리", { exact: true }).waitFor();
+  assert.ok(await nextTurnNotice.getByRole("button", { name: "우호도 관리" }).evaluate(button => {
+    const { top, bottom, height } = button.getBoundingClientRect();
+    return top >= 0 && bottom <= innerHeight && height >= 44;
+  }));
+  const noticePosition = await nextTurnNotice.boundingBox();
+  const actionPosition = await nextTurnAction.boundingBox();
+  assert.ok(noticePosition.y - (actionPosition.y + actionPosition.height) <= 32);
+  assert.ok((await nextTurnAction.getAttribute("aria-describedby")).split(/\s+/).includes("base-departure-warning"));
   dialog = await legacy.open("우호도 관리", /보유 포켓몬/);
   await dialog.getByRole("heading", { name: "이상해씨 Lv.1" }).waitFor();
   await dialog.getByText(/다음 턴 이탈 예정/).waitFor();
+  const pick = dialog.getByRole("group", { name: "동료 선택" });
+  assert.equal(await pick.getByText("다음 턴 이탈", { exact: true }).count(), 3);
   await legacy.close(dialog);
   dialog = await legacy.tools("mon-12");
   const sash = dialog.locator("li", { hasText: "기합의띠" });
@@ -375,14 +452,31 @@ try {
   await legacy.use(legacy.button("장착", sash));
   await legacy.close(dialog);
   dialog = await legacy.open("우호도 관리", /보유 포켓몬/);
-  await legacy.use(dialog.locator('[data-install-pick="mon-12"]'));
+  const cards = pick.locator("[data-install-pick]");
+  const order = () => cards.evaluateAll(buttons => buttons.map(button => button.dataset.installPick));
+  assert.deepEqual(await order(), ["mon-11", "mon-13", "mon-12"]);
+  assert.equal(await pick.getByText("다음 턴 이탈", { exact: true }).count(), 2);
+  await legacy.use(pick.getByRole("button", { name: "캐터피", exact: true }));
   await dialog.getByText("기합의띠로 이탈 방지 중").waitFor();
-  await legacy.use(dialog.locator('[data-install-pick="mon-13"]'));
+  const threatenedCharmander = pick.getByRole("button", { name: "파이리 다음 턴 이탈", exact: true });
+  assert.ok((await threatenedCharmander.boundingBox())?.height >= 44);
+  await legacy.use(threatenedCharmander);
+  const beforeRecovery = await legacy.read();
   await legacy.use(legacy.button("회복 아이템 사용", dialog));
+  await pick.getByRole("button", { name: "파이리", exact: true, pressed: true }).waitFor();
+  assert.equal(await pick.getByText("다음 턴 이탈", { exact: true }).count(), 1);
+  assert.deepEqual(await order(), ["mon-11", "mon-12", "mon-13"]);
+  const afterRecovery = await legacy.read();
+  assert.equal(afterRecovery.energy, beforeRecovery.energy - 1);
+  assert.equal(afterRecovery.resources.healItem, beforeRecovery.resources.healItem - 1);
+  assert.deepEqual(afterRecovery.roster.map(member => member.id), beforeRecovery.roster.map(member => member.id));
+  assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth === innerWidth));
   await legacy.close(dialog);
   await mobile.getByText("다음 턴 이탈 예정 · 이상해씨", { exact: true }).waitFor();
+  await nextTurnNotice.getByText("다음 턴 이탈 예정 · 이상해씨", { exact: true }).waitFor();
   const beforeDeparture = await legacy.read();
   await legacy.turn();
+  assert.equal(await nextTurnNotice.count(), 0);
   let departureSave = await legacy.read();
   assert.deepEqual(departureSave.roster.map(member => [member.id, member.favor, member.heldItem]),
     [["mon-12", 20, "focus_sash"], ["mon-13", 33, undefined]]);
@@ -426,7 +520,63 @@ try {
   assert.ok((await legacy.read()).caughtSpeciesIds.includes(1));
   console.log("Departure Chrome smoke passed: migrated warning, recovery, departure, reusable Focus Sash, empty save and recruitment");
 
+  const recruited = await legacy.read();
+  const candySave = { ...recruited, energy: 5, resources: { ...recruited.resources, candy: 5 },
+    roster: [{ ...recruited.roster[0], level: 2, exp: 35, heldItem: "lucky_egg" }] };
+  async function openCandySave() {
+    await mobile.evaluate(({ saveKey, snapshot }) => localStorage.setItem(saveKey, JSON.stringify(snapshot)), { saveKey, snapshot: candySave });
+    await mobile.reload();
+    return legacy.open("포켓몬 1", /보유 포켓몬/);
+  }
+  async function chooseAmount(candyDialog, count) {
+    await legacy.use(candyDialog.getByText("사탕 여러 개 먹이기", { exact: true }));
+    const quantity = candyDialog.getByRole("combobox", { name: "사탕 수량" });
+    assert.equal(await quantity.inputValue(), "5");
+    assert.deepEqual(await quantity.getByRole("option").allTextContents(), ["선택", "2개", "3개", "4개", "5개"]);
+    assert.ok((await quantity.boundingBox())?.height >= 44);
+    if (count !== 5) await quantity.selectOption(String(count));
+    return quantity;
+  }
+
+  dialog = await openCandySave();
+  const initialCandy = await legacy.read();
+  await chooseAmount(dialog, 5);
+  await dialog.getByText("행동력 5 · 사용 후 Lv.5 · 경험치 55/100", { exact: true }).waitFor();
+  await legacy.close(dialog);
+  assert.deepEqual(await legacy.read(), initialCandy);
+  dialog = await legacy.open("포켓몬 1", /보유 포켓몬/);
+  for (let count = 0; count < 5; count++) await legacy.use(legacy.button("사탕 먹이기", dialog));
+  await legacy.close(dialog);
+  const singleApplications = await legacy.read();
+
+  dialog = await openCandySave();
+  await chooseAmount(dialog, 5);
+  await legacy.use(legacy.button("사탕 5개 먹이기", dialog));
+  await dialog.getByRole("heading", { name: /Lv\.5$/ }).waitFor();
+  assert.equal(await dialog.getByText("사탕 여러 개 먹이기", { exact: true }).count(), 0);
+  await legacy.close(dialog);
+  assert.deepEqual(await legacy.read(), singleApplications);
+  await mobile.reload();
+  await legacy.button("포켓몬 1").waitFor();
+  assert.deepEqual(await legacy.read(), singleApplications);
+
+  dialog = await openCandySave();
+  const quantity = await chooseAmount(dialog, 2);
+  await dialog.getByText("행동력 2 · 사용 후 Lv.4 · 경험치 15/80", { exact: true }).waitFor();
+  await legacy.button("사탕 2개 먹이기", dialog).evaluate(element => { element.click(); element.click(); });
+  await dialog.getByRole("heading", { name: /Lv\.4$/ }).waitFor();
+  const partial = await legacy.read();
+  assert.equal(partial.energy, 3);
+  assert.equal(partial.resources.candy, 3);
+  assert.equal(await quantity.inputValue(), "0");
+  assert.deepEqual(await quantity.getByRole("option").allTextContents(), ["선택", "2개", "3개"]);
+  assert.ok(await legacy.button("선택한 사탕 먹이기", dialog).isDisabled());
+  assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth));
+  await legacy.close(dialog);
+  console.log("Candy Chrome smoke passed: five single taps match one five-item batch, live estimate, cancel, double-activation guard and reload");
+
   await verifyLegacyResearchStaff();
+  await verifySharedStaffing();
   assert.deepEqual(errors, []);
   console.log("Base Chrome smoke passed: new game with keyboard and migrated v1 with touch; construction, production, growth, expansion and a fresh game's clinic recovery");
 } finally {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Beam, CustomShader, FilmGrain, LinearGradient, RadialGradient, Ring, Shader, SimplexNoise } from "shaders/react";
-import { defineShader, transformPosition, wgsl } from "shaders/std";
+import { Beam, FilmGrain, RadialGradient, Ring, Shader, SimplexNoise } from "shaders/react";
 
 type Point = { x: number; y: number };
 
@@ -10,82 +9,22 @@ const sunbeams = [
   { start: { x: .80, y: .09 }, end: { x: .50, y: .54 }, width: .10, speed: .22, opacity: .28 },
 ];
 
-const scannerReturn = defineShader({
-  name: "ForestScannerReturn",
-  animatedTime: { speed: "speed" },
-  props: {
-    center: { default: { x: .5, y: .6 }, transform: transformPosition },
-    acquisition: { default: 0 },
-    aperture: { default: 0.13 },
-    confirmed: { default: 0 },
-    speed: { default: 1 },
-  },
-  paint: wgsl`
-    let p = (uv - center) * vec2f(max(aspect, 1.0), max(1.0 / aspect, 1.0));
-    let radius = aperture + acquisition * 0.045;
-    let distance = length(p);
-    let rim = 1.0 - smoothstep(0.0007, 0.0024, abs(distance - radius));
-    let inside = 1.0 - smoothstep(radius - 0.018, radius, distance);
-
-    // Sweep once during acquisition; keep the fine readout lines live after the lock.
-    let row = p.y + (2.0 * acquisition - 1.0) * radius;
-    let sweep = exp(-abs(row) * 110.0) * acquisition;
-    let azimuth = atan2(p.y, p.x + 0.000001);
-    let segment = smoothstep(0.20, 0.85, cos(azimuth * 4.0));
-    let apertureArc = exp(-abs(distance - radius - 0.031 * acquisition) * 175.0) * segment;
-    let lensGlint = exp(-abs(row + 0.019) * 75.0) * exp(-p.x * p.x * 12.0);
-    let acquireLight = (apertureArc * 0.34 + lensGlint * 0.3) * acquisition * (1.0 - acquisition * 0.45);
-    let lines = pow(0.5 + 0.5 * sin(uv.y * viewport.y * 1.65 - time * 2.4), 5.0);
-    let cell = floor(uv * vec2f(200.0, 155.0));
-    let grain = fract(sin(dot(cell, vec2f(12.9898, 78.233)) + floor(time * 15.0)) * 43758.5453);
-    let response = inside * (0.018 + lines * 0.077 + grain * 0.026 + sweep * 0.42);
-    let color = mix(vec3f(0.65, 0.95, 0.75), vec3f(0.98, 0.83, 0.49), confirmed);
-    return vec4f(color, rim * (0.46 + acquisition * 0.38) + (response + acquireLight * inside) * (1.0 - confirmed * 0.45));
-  `,
-});
-
-const recognitionPulse = defineShader({
-  name: "ScannerRecognitionPulse",
-  props: {
-    center: { default: { x: .5, y: .52 }, transform: transformPosition },
-    pulse: { default: 0 },
-  },
-  paint: wgsl`
-    let p = (uv - center) * vec2f(max(aspect, 1.0), max(1.0 / aspect, 1.0));
-    let distance = length(p);
-    let front = 0.05 + (1.0 - pulse) * 0.39;
-    let ring = exp(-abs(distance - front) * 100.0);
-    let streak = exp(-abs(p.y - (front - 0.21)) * 74.0) * exp(-p.x * p.x * 43.0);
-    let light = (ring * 0.61 + streak * 0.32) * pulse * smoothstep(0.0, 0.22, 1.0 - pulse);
-    return vec4f(0.78, 1.0, 0.70, light);
-  `,
-});
-
 export default function DraftShader({
   target,
   trainerRevealed,
-  fieldScan,
-  analysisPass,
-  analysisResolved,
-  recruited,
 }: {
   target?: Point;
   trainerRevealed: boolean;
-  fieldScan: boolean;
-  analysisPass?: number;
-  analysisResolved: boolean;
-  recruited: boolean;
 }) {
   const [unavailable, setUnavailable] = useState(false);
   const [ready, setReady] = useState(false);
   const [pulse, setPulse] = useState(0);
-  const analyzing = analysisPass !== undefined;
 
   useEffect(() => {
     if (!target && !trainerRevealed) return;
     let frame: number;
     const start = performance.now();
-    const duration = recruited ? 680 : trainerRevealed ? 620 : analyzing ? 370 : 200;
+    const duration = trainerRevealed ? 620 : 200;
     function animate(time: number) {
       const elapsed = Math.min(1, Math.max(0, (time - start) / duration));
       setPulse(trainerRevealed ? (1 - elapsed) ** 2 : 1 - elapsed);
@@ -93,7 +32,7 @@ export default function DraftShader({
     }
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
-  }, [target, trainerRevealed, analyzing, analysisPass, recruited]);
+  }, [target, trainerRevealed]);
 
   if (unavailable) return null;
   const center = { x: (target?.x ?? 50) / 100, y: (target?.y ?? 50) / 100 };
@@ -104,24 +43,7 @@ export default function DraftShader({
       onReady={() => setReady(true)}
       onUnavailable={() => setUnavailable(true)}
     >
-      {fieldScan && (
-        <LinearGradient
-          id="field-ground"
-          visible={false}
-          start={{ x: .5, y: .42 }}
-          end={{ x: .5, y: .92 }}
-          colorA="transparent"
-          colorB="#ffffff"
-        />
-      )}
-      <SimplexNoise
-        colorA={fieldScan ? "#d9e9bc" : "#cde9c0"}
-        colorB={fieldScan ? "#728a5733" : "#12231a"}
-        scale={fieldScan ? 2.0 : 2.4}
-        speed={fieldScan ? 0.15 : 0.23}
-        opacity={fieldScan ? 0.26 : 0.28}
-        maskSource={fieldScan ? "field-ground" : undefined}
-      />
+      <SimplexNoise colorA="#cde9c0" colorB="#12231a" scale={2.4} speed={0.23} opacity={0.28} />
       <FilmGrain animated strength={0.32} bias={0.45} />
       <RadialGradient
         id="draft-sunlight"
@@ -160,21 +82,15 @@ export default function DraftShader({
           maskSource="draft-sunlight"
         />
       ))}
-      {fieldScan ? (
-        <CustomShader src={scannerReturn} center={center} acquisition={pulse} visible={Boolean(target)}
-          aperture={analyzing ? .33 : .13} confirmed={analysisResolved ? 1 : 0} />
-      ) : (
-        <Ring
-          center={trainerRevealed ? { x: .43, y: .53 } : center}
-          radius={trainerRevealed ? 0.22 + pulse * 0.18 : 0.135 + pulse * 0.055}
-          color={trainerRevealed ? "#f5dda3" : "#e1fbe2"}
-          thickness={0.0025}
-          softness={0.002}
-          visible={trainerRevealed ? pulse > 0 : Boolean(target)}
-          opacity={trainerRevealed ? pulse * 0.46 : target ? 0.24 + pulse * 0.56 : 0}
-        />
-      )}
-      {recruited && <CustomShader src={recognitionPulse} center={center} pulse={pulse} />}
+      <Ring
+        center={trainerRevealed ? { x: .43, y: .53 } : center}
+        radius={trainerRevealed ? 0.22 + pulse * 0.18 : 0.135 + pulse * 0.055}
+        color={trainerRevealed ? "#f5dda3" : "#e1fbe2"}
+        thickness={0.0025}
+        softness={0.002}
+        visible={trainerRevealed ? pulse > 0 : Boolean(target)}
+        opacity={trainerRevealed ? pulse * 0.46 : target ? 0.24 + pulse * 0.56 : 0}
+      />
       {trainerRevealed && (
         <Beam
           startPosition={{ x: 1.1 - pulse * .92, y: .04 }}

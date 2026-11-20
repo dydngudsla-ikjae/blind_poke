@@ -1,15 +1,13 @@
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import forest from "../../assets/observatory-forest.webp";
-import unknownSignal from "../../assets/unknown-presence.webp";
-import brassScope from "../../assets/field-observation-scope.webp";
 import focusClick from "../../assets/field-observation-detent.wav";
-import DraftAtmosphere from "../components/DraftAtmosphere";
 import HuntOptics from "../components/HuntOptics";
 import ScanMeasurements from "../components/ScanMeasurements";
 import { useGame } from "../game/GameProvider";
 import { huntCandidates } from "../game/gameHelpers";
 import { counterHuntPool, preparedTypeLabel } from "../game/territoryReadiness";
 import transitionFieldView from "./transitionFieldView";
+import "./FieldOptics.css";
 import "./HuntScreen.css";
 
 const positions = [
@@ -20,16 +18,6 @@ const positions = [
 const forestWidth = 1568;
 const forestHeight = 882;
 const forestPositionY = .54;
-const instrumentKey = "blindpoke-hunt-instrument";
-type Instrument = "digital" | "optical";
-
-function initialInstrument(): Instrument {
-  try {
-    return sessionStorage.getItem(instrumentKey) === "digital" ? "digital" : "optical";
-  } catch {
-    return "optical";
-  }
-}
 
 export default function HuntScreen() {
   const { data, state, dispatch } = useGame();
@@ -39,25 +27,14 @@ export default function HuntScreen() {
   const [hovered, setHovered] = useState<number | null>(null);
   const [focused, setFocused] = useState<number | null>(null);
   const [touchTarget, setTouchTarget] = useState<number | null>(null);
-  const [instrument, setInstrument] = useState(initialInstrument);
   const heading = useRef<HTMLHeadingElement>(null);
   const viewfinder = useRef<HTMLDivElement>(null);
   const latch = useRef<HTMLAudioElement>(null);
   const activeIndex = hovered ?? focused ?? touchTarget;
   const target = activeIndex === null ? undefined : positions[activeIndex];
   const active = activeIndex === null ? undefined : candidates[activeIndex];
-  const optical = instrument === "optical";
 
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
-
-  function selectInstrument(next: Instrument) {
-    setInstrument(next);
-    try {
-      sessionStorage.setItem(instrumentKey, next);
-    } catch {
-      // The device still works when the browser blocks session storage.
-    }
-  }
 
   function playFocusClick() {
     const sound = latch.current;
@@ -65,15 +42,6 @@ export default function HuntScreen() {
     sound.currentTime = 0;
     sound.volume = .19;
     void sound.play().catch(() => {});
-  }
-
-  function moveSight(event: PointerEvent<HTMLDivElement>) {
-    if (event.pointerType !== "mouse") return;
-    const view = event.currentTarget;
-    const bounds = view.getBoundingClientRect();
-    view.style.setProperty("--aim-x", `${event.clientX - bounds.left}px`);
-    view.style.setProperty("--aim-y", `${event.clientY - bounds.top}px`);
-    view.dataset.aiming = "true";
   }
 
   function identify({ pokemon, shownType }: (typeof candidates)[number], index: number, button: HTMLButtonElement) {
@@ -100,33 +68,18 @@ export default function HuntScreen() {
   }
 
   return (
-    <section className="draft-station hunt-station" aria-labelledby="hunt-title" data-instrument={instrument}>
+    <section className="draft-station hunt-station field-brass-station" aria-labelledby="hunt-title">
       <div className="draft-device">
         <div
           ref={viewfinder}
           className="draft-view hunt-view"
           role="group"
           aria-label="야생 개체 뷰파인더"
-          data-focused={Boolean(target)}
-          onPointerMove={optical ? undefined : moveSight}
-          onPointerLeave={event => {
-            delete event.currentTarget.dataset.aiming;
-            setHovered(null);
-          }}
+          onPointerLeave={() => setHovered(null)}
         >
           <img className="draft-landscape" src={forest} alt="" width={forestWidth} height={forestHeight} fetchPriority="high" />
-          {optical ? (
-            <>
-              <HuntOptics target={target} image={forest} imageAspect={forestWidth / forestHeight} imagePositionY={forestPositionY} />
-              <audio ref={latch} src={focusClick} preload="auto" />
-            </>
-          ) : (
-            <>
-              <DraftAtmosphere target={target} fieldScan />
-              <div className="hunt-lens-guides" aria-hidden="true" />
-              <div className="draft-aim" aria-hidden="true"><span /></div>
-            </>
-          )}
+          <HuntOptics target={target} image={forest} imageAspect={forestWidth / forestHeight} imagePositionY={forestPositionY} />
+          <audio ref={latch} src={focusClick} preload="auto" />
 
           <header className="draft-view-header">
             <div className="draft-mission">
@@ -136,7 +89,7 @@ export default function HuntScreen() {
             </div>
             <div className="draft-scanner-status" data-locked={Boolean(target)}>
               <span className="draft-status-light" aria-hidden="true" />
-              {optical ? (target ? "초점 맞음" : "초점 탐색 중") : (target ? "대상 포착" : "대상 탐색 중")}
+              {target ? "초점 맞음" : "초점 탐색 중"}
             </div>
           </header>
 
@@ -176,21 +129,19 @@ export default function HuntScreen() {
                   identify(candidate, index, event.currentTarget);
                 }}
               >
-                {optical ? <span className="hunt-optical-trace" aria-hidden="true" /> : (
-                  <>
-                    <img className="draft-signal-art" src={unknownSignal} alt="" draggable={false} />
-                    <span className="scanner-contact" aria-hidden="true" />
-                  </>
-                )}
+                <span className="hunt-optical-trace field-optic-trace" aria-hidden="true" />
               </button>
             );
           })}
 
-          <aside className="hunt-readout" aria-label="관측 패널" data-locked={Boolean(target)} aria-live="polite" aria-atomic="true">
-            {optical && <p className="hunt-field-note-label">야외 관측표</p>}
+          <aside className="hunt-readout field-note-paper" aria-label="관측 패널" aria-live="polite" aria-atomic="true">
+            <p className="hunt-field-note-label">야외 관측표</p>
             <h2>{activeIndex === null ? "관측 대기" : `미확인 개체 ${activeIndex + 1}`}</h2>
             {active?.counter && <p className="hunt-counter-note">유효 공격 후보</p>}
             <ScanMeasurements pokemon={active?.pokemon} shownType={active?.shownType} />
+            <p className="hunt-note-hint draft-touch-hint">
+              {target ? "같은 흔적을 다시 눌러 식별" : "흔적을 눌러 관측"}
+            </p>
           </aside>
         </div>
 
@@ -200,17 +151,10 @@ export default function HuntScreen() {
           }}>
             <span aria-hidden="true">←</span> {state.counterHunt ? "월드맵으로" : "본거지로"}
           </button>
-          <div className="hunt-instruments" role="group" aria-label="관측 장비">
-            <button type="button" aria-label="디지털 스캐너" aria-pressed={!optical} onClick={() => selectInstrument("digital")}>스캐너</button>
-            <button type="button" aria-pressed={optical} onClick={() => selectInstrument("optical")}>
-              <img src={brassScope} alt="" width={36} height={36} />황동 관측경
-            </button>
-          </div>
           <p className="draft-keys">
             <span><kbd>마우스</kbd><kbd>Tab</kbd> 조준</span>
             <span><kbd>클릭</kbd><kbd>Enter</kbd> 식별</span>
           </p>
-          <p className="draft-touch-hint">눌러서 관측 · 다시 눌러 식별</p>
         </footer>
       </div>
     </section>

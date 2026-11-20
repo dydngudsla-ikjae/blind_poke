@@ -7,6 +7,8 @@ const optics = defineShader({
   animatedTime: { speed: "speed" },
   props: {
     center: { default: { x: .5, y: .5 }, transform: transformPosition },
+    detailAt: { default: { x: .5, y: .5 }, transform: transformPosition },
+    closeup: { default: 0 },
     focus: { default: 0 },
     imageAspect: { default: 16 / 9 },
     imagePositionY: { default: .54 },
@@ -22,10 +24,12 @@ const optics = defineShader({
     let magnification = mix(0.96, 0.91, focus);
     let bent = center + (p * (magnification + 0.58 * radius * radius) + groundRipple) / proportions;
 
-    // Sample the same cover crop as the painted background.
+    // Match the landscape cover in exploration and the enlarged crop in identification.
     let crop = vec2f(min(1.0, aspect / imageAspect), min(1.0, imageAspect / aspect));
     let origin = (vec2f(1.0) - crop) * vec2f(0.5, imagePositionY);
-    let source = bent * crop + origin;
+    let detailWidth = max(2.35 * aspect, 3.15);
+    let detailCrop = vec2f(aspect, imageAspect) / detailWidth;
+    let source = mix(bent * crop + origin, detailAt + (bent - center) * detailCrop, closeup);
     let glass = textureSample(childTexture, childSampler, source);
     let ray = max(0.0, 1.0 - abs(p.x + 0.55 * p.y + 0.20) * 12.0);
     let reflection = ray * smoothstep(0.15, 0.35, radius) * 0.036;
@@ -35,12 +39,13 @@ const optics = defineShader({
   `,
 });
 
-export default function HuntOpticsShader({ image, imageAspect, imagePositionY, center, focus }: {
+export default function HuntOpticsShader({ image, imageAspect, imagePositionY = .54, center, focus, detailAt }: {
   image: string;
   imageAspect: number;
-  imagePositionY: number;
+  imagePositionY?: number;
   center: { x: number; y: number };
   focus: number;
+  detailAt?: { x: number; y: number };
 }) {
   const [ready, setReady] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
@@ -49,7 +54,8 @@ export default function HuntOpticsShader({ image, imageAspect, imagePositionY, c
   return (
     <Shader className="hunt-optics-shader" data-ready={ready} disableTelemetry
       onReady={() => setReady(true)} onUnavailable={() => setUnavailable(true)}>
-      <CustomShader src={optics} center={center} focus={focus} imageAspect={imageAspect} imagePositionY={imagePositionY}>
+      <CustomShader src={optics} center={center} focus={focus} imageAspect={imageAspect} imagePositionY={imagePositionY}
+        detailAt={detailAt} closeup={detailAt ? 1 : 0}>
         <ImageTexture url={image} objectFit="fill" />
       </CustomShader>
     </Shader>

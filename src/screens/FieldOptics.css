@@ -1,0 +1,68 @@
+.field-brass-station .draft-mission {
+  border-left-color: #bd9255;
+  background: linear-gradient(90deg, #241a10f2, #21181098 74%, transparent);
+}
+.field-brass-station .draft-location { color: #ecd19c; }
+.field-brass-station .draft-scanner-status {
+  border-top-color: #a57e49;
+  color: #e6c896;
+  background: #2d2213ef;
+}
+.field-brass-station .draft-scanner-status[data-locked="true"] { color: #fff0bc; }
+.field-brass-station .draft-status-light { border-radius: 50%; }
+
+.field-optic-bezel {
+  border: clamp(5px, 1vw, 12px) solid #a17942;
+  border-top-color: #e1b979;
+  border-right-color: #9a713c;
+  border-bottom-color: #523618;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px #251809,
+    0 0 0 5px #987042,
+    0 0 0 8px #372716,
+    0 0 26px 10px #0e100cba,
+    0 0 0 160vmax #100f0abd,
+    inset 0 0 0 2px #33210c,
+    inset 0 0 0 5px #e4b57570,
+    inset 0 0 31px 11px #261a1094;
+}
+
+.field-optic-rim {
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  opacity: .85;
+  transform: rotate(calc(11deg * (1 - var(--optics-focus, 1))));
+  background: repeating-conic-gradient(from -2deg, #f0c47d 0deg 1deg, #2b1b0d 1deg 2deg, transparent 2deg 10deg);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px) calc(100% - 2px), transparent calc(100% - 1px));
+}
+
+.field-optic-trace {
+  aspect-ratio: 1;
+  border-inline: 1px solid #ffe7a9b5;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #fff1b67d, #e0c78c2b 35%, transparent 66%);
+  box-shadow: 0 0 13px #f4cf6429;
+  pointer-events: none;
+}
+
+.hunt-optics-shader { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.hunt-optics-shader[data-ready="true"] { opacity: 1; }
+
+.field-note-paper {
+  --field-ink: #312114;
+  --field-muted: #654c32;
+  --field-mint: #45502d;
+  --field-line: #9d7a5278;
+  border: 1px solid #bf9558;
+  border-radius: 5px 7px 4px 5px;
+  background: #edcf95 url("../../assets/field-journal-page.webp") center / 100% 100% no-repeat;
+  box-shadow: 0 3px #947143, 2px 9px 19px #171108c4;
+  color: var(--field-ink);
+}
+
+.field-brass-station :is(.hunt-controls, .identify-controls) {
+  border-top-color: #957345;
+  background: linear-gradient(#302b1e, #1d1c13);
+}

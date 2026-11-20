@@ -6,25 +6,16 @@ const DraftShader = lazy(() => import("./DraftShader").catch(() => ({ default: (
 export default function DraftAtmosphere({
   target,
   trainerRevealed = false,
-  fieldScan = false,
-  analysisPass,
-  analysisResolved = false,
-  recruited = false,
 }: {
   target?: { x: number; y: number };
   trainerRevealed?: boolean;
-  fieldScan?: boolean;
-  analysisPass?: number;
-  analysisResolved?: boolean;
-  recruited?: boolean;
 }) {
   const enabled = useFieldMotion();
 
   return enabled ? (
     <div className="draft-atmosphere" aria-hidden="true">
       <Suspense fallback={null}>
-        <DraftShader target={target} trainerRevealed={trainerRevealed} fieldScan={fieldScan}
-          analysisPass={analysisPass} analysisResolved={analysisResolved} recruited={recruited} />
+        <DraftShader target={target} trainerRevealed={trainerRevealed} />
       </Suspense>
     </div>
   ) : null;

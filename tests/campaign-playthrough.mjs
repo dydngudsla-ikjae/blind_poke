@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { chromium } from "playwright";
 import { preview } from "vite";
-import { ENERGY_CHARGE_COST } from "../src/domain/economy.ts";
+import { candyCostToLevel, ENERGY_CHARGE_COST } from "../src/domain/economy.ts";
 import { worldMapNodes } from "../src/domain/worldMap.ts";
 import { campaignMemberScore, fixBattleDraws, memberScore, playCampaignBattle, setBattleRandom, useHistoricalBattleData } from "./battle-play.mjs";
 
@@ -12,6 +12,8 @@ const profiles = [
   { seed: 83, picks: [2, 0, 1] }, { seed: 121, picks: [0, 2, 1] },
 ];
 const connectedRoute = process.argv.includes("--connected");
+const batchCandy = process.argv.includes("--batch-candy");
+const quickCharge = process.argv.includes("--quick-charge");
 const trainingAudit = process.argv.includes("--training-audit");
 const frontierAudit = process.argv.includes("--frontier-audit");
 const researchSiteAudit = process.argv.includes("--research-site-audit");
@@ -35,7 +37,7 @@ const auditCases = new Map([
   [226, { site: "ne-02", enemy: ["할비롱 Lv.18", "절벼게 Lv.18"], region: 3, concentrated: [16, 11], spread: [15, 11, 6],
     moveThreshold: [14, 9, 10], researchThreshold: { name: "루나톤", level: 4 }, choices: 33 }],
 ]);
-const requested = process.argv.slice(2).filter(arg => !["--connected", "--training-audit", "--guided", "--baseline-data", "--favor", "--frontier", "--frontier-audit", "--outposts", "--research-site-audit", "--ending", "--dex-during", "--dex-refill-audit", "--inherited-dojo-challenge", "--dark-audit", "--flying-audit", "--flying-battle-audit", "--flying-sample", "--flying-extremes", "--flying-decision-audit"].includes(arg)).map(Number);
+const requested = process.argv.slice(2).filter(arg => !["--connected", "--batch-candy", "--quick-charge", "--training-audit", "--guided", "--baseline-data", "--favor", "--frontier", "--frontier-audit", "--outposts", "--research-site-audit", "--ending", "--dex-during", "--dex-refill-audit", "--inherited-dojo-challenge", "--dark-audit", "--flying-audit", "--flying-battle-audit", "--flying-sample", "--flying-extremes", "--flying-decision-audit"].includes(arg)).map(Number);
 const eligible = manageFavor ? profiles.filter(({ seed }) => seed === 7)
   : trainingAudit || useGuidance ? profiles.filter(({ seed }) => auditCases.has(seed)) : profiles;
 const defaults = trainingAudit || useGuidance ? eligible : eligible.slice(0, 3);
@@ -874,6 +876,8 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   const dexAttempts = [];
   const totals = { charges: 0, candies: 0, hunts: 0, added: 0, growthTurns: 0, supplyTurns: 0, observedIsolationTurns: 0,
     missedGrossGold: 0, forfeitedGold: 0, lost: [], retries: 0, counterHunts: 0 };
+  const candyActions = { singles: 0, batches: 0, quantityChanges: 0 };
+  let shortcutCharges = 0;
   const favor = { stages: [], turns: [], healItemsProduced: 0, recovery: [], sashProtection: [], hunts: [],
     actionPower: { hunts: 0, clearing: 0, construction: 0, assignments: 0 }, charges: 0, tool: 0, material: 0 };
   const ledger = { turnRefill: 0, purchasedRefill: 0, income: 0, raids: [], chargeEvents: [], candyPerTurn: [] };
@@ -1009,12 +1013,20 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   }
 
   async function charge() {
-    const before = manageFavor ? await save() : null;
+    const before = manageFavor || quickCharge ? await save() : null;
     if (dexRefill) assert.ok(canBuyCharge(before), "The purchase must follow the refill strategy");
-    await tap(button("상점"));
-    const shop = page.getByRole("dialog", { name: /상점/ });
-    await tap(button("구매", shop));
-    await close(shop);
+    const shortcut = button(/^충전권 구매/);
+    if (quickCharge && await shortcut.isVisible()) {
+      await tap(shortcut);
+      await page.waitForFunction(({ key, gold }) => JSON.parse(localStorage.getItem(key))?.resources.gold === gold,
+        { key, gold: before.resources.gold - ENERGY_CHARGE_COST });
+      shortcutCharges++;
+    } else {
+      await tap(button("상점"));
+      const shop = page.getByRole("dialog", { name: /상점/ });
+      await tap(button("구매", shop));
+      await close(shop);
+    }
     totals.charges++;
     const after = await save();
     if (before) ledger.purchasedRefill += after.energy - before.energy;
@@ -1068,6 +1080,15 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     const outcome = page.locator(".identify-outcome");
     await outcome.waitFor();
     const caught = await outcome.getAttribute("data-result") === "captured";
+    const newSpecies = caught && !before.caughtSpeciesIds.includes(id);
+    const dexCount = before.caughtSpeciesIds.length + Number(newSpecies);
+    if (endingRun && newSpecies && [10, 25].includes(dexCount)) {
+      const record = outcome.getByRole("group", { name: "도감 기록" });
+      await record.getByText("도감 신규 등록", { exact: true }).waitFor();
+      await record.getByText(`누적 ${dexCount}종`, { exact: true }).waitFor();
+      await record.getByText(`${dexCount}종 보상 달성 · 목표·도감에서 확인`, { exact: true }).waitFor();
+      console.log(`Dex capture: ${dexCount} species · ${species.get(id).nameKr}`);
+    }
     if (dexRefill) dexAttempts.push({ id, chance, rng, caught });
     await tap(button(fromMap ? "월드맵으로" : "본거지로"));
     const arrival = heading(destination);
@@ -1804,9 +1825,23 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       await tap(dialog.locator(`[data-install-pick="${id}"]`));
       for (;;) {
         const current = await save();
-        if (!current.energy || !current.resources.candy || current.roster.find(member => member.id === id).level >= level) break;
-        await tap(button("사탕 먹이기", dialog));
-        totals.candies++;
+        const selectedMember = current.roster.find(member => member.id === id);
+        if (!current.energy || !current.resources.candy || selectedMember.level >= level) break;
+        const count = batchCandy ? Math.min(current.energy, current.resources.candy, candyCostToLevel(selectedMember, level)) : 1;
+        if (count > 1) {
+          await tap(dialog.getByText("사탕 여러 개 먹이기", { exact: true }));
+          const quantity = dialog.getByRole("combobox", { name: "사탕 수량" });
+          if (await quantity.inputValue() !== String(count)) {
+            await quantity.selectOption(String(count));
+            candyActions.quantityChanges++;
+          }
+          await tap(button(`사탕 ${count}개 먹이기`, dialog));
+          candyActions.batches++;
+        } else {
+          await tap(button("사탕 먹이기", dialog));
+          candyActions.singles++;
+        }
+        totals.candies += count;
       }
       await close(dialog);
     }
@@ -2375,6 +2410,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       await verifySupplyMap();
     }
     console.log(JSON.stringify({ seed, trainer, starters, route: connectedRoute ? "connected" : "nw-04-first", cleared: 40, turns: cleared.turnCount, ...totals }));
+    if (batchCandy) console.log(JSON.stringify({ seed, audit: "batch candy", candies: totals.candies, ...candyActions }));
     if (useGuidance) {
       const site = auditCases.get(seed).site;
       const attempts = logs.filter(battle => battle.id === site);
@@ -2392,6 +2428,11 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
         return { snapshot, keepers, rng: await page.evaluate(() => window.campaignRngState) };
       }
       await verifyCampaignEnding(restored, chargesAtClear);
+    }
+    if (quickCharge) {
+      assert.ok(shortcutCharges > 0);
+      console.log(JSON.stringify({ seed, audit: "quick charge", shortcutCharges, shopCharges: totals.charges - shortcutCharges,
+        purchases: totals.charges, shopOnlyActions: totals.charges * 3, actions: totals.charges * 3 - shortcutCharges * 2 }));
     }
     if (researchSiteAudit) return {
       checkpoint: researchCheckpoint, chargeEvents: ledger.chargeEvents, candyPerTurn: ledger.candyPerTurn,

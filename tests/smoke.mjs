@@ -114,10 +114,12 @@ try {
   await page.keyboard.press("Enter");
   const analysis = page.getByRole("complementary", { name: "개체 분석" });
   await analysis.locator(".identify-console-header", { hasText: `감지 타입 ${detectedType}` }).waitFor();
+  await analysis.getByText(/단서 1회 −8%p · 오답 −20%p · 최저 \d+%/).waitFor();
   const lens = page.getByRole("group", { name: "확대 렌즈" });
   await lens.getByText("미확인 개체 1").waitFor();
   const targetArt = lens.locator(".identify-target-art");
-  if (!(await targetArt.getAttribute("src"))?.includes("unknown-presence")) {
+  await lens.locator(".identify-trace").waitFor();
+  if (await targetArt.count() !== 0) {
     throw new Error("외곽 대조 전에 포켓몬 원화가 표시됩니다.");
   }
   await page.getByRole("button", { name: /본인확인서 대조/ }).click();
@@ -129,10 +131,37 @@ try {
     return pokemon.find(entry => entry.pokemonRowid === id).nameKr;
   }, pokemonId);
   const guess = page.getByRole("textbox", { name: "포켓몬 이름" });
+  const beforeWrong = Number(await analysis.locator("meter").getAttribute("value"));
+  await guess.fill("오답검증");
+  await guess.press("Enter");
+  await analysis.getByText("오답 1", { exact: true }).waitFor();
+  assert.equal(Number(await analysis.locator("meter").getAttribute("value")), beforeWrong - 20);
+  const consultation = analysis.getByRole("button", { name: /박사와 상담하기/ });
+  await consultation.getByText("다음 단서 · 능력치", { exact: true }).waitFor({ timeout: 4000 });
+  await consultation.press("Enter");
+  const journal = analysis.locator(".identify-record");
+  await journal.getByText(/두드러진 능력치/).waitFor();
+  await journal.locator("summary").press("Enter");
+  const observeSize = analysis.getByRole("button", { name: /직접 관찰하기/ });
+  await observeSize.evaluate(button => { button.click(); button.click(); });
+  await journal.getByText(/신체 정보: 키/).waitFor();
+  assert.ok(await observeSize.isDisabled());
+  assert.equal(await journal.getByText(/신체 정보: 키/).count(), 1);
+  await consultation.getByText("다음 단서 · 기술", { exact: true }).waitFor();
+  await consultation.press("Enter");
+  await journal.getByText(/배울 수 있는 기술/).waitFor();
+  await consultation.getByText("다음 단서 · 특성", { exact: true }).waitFor();
+  assert.equal(await journal.getByRole("listitem").count(), 4);
   await guess.fill(pokemonName);
   await guess.press("Enter");
   await analysis.getByRole("heading", { name: "포획 성공" }).waitFor();
   await analysis.getByText(pokemonName, { exact: true }).waitFor({ timeout: 2000 });
+  const firstDex = analysis.getByRole("group", { name: "도감 기록" });
+  const alreadyRecorded = save.caughtSpeciesIds.includes(pokemonId);
+  const totalRecords = save.caughtSpeciesIds.length + Number(!alreadyRecorded);
+  await firstDex.getByText(alreadyRecorded ? "도감에 기록된 종" : "도감 신규 등록", { exact: true }).waitFor();
+  await firstDex.getByText(`누적 ${totalRecords}종`, { exact: true }).waitFor();
+  await firstDex.getByText(`다음 보상까지 ${10 - totalRecords}종`, { exact: true }).waitFor();
   await analysis.getByRole("button", { name: "새 동료 보기" }).click();
   const profile = page.getByRole("dialog", { name: new RegExp(pokemonName) });
   await profile.getByText("최대 HP", { exact: true }).waitFor();
@@ -141,6 +170,7 @@ try {
   await lens.getByRole("img", { name: pokemonName, exact: true }).waitFor();
   const capturedSave=await page.evaluate(()=>JSON.parse(localStorage.getItem("blindpoke-save-v1")));
   if(capturedSave.roster.length!==4) throw new Error("포획한 포켓몬이 로스터와 저장 데이터에 추가되지 않았습니다.");
+  assert.equal(capturedSave.caughtSpeciesIds.length, totalRecords);
   await page.getByRole("button", { name: "본거지로" }).click();
   await page.getByRole("button", {name:"엔트리"}).click();
   await page.locator('[data-pc-member="mon-1"]').dragTo(page.locator('[data-entry-slot="0"]'));
@@ -321,6 +351,7 @@ try {
   await page.getByRole("button", { name: "취소" }).click();
   await page.getByRole("heading", { name: "관측 임무 완료" }).waitFor();
   await page.getByRole("button", { name: "계속 플레이" }).click();
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem("blindpoke-save-v1"))?.endingSeen === true);
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "본거지", exact: true }).waitFor();
   await page.getByRole("button", { name: /목표·도감/ }).click();
@@ -376,7 +407,10 @@ try {
 
   async function verifyTouchJourney(viewport) {
     const touch = await browser.newPage({ viewport, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
-    await touch.addInitScript(() => { Math.random = () => 0; });
+    await touch.addInitScript(() => {
+      Math.random = () => 0;
+      sessionStorage.setItem("blindpoke-hunt-instrument", "digital");
+    });
     await touch.goto(url);
     const touchStarters = touch.locator("[data-draft-target]");
     for (let round = 1; round <= 3; round++) {
@@ -396,34 +430,49 @@ try {
       await touchStarters.first().tap();
     }
     await touch.getByRole("button", { name: "본거지로 이동" }).tap();
+    const mobileSave = () => touch.evaluate(() => JSON.parse(localStorage.getItem("blindpoke-save-v1")));
+    const buildFarm = async () => {
+      await touch.getByRole("button", { name: "1번 부지 건설" }).tap();
+      const build = touch.getByRole("dialog", { name: "건설 · 1번 부지" });
+      await build.getByRole("button", { name: "밭", exact: true }).tap();
+      for (const id of ["mon-1", "mon-2", "mon-3"]) await build.locator(`[data-install-pick="${id}"]`).tap();
+      await build.locator("[data-build-confirm]").tap();
+    };
+    const startedConstruction = viewport.width === 390;
+    if (startedConstruction) await buildFarm();
     assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
-    await touch.locator('[data-action="hunt"]').tap();
-    const touchTarget = touch.locator(".hunt-target").first();
-    await touchTarget.tap();
+    const beforeHunt = (await mobileSave()).energy;
+    const beforeHuntDex = (await mobileSave()).caughtSpeciesIds;
+    const startHunt = touch.locator('[data-action="hunt"]');
+    await startHunt.evaluate(element => { element.click(); element.click(); });
     const touchReading = touch.getByRole("complementary", { name: "관측 패널" });
+    await touchReading.getByText("흔적을 눌러 관측", { exact: true }).waitFor();
+    assert.equal((await mobileSave()).energy, beforeHunt - 2);
+    await touch.locator(".hunt-target").first().tap();
     await touchReading.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
+    const touchTarget = touch.locator(".hunt-target").nth(1);
+    await touchTarget.tap();
+    await touchReading.getByRole("heading", { name: "미확인 개체 2" }).waitFor();
+    await touchReading.getByText("같은 흔적을 다시 눌러 식별", { exact: true }).waitFor();
     assert.equal(await touch.getByRole("heading", { name: "야생 탐험" }).count(), 1);
     const touchType = await touchReading.locator(".draft-detected-type dd").textContent();
-    const digital = touch.getByRole("button", { name: "디지털 스캐너" });
-    const brass = touch.getByRole("button", { name: "황동 관측경" });
-    const scanSave = await touch.evaluate(() => localStorage.getItem("blindpoke-save-v1"));
-    const observations = await touchReading.locator("dd").allTextContents();
-    assert.equal(await digital.getAttribute("aria-pressed"), "false");
     await touchReading.getByText("야외 관측표").waitFor();
-    assert.equal(await brass.getAttribute("aria-pressed"), "true");
+    assert.equal(await touch.getByRole("group", { name: "관측 장비", exact: true }).count(), 0);
     assert.equal(await touch.locator(".hunt-optical-trace").count(), 3);
     assert.equal(await touch.locator(".hunt-optics-focus-mark").count(), 1);
     assert.equal(await touch.locator(".draft-signal-art, .hunt-optics-shader").count(), 0);
-    assert.deepEqual(await touchReading.locator("dd").allTextContents(), observations);
-    await digital.tap();
-    assert.equal(await touch.locator(".draft-signal-art").count(), 3);
-    assert.deepEqual(await touchReading.locator("dd").allTextContents(), observations);
-    await brass.tap();
-    assert.equal(await touch.evaluate(() => localStorage.getItem("blindpoke-save-v1")), scanSave);
     assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
     await touchTarget.tap();
     await touch.locator(".identify-console-header", { hasText: `감지 타입 ${touchType}` }).waitFor();
-    await touch.getByRole("button", { name: /본인확인서 대조/ }).tap();
+    const mobileMeter = touch.locator(".identify-chance meter");
+    const beforeClue = Number(await mobileMeter.getAttribute("value"));
+    const compare = touch.getByRole("button", { name: /본인확인서 대조/ });
+    if (viewport.width === 320) await compare.evaluate(button => { button.click(); button.click(); });
+    else await compare.tap();
+    assert.equal(Number(await mobileMeter.getAttribute("value")), beforeClue - 8);
+    assert.ok(await compare.isDisabled());
+    await compare.getByText("대조 완료", { exact: true }).waitFor();
+    assert.equal(await touch.locator(".identify-record li").count(), 1);
     const mobileArtwork = await touch.locator(".identify-target-art").getAttribute("src");
     const mobileId = Number(mobileArtwork.match(/(\d+)\.png/)?.[1]);
     const mobileName = await touch.evaluate(async id => {
@@ -437,24 +486,36 @@ try {
     const mobileSubmit = touch.getByRole("button", { name: "식별", exact: true });
     await touch.waitForFunction(() => {
       const box = document.querySelector(".identify-submit").getBoundingClientRect();
-      return box.top >= 0 && box.bottom <= window.visualViewport.height && box.height >= 44;
+      const viewport = window.visualViewport;
+      return box.top >= viewport.offsetTop && box.bottom <= viewport.offsetTop + viewport.height && box.height >= 44;
     });
+    await mobileGuess.dispatchEvent("compositionstart", { data: "ㅇ" });
+    await mobileGuess.evaluate(input => input.form.requestSubmit());
+    assert.equal(await mobileGuess.count(), 1, "IME 조합 중에는 제출하지 않습니다.");
+    await mobileGuess.dispatchEvent("compositionend", { data: mobileName });
     await mobileSubmit.evaluate(element => { element.click(); element.click(); });
     await touch.setViewportSize(viewport);
     await touch.getByRole("heading", { name: "포획 성공", exact: true }).waitFor();
+    const dex = touch.getByRole("group", { name: "도감 기록" });
+    const known = beforeHuntDex.includes(mobileId);
+    const currentCount = beforeHuntDex.length + Number(!known);
+    await dex.getByText(known ? "도감에 기록된 종" : "도감 신규 등록", { exact: true }).waitFor();
+    assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
+    await dex.getByText(`누적 ${currentCount}종`, { exact: true }).waitFor();
+    await touch.getByText(startedConstruction ? /밭이 완공되면 씨앗 생성 직무/ : /건설 메뉴에서 다음 시설을 지으면.*밭/, { exact: false }).waitFor();
+    const preparePlacement = touch.getByRole("button", { name: "밭 배치 준비", exact: true });
+    assert.equal(await preparePlacement.count(), 0);
     await touch.getByRole("button", { name: "새 동료 보기" }).tap();
     const recruited = touch.getByRole("dialog", { name: new RegExp(mobileName + " · 새 동료") });
     await recruited.getByText("특수공격", { exact: true }).waitFor();
     await recruited.getByRole("button", { name: "닫기" }).tap();
     await touch.getByRole("button", { name: "본거지로" }).tap();
-    const mobileSave = () => touch.evaluate(() => JSON.parse(localStorage.getItem("blindpoke-save-v1")));
-    assert.equal((await mobileSave()).roster.length, 4);
-    const seederId = (await mobileSave()).roster.find(member => [member.pokemon.type1Rowid, member.pokemon.type2Rowid].includes(12)).id;
-    await touch.getByRole("button", { name: "1번 부지 건설" }).tap();
-    const mobileBuild = touch.getByRole("dialog", { name: "건설 · 1번 부지" });
-    await mobileBuild.getByRole("button", { name: "밭", exact: true }).tap();
-    for (const id of ["mon-1", "mon-2", "mon-3"]) await mobileBuild.locator(`[data-install-pick="${id}"]`).tap();
-    await mobileBuild.locator("[data-build-confirm]").tap();
+    const afterCapture = await mobileSave();
+    assert.equal(afterCapture.roster.length, 4);
+    assert.equal(afterCapture.roster.at(-1).pokemon.pokemonRowid, mobileId);
+    assert.equal(afterCapture.energy, beforeHunt - 2);
+    const seederId = afterCapture.roster.at(-1).id;
+    if (!startedConstruction) await buildFarm();
     await touch.locator("#nextTurn").tap();
     await touch.getByRole("button", { name: "1번 부지 밭 관리" }).tap();
     const mobileFarm = touch.getByRole("dialog", { name: "밭 · 1번 부지" });
@@ -463,11 +524,22 @@ try {
     await mobileFarm.getByRole("button", { name: /씨앗 생성/ }).tap();
     await mobileFarm.locator(`[data-install-pick="${seederId}"]`).tap();
     await mobileFarm.getByText("현재 0마리 → 배치 후 1마리", { exact: true }).waitFor();
-    await mobileFarm.getByText(/씨앗 산출 0 → [1-9]/).waitFor();
+    const preview = mobileFarm.getByText(/씨앗 산출 0 → [1-9]/);
+    await preview.waitFor();
+    const expectedSeeds = Number((await preview.textContent()).match(/씨앗 산출 0 → (\d+)/)[1]);
     await mobileFarm.getByRole("button", { name: /직무 배치 · 행동력/ }).tap();
     await mobileFarm.getByRole("button", { name: "닫기" }).tap();
+    const beforeProduction = await mobileSave();
     await touch.locator("#nextTurn").tap();
-    await touch.waitForFunction(() => JSON.parse(localStorage.getItem("blindpoke-save-v1"))?.resources.seed > 0);
+    await touch.waitForFunction(turn => JSON.parse(localStorage.getItem("blindpoke-save-v1"))?.turnCount === turn, beforeProduction.turnCount + 1);
+    const produced = await mobileSave();
+    assert.equal(produced.resources.seed, beforeProduction.resources.seed + expectedSeeds);
+    assert.equal(produced.roster.find(member => member.id === seederId).jobId, "seed");
+    await touch.reload();
+    await touch.getByRole("heading", { name: "본거지", exact: true }).waitFor();
+    const reloaded = await mobileSave();
+    assert.equal(reloaded.resources.seed, produced.resources.seed);
+    assert.deepEqual(reloaded.roster.find(member => member.id === seederId), produced.roster.find(member => member.id === seederId));
     const meter = touch.locator(".base-energy");
     assert.equal(await meter.locator("b").textContent(), "5/5");
     const readouts = await touch.locator(".base-hud").evaluate(hud => {
@@ -501,15 +573,126 @@ try {
     await touch.getByRole("button", { name: "지도", exact: true }).tap();
     await touch.locator('[data-node="southwest"]').tap();
     await touch.getByRole("button", { name: /정찰하기/ }).tap();
-    await touch.getByText("Lv.2", { exact: true }).waitFor();
+    await touch.getByText("캐터피 Lv.2", { exact: true }).waitFor();
     await touch.getByRole("button", { name: /거점 도전/ }).tap();
     await touch.getByRole("heading", { name: "거점 배틀", exact: true }).waitFor();
     await touch.locator('.duel-move[data-move-id]:enabled').first().tap();
-    await touch.waitForFunction(() => /의 .*피해/.test(document.querySelector(".duel-latest")?.textContent ?? ""));
+    await touch.waitForFunction(() => {
+      const summary = document.querySelector(".duel-latest");
+      const move = document.querySelector(".duel-move");
+      if (!summary || !move || !/의 .*피해/.test(summary.textContent ?? "")) return false;
+      const report = summary.getBoundingClientRect();
+      return report.top >= 0 && report.bottom <= move.getBoundingClientRect().top;
+    });
     assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
     await touch.reload();
     await touch.getByRole("heading", { name: "본거지", exact: true }).waitFor();
     assert.ok((await mobileSave()).roster.find(member => member.id === seederId).productionCarry.seed >= 0);
+    if (viewport.width === 390) {
+      const enterAnalysis = async () => {
+        await touch.locator('[data-action="hunt"]').tap();
+        const target = touch.locator(".hunt-target").nth(1);
+        await target.tap();
+        await target.tap();
+        await touch.getByRole("heading", { name: "개체 식별" }).waitFor();
+      };
+      const leave = async () => {
+        await touch.getByRole("button", { name: "본거지로", exact: true }).tap();
+        await touch.getByRole("heading", { name: "본거지", exact: true }).waitFor();
+      };
+      const oldProgress = await mobileSave();
+      const nineSpecies = await touch.evaluate(async ({ ids, exclude }) => {
+        const all = await fetch("/data/pokemon.json").then(response => response.json());
+        return [...new Set([...ids, ...all.map(mon => mon.pokemonRowid)].filter(id => id !== exclude))].slice(0, 9);
+      }, { ids: oldProgress.caughtSpeciesIds, exclude: mobileId });
+      const openDexCheckpoint = async speciesIds => {
+        const roster = oldProgress.roster.filter(member => member.pokemon.pokemonRowid !== mobileId);
+        const entryOrder = oldProgress.entryOrder.filter(id => roster.some(member => member.id === id));
+        await touch.evaluate(snapshot => localStorage.setItem("blindpoke-save-v1", JSON.stringify(snapshot)), {
+          ...oldProgress, energy: 5, caughtSpeciesIds: speciesIds, roster, entryOrder,
+        });
+        await touch.reload();
+        await touch.getByRole("heading", { name: "본거지", exact: true }).waitFor();
+      };
+      await openDexCheckpoint(nineSpecies);
+      await enterAnalysis();
+      assert.equal(await dex.count(), 0);
+      await mobileGuess.fill(mobileName);
+      await mobileSubmit.tap();
+      await touch.getByRole("heading", { name: "포획 성공" }).waitFor();
+      await dex.getByText("도감 신규 등록", { exact: true }).waitFor();
+      await dex.getByText("누적 10종", { exact: true }).waitFor();
+      await dex.getByText(/10종 보상 달성/).waitFor();
+      await touch.getByText(/본거지 1번 부지에 있는 밭에서 씨앗 생성 직무/).waitFor();
+      const captured = await mobileSave();
+      const newId = captured.roster.at(-1).id;
+      await preparePlacement.waitFor({ timeout: 4000 });
+      await preparePlacement.tap();
+      const placement = touch.getByRole("dialog", { name: "밭 · 1번 부지" });
+      await placement.waitFor();
+      await placement.getByRole("button", { name: /씨앗 생성/, pressed: true }).waitFor();
+      assert.equal(await placement.locator(`[data-install-pick="${newId}"]`).getAttribute("aria-pressed"), "true");
+      assert.deepEqual(await mobileSave(), captured);
+      await placement.getByRole("group", { name: "다음 턴 공동 재고" }).waitFor();
+      await placement.getByRole("button", { name: "직무 배치 · 행동력 1" }).tap();
+      await placement.getByRole("button", { name: `${mobileName} 회수`, exact: true }).waitFor();
+      await placement.getByRole("button", { name: "닫기", exact: true }).tap();
+      const completedDex = await mobileSave();
+      assert.equal(completedDex.energy, captured.energy - 1);
+      assert.equal(completedDex.roster.find(member => member.id === newId).jobId, "seed");
+      assert.ok(!Object.hasOwn(completedDex, "facilityOpening"));
+      assert.deepEqual(completedDex.caughtSpeciesIds, [...nineSpecies, mobileId]);
+      assert.deepEqual(completedDex.claimedDexRewards, oldProgress.claimedDexRewards);
+      assert.equal(completedDex.resources.candy, oldProgress.resources.candy);
+      await touch.getByRole("button", { name: "목표·도감" }).tap();
+      const goals = touch.getByRole("dialog", { name: "관측 목표와 도감" });
+      await goals.getByRole("listitem").filter({ hasText: /10종 기록/ }).getByRole("button", { name: "보상 받기" }).waitFor();
+      await goals.getByRole("button", { name: "닫기" }).tap();
+
+      await openDexCheckpoint(completedDex.caughtSpeciesIds);
+      assert.ok(!(await mobileSave()).roster.some(member => member.pokemon.pokemonRowid === mobileId));
+      await enterAnalysis();
+      await mobileGuess.fill(mobileName);
+      await mobileSubmit.tap();
+      await dex.getByText("도감에 기록된 종", { exact: true }).waitFor();
+      await dex.getByText("누적 10종", { exact: true }).waitFor();
+      await dex.getByText("다음 보상까지 15종", { exact: true }).waitFor();
+      const beforeCancel = await mobileSave();
+      await preparePlacement.tap();
+      await placement.getByRole("button", { name: "닫기", exact: true }).tap();
+      await placement.waitFor({ state: "hidden" });
+      assert.ok(await touch.getByRole("heading", { name: "본거지", exact: true }).evaluate(heading => document.activeElement === heading));
+      assert.deepEqual(await mobileSave(), beforeCancel);
+      assert.deepEqual((await mobileSave()).caughtSpeciesIds, completedDex.caughtSpeciesIds);
+
+      const beforeFailure = await mobileSave();
+      await enterAnalysis();
+      await mobileGuess.fill(mobileName);
+      await touch.evaluate(() => { Math.random = () => 0.999; });
+      await mobileSubmit.tap();
+      await touch.getByRole("heading", { name: /포획 실패/ }).waitFor();
+      assert.equal(await preparePlacement.count(), 0);
+      assert.equal(await dex.count(), 0);
+      await touch.evaluate(() => { Math.random = () => 0; });
+      await leave();
+      const afterFailure = await mobileSave();
+      assert.equal(afterFailure.energy, beforeFailure.energy - 2);
+      assert.deepEqual(afterFailure.roster, beforeFailure.roster);
+      assert.deepEqual(afterFailure.caughtSpeciesIds, beforeFailure.caughtSpeciesIds);
+
+      await touch.locator("#nextTurn").tap();
+      const beforeGiveup = await mobileSave();
+      await enterAnalysis();
+      await touch.getByRole("button", { name: "식별 포기", exact: true }).tap();
+      await touch.getByRole("heading", { name: "식별 포기", exact: true }).waitFor();
+      assert.equal(await preparePlacement.count(), 0);
+      assert.equal(await dex.count(), 0);
+      assert.equal(await touch.locator(".identify-target-art").count(), 0);
+      await leave();
+      const afterGiveup = await mobileSave();
+      assert.equal(afterGiveup.energy, beforeGiveup.energy - 2);
+      assert.deepEqual(afterGiveup.roster, beforeGiveup.roster);
+    }
     await touch.getByRole("button", { name: "설정", exact: true }).tap();
     await touch.getByRole("button", { name: "데이터 초기화" }).tap();
     await touch.getByRole("button", { name: "기록 지우고 시작" }).tap();
@@ -520,7 +703,7 @@ try {
   await verifyTouchJourney({ width: 390, height: 844 });
 
   if (errors.length) throw new Error(`브라우저 오류:\n${errors.join("\n")}`);
-  console.log("Chrome smoke passed: keyboard, 320/390px touch recruitment → profile → production → battle, fresh and v3 base expansion, starting region, rewards, ending and reset");
+  console.log("Chrome smoke passed: keyboard, 320/390px touch recruitment → production, Dex milestones and recaptures, failed/abandoned captures, saved progress, battle and ending");
 } finally {
   await browser?.close();
   await server.close();

@@ -42,7 +42,7 @@ async function openBattle(profile) {
       : spot.id === profile.site ? { ...spot, owner: "trainer", trainerId: rivalId, scouted: profile.scouted, active: true }
         : spot.trainerId === rivalId ? { ...spot, owner: "unoccupied", trainerId: null } : spot);
     save.roster = save.roster.map((member, index) => ({ ...member, ...roster[index], iv: {}, exp: index === 1 ? profile.exp : 0 }));
-    save.entryOrder = save.roster.map(member => member.id);
+    save.entryOrder = save.roster.slice(0, profile.entryCount).map(member => member.id);
     save.resources.candy = profile.candy;
     if (profile.legacy) {
       save.v = 3;
@@ -50,7 +50,7 @@ async function openBattle(profile) {
       delete save.mapSnapshot;
     }
     localStorage.setItem(key, JSON.stringify(save));
-  }, { profile: { site: profile.site, owned: profile.owned, scouted: profile.scouted ?? true,
+  }, { profile: { site: profile.site, owned: profile.owned, scouted: profile.scouted ?? true, entryCount: profile.entryCount ?? roster.length,
     exp: profile.exp ?? 0, candy: profile.candy ?? 0, legacy: Boolean(profile.legacy) }, roster, key, rivalId });
   await page.reload();
   if (profile.produceCure) {
@@ -117,6 +117,9 @@ try {
   await ready(healing.page);
   const poisoned = await healing.read();
   const poisonedHp = await hp(patient);
+  const healingRecap = healing.page.getByRole("status", { name: "직전 배틀 기록" });
+  await healingRecap.getByText("직전 1턴", { exact: true }).waitFor({ timeout: 4000 });
+  await healingRecap.locator('[data-side="settlement"]').getByText(/독 피해/).waitFor();
   const playerPp = await attackRound.textContent();
   await healing.page.evaluate(() => { window.battleRoll = .99; });
   const combatLog = healing.page.getByRole("region", { name: "전투 기록" });
@@ -126,6 +129,10 @@ try {
   await ready(healing.page);
   assert.equal(await patient.locator(".duel-condition").count(), 0);
   assert.ok(await hp(patient) < poisonedHp, "The opponent attacks on the cure round");
+  await healingRecap.getByText("직전 2턴", { exact: true }).waitFor();
+  assert.deepEqual(await healingRecap.locator("[data-side]").evaluateAll(rows => rows.map(row => row.dataset.side)), ["player", "enemy"]);
+  await healingRecap.locator('[data-side="player"]').getByText(/독 상태이상을 치료했다/).waitFor();
+  await healingRecap.locator('[data-side="enemy"]').getByText(/뿔충이의 독침.*피해/).waitFor();
   assert.match(await combatLog.getByRole("listitem").first().textContent(), /뿔충이의 독침/);
   assert.doesNotMatch(await combatLog.getByRole("listitem").first().textContent(), /독 피해/);
   assert.equal(await attackRound.textContent(), playerPp);
@@ -153,6 +160,8 @@ try {
   });
   const tackle = ghost.page.getByRole("button", { name: /몸통박치기/ });
   const enemyHp = await hp(ghost.opponent);
+  const ghostPlayer = ghost.page.locator('.duel-vitals[data-side="player"]');
+  const allyHp = await hp(ghostPlayer);
   assert.match(await tackle.textContent(), /효과 없음.*PP 35\/35/);
   await ghost.page.emulateMedia({ reducedMotion: "no-preference" });
   await tackle.press("Enter");
@@ -161,6 +170,12 @@ try {
   await ghost.page.emulateMedia({ reducedMotion: "reduce" });
   assert.equal(await hp(ghost.opponent), enemyHp);
   assert.match(await tackle.textContent(), /PP 34\/35/);
+  const ghostRecap = ghost.page.getByRole("status", { name: "직전 배틀 기록" });
+  await ghostRecap.locator('[data-side="player"]').getByText(/몸통박치기.*효과 없음/).waitFor();
+  const enemyReading = ghostRecap.locator('[data-side="enemy"]');
+  const injury = allyHp - await hp(ghostPlayer);
+  assert.ok(injury > 0);
+  assert.match(await enemyReading.textContent(), new RegExp(`흔들풍손의 .*${injury} 피해`));
   assert.match(await ghost.page.locator(".duel-record").textContent(), /효과 없음/);
   assert.doesNotMatch(await ghost.page.locator(".duel-record").textContent(), /꿈먹기|코골기|대폭발/);
   const ghostResult = await playBattle(ghost.page, { manualSwitch: true });
@@ -184,6 +199,12 @@ try {
   assert.ok(await hp(player) < Number(await player.locator("meter").getAttribute("max")));
   assert.equal(await hp(steel.opponent), Number(await steel.opponent.locator("meter").getAttribute("max")));
   assert.match(await steel.page.locator(".duel-turn").getAttribute("aria-label"), /^2턴/);
+  const switchRecap = steel.page.getByRole("status", { name: "직전 배틀 기록" });
+  await switchRecap.locator('[data-side="player"]').getByText(/앗차프, 나서라/).waitFor();
+  await switchRecap.locator('[data-side="enemy"]').getByText(/두랄루돈의 .*피해/).waitFor();
+  const summaryBox = await switchRecap.boundingBox();
+  const commandsBox = await steel.page.getByRole("group", { name: "사용할 기술" }).boundingBox();
+  assert.ok(summaryBox.y + summaryBox.height <= commandsBox.y, "Round report is visible above the controls");
   assert.equal(await steel.page.locator('[data-move-id="58"]').count(), 0);
   assert.equal(await steel.page.evaluate(() => document.documentElement.scrollWidth), 390);
   const steelResult = await playBattle(steel.page);
@@ -290,6 +311,30 @@ try {
   assert.deepEqual(growth.errors, []);
   console.log("Legacy Chrome passed: scoped growth, useful switch and no concede while the bench can attack");
   await growth.page.close();
+
+  const reserve = await openBattle({
+    site: "east", enemy: 425, level: 5, team: [[131, 1], [68, 1], [158, 6]], entryCount: 2, mapOnly: true, mobile: true,
+    owned: ["home", "southwest", "south", "southeast"],
+  });
+  await reserve.page.getByText("상성·교대 분석", { exact: true }).tap();
+  const reserveTactics = reserve.page.locator("details.atlas-tactics");
+  await reserveTactics.getByText("유효 공격 PP 부족 가능", { exact: true }).waitFor();
+  const beforeReserve = await reserve.read();
+  const adjustEntry = reserve.button("교대 전력 편성");
+  assert.ok((await adjustEntry.boundingBox())?.height >= 44);
+  await adjustEntry.tap();
+  const reserveEntry = reserve.page.getByRole("dialog", { name: /전투 엔트리 편성/ });
+  await reserveEntry.locator('[data-pc-member="mon-3"]').tap();
+  await reserveEntry.getByRole("button", { name: "닫기", exact: true }).tap();
+  await reserveTactics.getByText("유효 공격 PP 부족 가능", { exact: true }).waitFor({ state: "hidden" });
+  await reserveTactics.getByText(/리아코.*물대포.*유효 PP 합계 25/).waitFor();
+  const afterReserve = await reserve.read();
+  assert.deepEqual(afterReserve.entryOrder, [...beforeReserve.entryOrder, "mon-3"]);
+  assert.equal(afterReserve.energy, beforeReserve.energy);
+  assert.ok(await reserve.page.evaluate(() => document.documentElement.scrollWidth === innerWidth));
+  assert.deepEqual(reserve.errors, []);
+  console.log("Mobile PP scout passed: add a reserve from the same report, recalculate PP coverage and preserve energy");
+  await reserve.page.close();
 
   const remote = await openBattle({
     site: "nw-04", enemy: 769, level: 8, team: expectedParty, mapOnly: true, scouted: false,
