@@ -408,8 +408,7 @@ try {
     const brass = touch.getByRole("button", { name: "황동 관측경" });
     const scanSave = await touch.evaluate(() => localStorage.getItem("blindpoke-save-v1"));
     const observations = await touchReading.locator("dd").allTextContents();
-    assert.equal(await digital.getAttribute("aria-pressed"), "true");
-    await brass.tap();
+    assert.equal(await digital.getAttribute("aria-pressed"), "false");
     await touchReading.getByText("야외 관측표").waitFor();
     assert.equal(await brass.getAttribute("aria-pressed"), "true");
     assert.equal(await touch.locator(".hunt-optical-trace").count(), 3);

@@ -25,9 +25,9 @@ type Instrument = "digital" | "optical";
 
 function initialInstrument(): Instrument {
   try {
-    return sessionStorage.getItem(instrumentKey) === "optical" ? "optical" : "digital";
+    return sessionStorage.getItem(instrumentKey) === "digital" ? "digital" : "optical";
   } catch {
-    return "digital";
+    return "optical";
   }
 }
 
