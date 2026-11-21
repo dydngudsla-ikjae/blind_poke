@@ -5,24 +5,30 @@ import { RESOURCE_LABELS } from "../domain/economy";
 import type { ResourceKey } from "../domain/jobs";
 import { settlementName } from "../domain/settlements";
 import { worldMapNodes } from "../domain/worldMap";
-import { awardResources, DEX_REWARDS, ENDING_SPECIES, INHERITED_RESEARCH_REWARD, inheritedDojoProgress, regionProgress, rewardEntries } from "../game/campaign";
+import { DEX_REWARDS, ENDING_SPECIES, INHERITED_RESEARCH_REWARD, inheritedDojoProgress, regionProgress, rewardEntries, rewardStorageShortfall } from "../game/campaign";
 import { useGame } from "../game/GameProvider";
 
 function rewardLabel(resources: Partial<Record<ResourceKey, number>>) {
   return rewardEntries(resources).map(([key, amount]) => `${RESOURCE_LABELS[key]} +${amount}`).join(" · ");
 }
 
+function storageNeededLabel(shortfall: ReturnType<typeof rewardStorageShortfall>) {
+  return shortfall.map(([key, amount]) => `${RESOURCE_LABELS[key]} ${amount}`).join(" · ");
+}
+
 export function CampaignStatus({ onOpen }: { onOpen: () => void }) {
   const { state } = useGame();
   const regions = regionProgress(state.territories);
   const nextArea = regions.find(area => area.owned < area.total);
-  const nextReward = DEX_REWARDS.find(reward => !state.claimedDexRewards.includes(reward.threshold));
+  const unclaimed = DEX_REWARDS.filter(reward => !state.claimedDexRewards.includes(reward.threshold));
+  const earned = unclaimed.filter(reward => state.caughtSpeciesIds.length >= reward.threshold);
+  const rewardStatus = earned.length ? earned.some(reward => !rewardStorageShortfall(state, reward.resources).length)
+    ? "보상 수령 가능" : "보상 저장 공간 필요" : unclaimed[0] && `다음 보상 ${unclaimed[0].threshold}종`;
 
   return (
     <div className="base-campaign-status" aria-label="관측 목표">
       <p>{nextArea ? <>{nextArea.name} 확보 <b>{nextArea.owned}/{nextArea.total}</b></> : "전 지역 확보"}</p>
-      <p>도감 <b>{state.caughtSpeciesIds.length}</b>종 {nextReward && <span>· {state.caughtSpeciesIds.length >= nextReward.threshold
-        ? "보상 수령 가능" : `다음 보상 ${nextReward.threshold}종`}</span>}</p>
+      <p>도감 <b>{state.caughtSpeciesIds.length}</b>종 {rewardStatus && <span>· {rewardStatus}</span>}</p>
       <button className="base-button" onClick={onOpen}>목표·도감 <span aria-hidden="true">→</span></button>
     </div>
   );
@@ -41,7 +47,7 @@ export function CampaignGoals({ onClose }: { onClose: () => void }) {
   const site = challenge.siteId ? settlementName(challenge.siteId) : undefined;
   const facility = challenge.outpostRoute ? "점령지 훈련소" : "승계 훈련소";
   const rewardReady = challenge.step === "complete" && !state.inheritedResearchRewardClaimed;
-  const researchRewardFits = rewardReady && awardResources(state, INHERITED_RESEARCH_REWARD, true) !== null;
+  const researchShortfall = rewardReady ? rewardStorageShortfall(state, INHERITED_RESEARCH_REWARD) : [];
   const challengeHint = {
     inherit: "훈련소가 후보인 트레이너 거점을 확보하고 훈련소를 승계하세요.",
     unavailable: "승계가 남은 거점과 승계 기록이 있는 훈련소가 없습니다.",
@@ -69,13 +75,15 @@ export function CampaignGoals({ onClose }: { onClose: () => void }) {
           {DEX_REWARDS.map(reward => {
             const claimed = state.claimedDexRewards.includes(reward.threshold);
             const reached = count >= reward.threshold;
-            const fits = Boolean(awardResources(state, reward.resources, true));
+            const shortfall = reached && !claimed ? rewardStorageShortfall(state, reward.resources) : [];
             return (
               <li key={reward.threshold}>
-                <div><b>{reward.threshold}종 기록</b><br /><small>{rewardLabel(reward.resources)}</small></div>
+                <div><b>{reward.threshold}종 기록</b><br /><small>{rewardLabel(reward.resources)}</small>
+                  {shortfall.length > 0 && <p className="base-help">필요한 저장 공간 · {storageNeededLabel(shortfall)}</p>}
+                </div>
                 {claimed ? <span>수령 완료</span> : reached ? (
-                  <button className="base-button" disabled={!fits} onClick={() => dispatch({ type: "CLAIM_DEX_REWARD", threshold: reward.threshold })}>
-                    {fits ? "보상 받기" : "저장 공간 부족"}
+                  <button className="base-button" disabled={shortfall.length > 0} onClick={() => dispatch({ type: "CLAIM_DEX_REWARD", threshold: reward.threshold })}>
+                    {shortfall.length ? "저장 공간 부족" : "보상 받기"}
                   </button>
                 ) : <span>{reward.threshold - count}종 남음</span>}
               </li>
@@ -89,14 +97,15 @@ export function CampaignGoals({ onClose }: { onClose: () => void }) {
               <b>{facility}에서 사탕 생산하기</b>
               <p className="base-help">{challengeHint}</p>
               <small>보상 · {rewardLabel(INHERITED_RESEARCH_REWARD)}</small>
+              {researchShortfall.length > 0 && <p className="base-help">필요한 저장 공간 · {storageNeededLabel(researchShortfall)}</p>}
             </div>
             <div>
               <p className="base-help base-number">{challenge.step === "complete" ? "달성"
                 : ["unavailable", "buildUnavailable"].includes(challenge.step) ? "진행 불가" : "진행 중"}</p>
               {state.inheritedResearchRewardClaimed && <span role="status">수령 완료</span>}
-              {rewardReady && <button className="base-button" disabled={!researchRewardFits}
+              {rewardReady && <button className="base-button" disabled={researchShortfall.length > 0}
                 onClick={() => dispatch({ type: "CLAIM_INHERITED_RESEARCH_REWARD" })}>
-                {researchRewardFits ? "과제 보상 받기" : "저장 공간 부족"}
+                {researchShortfall.length ? "저장 공간 부족" : "과제 보상 받기"}
               </button>}
             </div>
           </li>

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
 import { preload } from "react-dom";
 import atlas from "../../assets/observatory-atlas.webp";
 import chart from "../../assets/field-chart.webp";
@@ -25,6 +25,9 @@ import "./MapScreen.css";
 const AtlasShader = lazy(() => import("../components/AtlasShader").catch(() => ({ default: () => null })));
 const overview = { zoom: 1, x: 0, y: 0 };
 const maxZoom = 2.5;
+const markerDragThreshold = 8;
+export type MapViewportSnapshot = { view: typeof overview; siteId: string };
+
 const statuses = {
   owned: "내 거점",
   scoutable: "정찰 가능",
@@ -45,23 +48,55 @@ function clampPan(pan: number, zoom: number) {
   return Math.max(1 - zoom, Math.min(0, pan));
 }
 
-export default function MapScreen() {
+function viewWithVisibleNode(view: typeof overview, x: number, y: number) {
+  const px = view.x + x / 100 * view.zoom;
+  const py = view.y + y / 100 * view.zoom;
+  if (px >= .06 && px <= .94 && py >= .07 && py <= .9) return view;
+  return {
+    ...view,
+    x: clampPan(.5 - x / 100 * view.zoom, view.zoom),
+    y: clampPan(.5 - y / 100 * view.zoom, view.zoom),
+  };
+}
+
+export default function MapScreen({ viewportSnapshot, resumeReport }: {
+  viewportSnapshot: RefObject<MapViewportSnapshot | null>;
+  resumeReport: boolean;
+}) {
   const { state, data, dispatch } = useGame();
-  const [selectedId, setSelectedId] = useState(() => state.mapFocusId && atlasNodes.has(state.mapFocusId) ? state.mapFocusId : "home");
-  const [view, setView] = useState(overview);
+  const initialNode = (state.mapFocusId && atlasNodes.get(state.mapFocusId)) || atlasNodes.get("home")!;
+  const [selectedId, setSelectedId] = useState(initialNode.id);
+  const [view, setView] = useState(() => {
+    const previous = viewportSnapshot.current;
+    if (!previous) return overview;
+    return previous.siteId === initialNode.id ? previous.view : viewWithVisibleNode(previous.view, initialNode.x, initialNode.y);
+  });
   const [reportOpen, setReportOpen] = useState(true);
-  const [panel, setPanel] = useState<"entry" | "shop" | null>(null);
+  const [panel, setPanel] = useState<{ kind: "entry"; memberId?: string } | { kind: "shop" } | null>(null);
   const [scannedId, setScannedId] = useState<string | null>(null);
-  const drag = useRef<{ id: number; x: number; y: number; start: typeof overview } | null>(null);
-  const markerTouch = useRef<{ id: number; x: number; y: number } | null>(null);
+  const drag = useRef<{
+    id: number; x: number; y: number; start: typeof overview; markerId?: string; panning: boolean;
+  } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const report = useRef<HTMLHeadingElement>(null);
+  const reportPanel = useRef<HTMLElement>(null);
   const challengeCommand = useRef<HTMLButtonElement>(null);
   const reportFocus = useRef(false);
   const viewport = useRef<HTMLDivElement>(null);
   const showEffects = useFieldMotion();
 
-  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  useLayoutEffect(() => {
+    viewportSnapshot.current = { view, siteId: selectedId };
+  }, [viewportSnapshot, view, selectedId]);
+  useLayoutEffect(() => {
+    if (!resumeReport) {
+      heading.current?.focus({ preventScroll: true });
+      return;
+    }
+    report.current?.focus({ preventScroll: true });
+    if (matchMedia("(max-width: 780px)").matches) reportPanel.current?.scrollIntoView({ block: "start" });
+    else report.current?.scrollIntoView({ block: "nearest" });
+  }, []);
   useEffect(() => { if (scannedId) report.current?.focus({ preventScroll: true }); }, [scannedId]);
   useLayoutEffect(() => {
     if (!reportFocus.current) return;
@@ -116,7 +151,8 @@ export default function MapScreen() {
   const nextSupplySite = supplyPlan?.missing[0];
   const supplyPath = supplyPlan?.path ?? [];
   const previewRoutes = new Set(supplyPath.slice(1).map((id, index) => [supplyPath[index], id].sort().join("|")));
-  const needsEntry = battleEntries(state).length === 0;
+  const entryCount = battleEntries(state).length;
+  const needsEntry = entryCount === 0;
   const energyShort = state.energy < BATTLE_ENERGY_COST;
   const battleUnavailable = needsEntry && state.roster.length === 0 ? "탐험에서 동료를 포획하세요."
     : !needsEntry && energyShort ? "행동력이 부족합니다." : null;
@@ -163,24 +199,45 @@ export default function MapScreen() {
     return () => surface.removeEventListener("wheel", wheel);
   }, []);
 
-  function startDrag(event: PointerEvent<HTMLDivElement>) {
-    if (event.button !== 0 || drag.current || view.zoom <= 1 || (event.target as Element).closest("button")) return;
+  function captureDrag(event: PointerEvent<HTMLDivElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
-    drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, start: view };
     event.currentTarget.dataset.dragging = "";
+  }
+
+  function startDrag(event: PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0 || !event.isPrimary || drag.current || view.zoom <= 1) return;
+    const marker = (event.target as Element).closest<HTMLButtonElement>("button[data-node]");
+    if (marker && event.pointerType !== "touch") return;
+    const markerId = marker?.dataset.node;
+    drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, start: view, markerId, panning: !markerId };
+    if (!markerId) captureDrag(event);
   }
 
   function moveDrag(event: PointerEvent<HTMLDivElement>) {
     const gesture = drag.current;
     if (!gesture || gesture.id !== event.pointerId) return;
+    const x = event.clientX - gesture.x;
+    const y = event.clientY - gesture.y;
+    if (!gesture.panning) {
+      if (Math.hypot(x, y) <= markerDragThreshold) return;
+      gesture.panning = true;
+      captureDrag(event);
+    }
     const bounds = event.currentTarget.getBoundingClientRect();
-    panBy((event.clientX - gesture.x) / bounds.width, (event.clientY - gesture.y) / bounds.height, gesture.start);
+    panBy(x / bounds.width, y / bounds.height, gesture.start);
   }
 
   function stopDrag(event: PointerEvent<HTMLDivElement>) {
-    if (drag.current?.id !== event.pointerId) return;
+    const gesture = drag.current;
+    if (gesture?.id !== event.pointerId) return;
+    // The marker loses its implicit touch capture when the viewport starts panning.
+    if (event.type === "lostpointercapture" && gesture.panning && event.target !== event.currentTarget) return;
     drag.current = null;
     delete event.currentTarget.dataset.dragging;
+    if (event.type === "pointerup" && !gesture.panning && gesture.markerId &&
+      Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) <= markerDragThreshold) {
+      selectSite(gesture.markerId);
+    }
   }
 
   function handleMapKeys(event: KeyboardEvent<HTMLDivElement>) {
@@ -199,16 +256,7 @@ export default function MapScreen() {
   }
 
   function keepNodeVisible(x: number, y: number) {
-    setView(current => {
-      const px = current.x + x / 100 * current.zoom;
-      const py = current.y + y / 100 * current.zoom;
-      if (px >= .06 && px <= .94 && py >= .07 && py <= .9) return current;
-      return {
-        ...current,
-        x: clampPan(.5 - x / 100 * current.zoom, current.zoom),
-        y: clampPan(.5 - y / 100 * current.zoom, current.zoom),
-      };
-    });
+    setView(current => viewWithVisibleNode(current, x, y));
   }
 
   function selectKnownSite(id: string) {
@@ -223,26 +271,6 @@ export default function MapScreen() {
     setSelectedId(id);
     setScannedId(null);
     setReportOpen(true);
-  }
-
-  function trackMarkerTouch(event: PointerEvent<HTMLButtonElement>) {
-    if (view.zoom > 1 && event.isPrimary && event.pointerType === "touch") {
-      markerTouch.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    }
-  }
-
-  function cancelMarkerSwipe(event: PointerEvent<HTMLButtonElement>) {
-    const touch = markerTouch.current;
-    if (touch?.id === event.pointerId && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 8) {
-      markerTouch.current = null;
-    }
-  }
-
-  function finishMarkerTouch(event: PointerEvent<HTMLButtonElement>, id: string) {
-    cancelMarkerSwipe(event);
-    if (markerTouch.current?.id !== event.pointerId) return;
-    markerTouch.current = null;
-    selectSite(id);
   }
 
   return (
@@ -302,11 +330,8 @@ export default function MapScreen() {
                       data-label-align={node.x < 15 ? "left" : node.x > 85 ? "right" : "center"}
                       disabled={nodeStatus === "locked"} aria-pressed={active} aria-label={label}
                       style={{ left: `${node.x}%`, top: `${node.y}%`, transform: `translate(-50%, -50%) scale(${1 / view.zoom})` }}
-                      onPointerDown={trackMarkerTouch} onPointerMove={cancelMarkerSwipe}
-                      onPointerUp={event => finishMarkerTouch(event, node.id)}
-                      onPointerCancel={() => { markerTouch.current = null; }}
                       onClick={event => {
-                        // Chrome can suppress a touch click immediately after a map drag.
+                        // Zoomed touch taps are resolved with the gesture on pointerup.
                         if (view.zoom > 1 && "pointerType" in event.nativeEvent && event.nativeEvent.pointerType === "touch") return;
                         selectSite(node.id);
                       }}
@@ -328,7 +353,7 @@ export default function MapScreen() {
             </div>
           </div>
 
-          <aside className="atlas-report" aria-labelledby="atlas-report-title" data-open={reportOpen}>
+          <aside ref={reportPanel} className="atlas-report" aria-labelledby="atlas-report-title" data-open={reportOpen}>
             <div className="atlas-report-header">
               <h2 id="atlas-report-title">정찰 기록</h2>
               <button type="button" className="atlas-report-toggle" aria-expanded={reportOpen} aria-controls="atlas-report-detail"
@@ -369,6 +394,11 @@ export default function MapScreen() {
                   {supplyPlan && nextSupplySite && (
                     <>
                       <p>{supply === "isolated" ? "보급을 복구하려면" : "확보한 뒤 보급하려면"} 거점 {supplyPlan.missing.length}곳을 더 확보하세요.</p>
+                      <p>
+                        <strong>{supply === "isolated" ? "복구에 최소 행동력" : "도전 포함 최소 행동력"} {BATTLE_ENERGY_COST *
+                          (supplyPlan.missing.length + (supply === "isolated" ? 0 : 1))}</strong>
+                        <span> · 현재 {state.energy}</span>
+                      </p>
                       <button className="base-button" type="button" onClick={() => selectKnownSite(nextSupplySite)}>보급로 첫 거점 보기</button>
                     </>
                   )}
@@ -405,10 +435,13 @@ export default function MapScreen() {
               </>}
               {canChallenge && (
                 <>
-                  {territory.scouted && <TerritoryReadiness key={selectedId} territoryId={selectedId} />}
-                  {needsEntry && state.roster.length > 0 && (
-                    <button className="atlas-scout" type="button" aria-haspopup="dialog" onClick={() => setPanel("entry")}>
-                      엔트리 편성 <span aria-hidden="true">→</span>
+                  {territory.scouted && <TerritoryReadiness key={selectedId} territoryId={selectedId}
+                    onOpenEntry={memberId => setPanel({ kind: "entry", memberId })} />}
+                  {state.roster.length > 0 && (
+                    <button className="atlas-scout" type="button" aria-haspopup="dialog" aria-describedby="atlas-entry-count"
+                      onClick={() => setPanel({ kind: "entry" })}>
+                      엔트리 편성 <small id="atlas-entry-count" aria-hidden="true">편성 {entryCount}/{state.entryCap}</small>
+                      <span aria-hidden="true">→</span>
                     </button>
                   )}
                   <button ref={challengeCommand} className="atlas-scout" disabled={needsEntry || energyShort} onClick={startBattle}
@@ -420,7 +453,7 @@ export default function MapScreen() {
                     <div className="atlas-charge-options">
                       <QuickChargeButton requiredEnergy={BATTLE_ENERGY_COST} nextAction={challengeCommand} />
                       {energyShort && <button className="base-button" type="button" aria-describedby="atlas-battle-note" aria-haspopup="dialog"
-                        onClick={() => setPanel("shop")}>충전권 확인</button>}
+                        onClick={() => setPanel({ kind: "shop" })}>충전권 확인</button>}
                     </div>
                   )}
                 </>
@@ -470,7 +503,7 @@ export default function MapScreen() {
         </div>
         <footer className="atlas-controls">
           <button id="backToBase" className="hunt-return" onClick={() => {
-            transitionFieldView(() => dispatch({ type: "PATCH", patch: { screen: "base", siteViewId: null } }), "map");
+            transitionFieldView(() => dispatch({ type: "PATCH", patch: { screen: "base", siteViewId: null, mapFocusId: selectedId } }), "map");
           }}><span aria-hidden="true">←</span> 본거지로</button>
           <p id="atlas-instructions">
             <span className="atlas-key-hint">휠·<kbd>+</kbd><kbd>−</kbd> 확대·축소 <span>드래그·<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> 이동</span></span>
@@ -478,8 +511,8 @@ export default function MapScreen() {
           </p>
         </footer>
       </div>
-      {panel === "entry" && <EntryModal onClose={() => setPanel(null)} />}
-      {panel === "shop" && <BasePanels panel={{ kind: "shop" }} onClose={() => setPanel(null)} />}
+      {panel?.kind === "entry" && <EntryModal initialMemberId={panel.memberId} onClose={() => setPanel(null)} />}
+      {panel?.kind === "shop" && <BasePanels panel={panel} onClose={() => setPanel(null)} />}
     </section>
   );
 }

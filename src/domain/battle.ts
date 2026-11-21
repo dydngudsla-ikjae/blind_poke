@@ -97,6 +97,16 @@ export function pickMoveset(pokemon: PokemonRecord, level: number, data: GameDat
   return attack ? [...equipped.slice(0, 3), attack] : equipped;
 }
 
+export function nextOrdinaryAttack(pokemon: PokemonRecord, level: number, data: GameDataBundle) {
+  const equipped = new Set(pickMoveset(pokemon, level, data).map(move => move.id));
+  for (const nextLevel of campaignLearnLevels(pokemon, data)) {
+    if (nextLevel <= level) continue;
+    const move = pickMoveset(pokemon, nextLevel, data).find(move => !equipped.has(move.id) && ordinaryAttack(move));
+    if (move) return { level: nextLevel, move };
+  }
+  return null;
+}
+
 export function battleMoves(mon: Combatant) {
   return mon.moves.some(move => move.pp > 0) ? mon.moves : [STRUGGLE];
 }
@@ -158,6 +168,15 @@ export function movePower(move: BattleMove, target: Combatant) {
   return 20 * (weightThresholds.findIndex(threshold => weight < threshold) + 1);
 }
 
+export function moveAccuracy(move: BattleMove, actor: Combatant) {
+  const certainToxic = move.status === "toxic" && actor.types.includes(4);
+  return move.accuracy > 0 && !certainToxic ? move.accuracy : null;
+}
+
+export function statusMoveImmune(move: BattleMove, target: Combatant) {
+  return Boolean(move.status && movePower(move, target) === 0 && !canApplyStatus(target, move.status, move));
+}
+
 export type BattleSide = "player" | "enemy";
 export type BattleResult = "win" | "lose" | "draw";
 export interface BattleState {
@@ -171,7 +190,10 @@ export interface BattleStep {
   state: BattleState;
   lines: string[];
   actor?: BattleSide;
-  strike?: { side: BattleSide; move: BattleMove; damage: number; outcome: "hit" | "miss" | "immune" | "blocked"; fainted?: boolean };
+  strike?: {
+    side: BattleSide; move: BattleMove; damage: number; outcome: "hit" | "miss" | "immune" | "blocked";
+    fainted?: boolean; statusImmune?: boolean;
+  };
 }
 
 export function createBattle(players: Combatant[], enemies: Combatant[]): BattleState {
@@ -193,15 +215,19 @@ function switchTo(state: BattleState, side: BattleSide, index: number): BattleSt
   return { ...updateActive(state, side, { ...outgoing, stages: {}, status }), active: { ...state.active, [side]: index } };
 }
 
-const statNames: Record<BattleStat, string> = { atk: "공격", def: "방어", satk: "특수공격", sdef: "특수방어", spd: "스피드" };
+export const battleStatNames: Record<BattleStat, string> = { atk: "공격", def: "방어", satk: "특수공격", sdef: "특수방어", spd: "스피드" };
+
+export function adjustedBattleStage(stage: number, change: number) {
+  return Math.min(6, Math.max(-6, stage + change));
+}
 
 function changeStats(mon: Combatant, changes: BattleBoost["changes"], lines: string[]) {
   if (mon.fainted) return mon;
   const stages = { ...mon.stages };
   for (const stat of Object.keys(changes) as BattleStat[]) {
     const from = stages[stat] ?? 0;
-    const next = Math.min(6, Math.max(-6, from + (changes[stat] ?? 0)));
-    const label = mon.name + "의 " + statNames[stat];
+    const next = adjustedBattleStage(from, changes[stat] ?? 0);
+    const label = mon.name + "의 " + battleStatNames[stat];
     lines.push(label + (next === from ? "은(는) 더 변하지 않았다." : next > from ? " 상승!" : " 하락!"));
     stages[stat] = next;
   }
@@ -226,10 +252,10 @@ function strike(state: BattleState, side: BattleSide, move: BattleMove, data: Ga
   const target = active(state, targetSide);
   lines.push(actor.name + "의 " + move.name + "!");
   const prerequisite = !move.requiresSleep || (move.requiresSleep === "actor" ? actor : target).status?.kind === "sleep";
-  const certain = move.status === "toxic" && actor.types.includes(4);
-  const missed = prerequisite && !certain && move.accuracy > 0 && random() * 100 >= move.accuracy;
+  const accuracy = moveAccuracy(move, actor);
+  const missed = prerequisite && accuracy !== null && random() * 100 >= accuracy;
   const matchup = movePower(move, target) > 0 || move.statusTypeCheck ? effectiveness(move.typeRowid, target.types, data) : 1;
-  const statusImmune = Boolean(move.status && movePower(move, target) === 0 && !canApplyStatus(target, move.status, move));
+  const statusImmune = statusMoveImmune(move, target);
   const immune = matchup === 0 || statusImmune;
   const damage = missed || immune || !prerequisite ? 0 : Math.min(target.curHp, calculateDamage(actor, target, move, data));
   let nextActor = move.id === STRUGGLE.id ? actor : {
@@ -276,7 +302,7 @@ function strike(state: BattleState, side: BattleSide, move: BattleMove, data: Ga
 
   return { state: updateActive(updateActive(state, side, nextActor), targetSide, nextTarget),
     lines, strike: { side, move, damage, outcome: !prerequisite ? "blocked" as const : immune ? "immune" as const :
-      missed ? "miss" as const : "hit" as const, fainted: nextTarget.fainted }, flinch };
+      missed ? "miss" as const : "hit" as const, fainted: nextTarget.fainted, statusImmune }, flinch };
 }
 
 function act(state: BattleState, side: BattleSide, move: BattleMove | undefined, data: GameDataBundle, random: () => number) {

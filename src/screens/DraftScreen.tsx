@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { preload } from "react-dom";
 import baseLandscape from "../../assets/observatory-base.webp";
 import forest from "../../assets/observatory-forest.webp";
-import unknownSignal from "../../assets/unknown-presence.webp";
 import DraftAtmosphere from "../components/DraftAtmosphere";
-import ScanMeasurements from "../components/ScanMeasurements";
 import {
   trainerRelation,
   TRAINER_RELATION_MODIFIER,
@@ -14,20 +12,29 @@ import { createMember, detectPokemonType, samplePokemon, SPRITE } from "../game/
 import TrainerRevealScreen from "./TrainerRevealScreen";
 import transitionFieldView from "./transitionFieldView";
 import "./DraftScreen.css";
+import "./FieldOptics.css";
 
-const positions = [
-  { x: 23, y: 63 },
-  { x: 50, y: 70 },
-  { x: 77, y: 63 },
+const trails = [
+  { x: 19, y: 52, place: "고사리 그늘" },
+  { x: 50, y: 69, place: "이끼 길목" },
+  { x: 81, y: 49, place: "나무뿌리 곁" },
 ];
+const trailPosition = ({ x, y }: { x: number; y: number }) => ({
+  "--target-x": `${x}%`,
+  "--target-y": `${y}%`,
+} as CSSProperties);
+const forestWidth = 1568;
+const forestHeight = 882;
 
 export default function DraftScreen() {
   const { state, dispatch, data } = useGame();
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [focusedId, setFocusedId] = useState<number | null>(null);
   const [touchId, setTouchId] = useState<number | null>(null);
+  const [arrivalIndex, setArrivalIndex] = useState<number | null>(null);
   const targetButtons = useRef<Array<HTMLButtonElement | null>>([]);
   const nextFocus = useRef<number | null>(null);
+  const pickedRound = useRef<number | null>(null);
   const round = state.draftRound;
   const revealed = state.screen === "trainerReveal";
   const candidates = useMemo(() => {
@@ -41,7 +48,9 @@ export default function DraftScreen() {
   const trainer = data.trainers.find(entry => entry.id === state.trainerId);
   const activeIndex = candidates.findIndex(({ pokemon }) => pokemon.pokemonRowid === (hoveredId ?? focusedId ?? touchId));
   const active = candidates[activeIndex];
-  const target = positions[activeIndex];
+  const trace = trails[activeIndex];
+  const arrival = arrivalIndex === null ? null : trails[arrivalIndex];
+  const newestMember = state.roster[round - 1];
 
   useEffect(() => {
     if (revealed) preload(baseLandscape, { as: "image" });
@@ -54,26 +63,19 @@ export default function DraftScreen() {
   }, [round, candidates.length]);
 
   function pick(pokemon: (typeof candidates)[number]["pokemon"], index: number, fromKeyboard: boolean) {
+    if (pickedRound.current === round) return;
+    pickedRound.current = round;
+    setArrivalIndex(index);
     const relation = trainer ? trainerRelation(trainer, pokemon, data.pokemon, data.types) : "neutral";
-    const next = round + 1;
-    if (fromKeyboard && next < 3) nextFocus.current = index;
+    if (fromKeyboard && round + 1 < 3) nextFocus.current = index;
     setHoveredId(null);
     setFocusedId(null);
     setTouchId(null);
     dispatch({
-      type: "ADD_MEMBER",
+      type: "PICK_STARTER",
+      expectedRound: round,
       member: createMember(pokemon, state.nextMemberId, pokemon.nameKr, TRAINER_RELATION_MODIFIER[relation]),
     });
-    dispatch({ type: "PATCH", patch: { draftRound: next, screen: next >= 3 ? "trainerReveal" : "draft" } });
-  }
-
-  function moveSight(event: PointerEvent<HTMLDivElement>) {
-    if (event.pointerType !== "mouse") return;
-    const view = event.currentTarget;
-    const bounds = view.getBoundingClientRect();
-    view.style.setProperty("--aim-x", `${event.clientX - bounds.left}px`);
-    view.style.setProperty("--aim-y", `${event.clientY - bounds.top}px`);
-    view.dataset.aiming = "true";
   }
 
   function enterBase() {
@@ -81,52 +83,41 @@ export default function DraftScreen() {
   }
 
   return (
-    <section className="draft-station starter-station" aria-labelledby="draft-title">
+    <section className={revealed ? "draft-station starter-station field-brass-station" : "draft-station starter-station"}
+      aria-labelledby="draft-title">
       <div className="draft-device">
         <div
-          className="draft-view"
+          className="draft-view starter-view"
           data-trainer-reveal={revealed}
           role="group"
-          aria-label={revealed ? "트레이너 신분증 뷰파인더" : "스타팅 스캐너"}
-          data-focused={Boolean(target)}
-          onPointerMove={revealed ? undefined : moveSight}
-          onPointerLeave={revealed ? undefined : event => {
-            delete event.currentTarget.dataset.aiming;
-            setHoveredId(null);
-          }}
-          style={target && {
-            "--focus-x": `${target.x}%`,
-            "--focus-y": `${target.y}%`,
-          } as CSSProperties | undefined}
+          aria-label={revealed ? "트레이너 신분증" : "숲 공터"}
+          onPointerLeave={revealed ? undefined : () => setHoveredId(null)}
         >
-          <img className="draft-landscape" src={forest} alt="" width={1568} height={882} fetchPriority="high" />
-          <DraftAtmosphere target={target} trainerRevealed={revealed} />
-          {!revealed && <div className="draft-aim" aria-hidden="true"><span /></div>}
-          {target && <div className="draft-lock" aria-hidden="true" />}
+          <img className="draft-landscape" src={forest} alt="" width={forestWidth} height={forestHeight} fetchPriority="high" />
+          <DraftAtmosphere reveal={revealed} focus={trace && { x: trace.x / 100, y: trace.y / 100 }}
+            arrival={arrival && { x: arrival.x / 100, y: arrival.y / 100, round }} />
 
-          <div className="draft-view-header">
+          <header className="draft-view-header">
             <div className="draft-mission">
               <span className="draft-location">숲 공터</span>
-              <h1 id="draft-title">{revealed ? "트레이너 확인" : "동료 탐색"}</h1>
+              <h1 id="draft-title">{revealed ? "트레이너 확인" : "첫 동료를 찾아서"}</h1>
+              {!revealed && <p className="starter-intro">숲의 흔적을 살펴 동료 세 마리를 맞이하세요.</p>}
             </div>
-            <div className="draft-scanner-status" data-locked={revealed || Boolean(active)}>
-              <span className="draft-status-light" aria-hidden="true" />
-              <span>{revealed ? "확인 완료" : active ? "관측 중" : `신호 ${candidates.length}개 감지`}</span>
-            </div>
-          </div>
+          </header>
 
           {candidates.map(({ pokemon }, index) => {
-            const { x, y } = positions[index];
             return (
               <button
                 key={pokemon.pokemonRowid}
                 ref={element => { targetButtons.current[index] = element; }}
                 type="button"
-                className="draft-target"
+                className="starter-target"
                 data-draft-target
-                data-locked={activeIndex === index}
-                style={{ "--target-x": `${x}%`, "--target-y": `${y}%` } as CSSProperties}
-                aria-label={`미확인 개체 ${index + 1}`}
+                data-observed={activeIndex === index}
+                style={trailPosition(trails[index])}
+                aria-label={trails[index].place}
+                aria-controls="starter-notes"
+                aria-describedby={activeIndex === index ? "starter-clues" : undefined}
                 onPointerEnter={event => {
                   if (event.pointerType === "mouse") setHoveredId(pokemon.pokemonRowid);
                 }}
@@ -136,8 +127,12 @@ export default function DraftScreen() {
                   setFocusedId(pokemon.pokemonRowid);
                 }}
                 onBlur={() => setFocusedId(current => current === pokemon.pokemonRowid ? null : current)}
+                onKeyDown={event => {
+                  if (event.repeat && (event.key === "Enter" || event.key === " ")) event.preventDefault();
+                }}
                 onClick={event => {
                   const pointer = event.nativeEvent;
+                  if (event.detail > 1 && (!("pointerType" in pointer) || pointer.pointerType === "mouse")) return;
                   if ("pointerType" in pointer && pointer.pointerType === "touch" && touchId !== pokemon.pokemonRowid) {
                     setHoveredId(null);
                     setFocusedId(null);
@@ -147,23 +142,23 @@ export default function DraftScreen() {
                   pick(pokemon, index, event.detail === 0);
                 }}
               >
-                <img className="draft-signal-art" src={unknownSignal} alt="" draggable={false} />
-                <span className="scanner-contact" aria-hidden="true" />
+                <span className="starter-trace" aria-hidden="true">
+                  <span className="starter-prints"><i /><i /><i /></span>
+                  <span className="starter-leaves"><i /><i /><i /></span>
+                </span>
+                <span className="starter-trace-tag">{trails[index].place}</span>
+                {activeIndex === index && <span className="starter-invite" aria-hidden="true">동료로 맞이하기</span>}
               </button>
             );
           })}
 
-          <div className="draft-readout" aria-live="polite" aria-atomic="true">
-            {active && (
-              <div
-                className="draft-reading"
-                data-align={activeIndex === 2 ? "left" : "right"}
-              >
-                <h2>미확인 개체 {activeIndex + 1}</h2>
-                <ScanMeasurements pokemon={active.pokemon} shownType={active.shownType} />
-              </div>
-            )}
-          </div>
+          {!revealed && arrival && newestMember && (
+            <div className="starter-arrival" key={round} style={trailPosition(arrival)} aria-hidden="true">
+              <img src={SPRITE(newestMember.pokemon)} alt="" />
+              <span>{newestMember.pokemon.nameKr} 영입</span>
+            </div>
+          )}
+
           {revealed && (
             <TrainerRevealScreen
               trainer={trainer}
@@ -172,11 +167,26 @@ export default function DraftScreen() {
           )}
         </div>
 
-        <div className="draft-controls">
-          <div className="draft-roster">
-            <h2>{revealed ? "동료 등록" : "스타팅 선택"} <b>{revealed ? state.roster.length : round + 1}/3</b></h2>
+        <div className={revealed ? "draft-controls" : "starter-journal field-note-paper"}>
+          {!revealed && (
+            <aside id="starter-notes" className="starter-note" aria-labelledby="starter-note-title"
+              aria-live="polite" aria-atomic="true">
+              <h2 id="starter-note-title">{trace?.place ?? "공터에서 들리는 세 기척"}</h2>
+              {active ? (
+                <dl id="starter-clues" className="starter-clues">
+                  <div className="starter-type-clue"><dt>타입 단서</dt><dd>{active.shownType}</dd></div>
+                  <div><dt>키</dt><dd>{active.pokemon.heightM == null ? "미확인" : `${active.pokemon.heightM} m`}</dd></div>
+                  <div><dt>몸무게</dt><dd>{active.pokemon.weightKg == null ? "미확인" : `${active.pokemon.weightKg} kg`}</dd></div>
+                </dl>
+              ) : null}
+              <p className="draft-keys">{active ? "클릭 또는 Enter로 영입" : "마우스나 Tab으로 기척 살피기"}</p>
+              <p className="draft-touch-hint">{active ? "같은 자리를 다시 눌러 영입" : "기척이 들리는 자리를 눌러 살피기"}</p>
+            </aside>
+          )}
+          <div className={revealed ? "draft-roster" : "draft-roster starter-roster"}>
+            <h2>{revealed ? "동료 등록" : "동료 영입"} <b>{state.roster.length}/3</b></h2>
             <ol aria-label="선택한 동료">
-              {positions.map((_, index) => {
+              {trails.map((_, index) => {
                 const member = state.roster[index];
                 return (
                   <li key={index} className={member ? "filled" : index === round ? "current" : undefined}>
@@ -187,17 +197,10 @@ export default function DraftScreen() {
                 );
               })}
             </ol>
+            <span className="starter-recruit-status" role="status">
+              {arrival && newestMember ? `${newestMember.pokemon.nameKr} 영입 · ${round}/3` : ""}
+            </span>
           </div>
-          <span className="draft-device-name">BlindPoke</span>
-          {!revealed && (
-            <>
-              <p className="draft-keys">
-                <span><kbd>마우스</kbd><kbd>Tab</kbd> 조준</span>
-                <span><kbd>클릭</kbd><kbd>Enter</kbd> 선택</span>
-              </p>
-              <p className="draft-touch-hint">눌러서 관측 · 다시 눌러 선택</p>
-            </>
-          )}
         </div>
       </div>
     </section>

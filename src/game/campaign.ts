@@ -109,11 +109,17 @@ export function rewardEntries(rewards: Partial<Record<ResourceKey, number>>) {
   return Object.entries(rewards) as Array<[ResourceKey, number]>;
 }
 
+export function rewardStorageShortfall(state: GameState, rewards: Partial<Record<ResourceKey, number>>): Array<[ResourceKey, number]> {
+  return rewardEntries(rewards).flatMap(([key, amount]) => {
+    const missing = state.resources[key] + amount - state.storageCap;
+    return missing > 0 ? [[key, missing]] : [];
+  });
+}
+
 export function awardResources(state: GameState, rewards: Partial<Record<ResourceKey, number>>, mustFit = false) {
-  const entries = rewardEntries(rewards);
-  if (mustFit && entries.some(([key, amount]) => state.resources[key] + amount > state.storageCap)) return null;
+  if (mustFit && rewardStorageShortfall(state, rewards).length) return null;
   const resources = { ...state.resources };
-  for (const [key, amount] of entries) {
+  for (const [key, amount] of rewardEntries(rewards)) {
     resources[key] += Math.max(0, Math.min(amount, state.storageCap - resources[key]));
   }
   return resources;

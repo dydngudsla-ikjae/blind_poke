@@ -125,6 +125,7 @@ export interface GameState {
 
 export type GameAction =
   | { type: "PATCH"; patch: Partial<GameState> }
+  | { type: "PICK_STARTER"; member: RosterMember; expectedRound: number }
   | { type: "ADD_MEMBER"; member: RosterMember }
   | { type: "SET_ENTRY_ORDER"; memberIds: string[] }
   | { type: "START_BUILDING"; building: BuildingState; memberIds: string[] }
@@ -138,13 +139,14 @@ export type GameAction =
   | { type: "OPEN_OUTPOST"; siteId: string }
   | { type: "RESOLVE_INHERITANCE"; siteId: string; buildingType: BuildingType | null }
   | { type: "START_HUNT"; typeId?: number }
+  | { type: "CONTINUE_HUNT" }
   | { type: "START_COUNTER_HUNT"; territoryId: string; typeIds: number[] }
   | { type: "END_HUNT"; opening?: FacilityOpening }
-  | { type: "USE_GROWTH_ITEM"; memberId: string; item: GrowthItem; count?: number }
-  | { type: "CRAFT_HELD_ITEM"; item: HeldItemId }
+  | { type: "USE_GROWTH_ITEM"; memberId: string; item: GrowthItem; count?: number; expectedEnergy?: number }
+  | { type: "CRAFT_HELD_ITEM"; item: HeldItemId; expectedParts?: number }
   | { type: "EQUIP_HELD_ITEM"; memberId: string; item: HeldItemId }
   | { type: "BUY_ENERGY_CHARGE"; expectedEnergy?: number }
-  | { type: "NEXT_TURN" }
+  | { type: "NEXT_TURN"; expectedTurn?: number }
   | { type: "CLAIM_DEX_REWARD"; threshold: number }
   | { type: "CLAIM_INHERITED_RESEARCH_REWARD" }
   | { type: "CONTINUE_AFTER_ENDING" }

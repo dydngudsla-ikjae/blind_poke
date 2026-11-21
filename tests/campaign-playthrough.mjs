@@ -32,17 +32,21 @@ const useFrontier = useOutposts || frontierAudit || process.argv.includes("--fro
 const manageFavor = useFrontier || process.argv.includes("--favor");
 const useGuidance = manageFavor || process.argv.includes("--guided");
 const baselineData = trainingAudit || process.argv.includes("--baseline-data");
+const iceLevelOption = process.argv.find(arg => arg.startsWith("--ice-level="));
+const minjiIceLevel = Number(iceLevelOption?.split("=")[1] ?? 14);
 const auditCases = new Map([
   [7, { site: "se-06", enemy: ["두까비 Lv.15", "어치르돈 Lv.15"], region: 2, concentrated: [12, 8], spread: [10, 8, 7], choices: 62 }],
   [226, { site: "ne-02", enemy: ["할비롱 Lv.18", "절벼게 Lv.18"], region: 3, concentrated: [16, 11], spread: [15, 11, 6],
     moveThreshold: [14, 9, 10], researchThreshold: { name: "루나톤", level: 4 }, choices: 33 }],
 ]);
-const requested = process.argv.slice(2).filter(arg => !["--connected", "--batch-candy", "--quick-charge", "--training-audit", "--guided", "--baseline-data", "--favor", "--frontier", "--frontier-audit", "--outposts", "--research-site-audit", "--ending", "--dex-during", "--dex-refill-audit", "--inherited-dojo-challenge", "--dark-audit", "--flying-audit", "--flying-battle-audit", "--flying-sample", "--flying-extremes", "--flying-decision-audit"].includes(arg)).map(Number);
+const requested = process.argv.slice(2).filter(arg => arg !== iceLevelOption && !["--connected", "--batch-candy", "--quick-charge", "--training-audit", "--guided", "--baseline-data", "--favor", "--frontier", "--frontier-audit", "--outposts", "--research-site-audit", "--ending", "--dex-during", "--dex-refill-audit", "--inherited-dojo-challenge", "--dark-audit", "--flying-audit", "--flying-battle-audit", "--flying-sample", "--flying-extremes", "--flying-decision-audit"].includes(arg)).map(Number);
 const eligible = manageFavor ? profiles.filter(({ seed }) => seed === 7)
   : trainingAudit || useGuidance ? profiles.filter(({ seed }) => auditCases.has(seed)) : profiles;
 const defaults = trainingAudit || useGuidance ? eligible : eligible.slice(0, 3);
 const selected = requested.length ? eligible.filter(({ seed }) => requested.includes(seed)) : defaults;
 assert.equal(selected.length, requested.length || defaults.length, "Unknown or duplicate campaign seed");
+assert.ok(!iceLevelOption || useGuidance && !baselineData && requested.length === 1 && requested[0] === 226 &&
+  Number.isInteger(minjiIceLevel) && minjiIceLevel >= 1 && minjiIceLevel <= 14, "Use --ice-level=1..14 with --guided 226");
 assert.ok(!(trainingAudit && connectedRoute), "The audited encounters use the original route");
 assert.ok(!useGuidance || (!trainingAudit && !connectedRoute), "Guided runs use the original route from a fresh game");
 assert.ok(!manageFavor || !baselineData, "The favor replay uses the current battle data");
@@ -724,6 +728,7 @@ async function verifyInheritedResearchReward(snapshot, { touch = false } = {}) {
     if (touch) {
       const blocked = button("저장 공간 부족", challenge);
       assert.ok(await blocked.isDisabled());
+      await challenge.getByText("필요한 저장 공간 · 경험치 사탕 1", { exact: true }).waitFor();
       await blocked.evaluate(button => button.click());
       assert.deepEqual(await read(), starting);
       await page.reload();
@@ -753,6 +758,7 @@ async function verifyInheritedResearchReward(snapshot, { touch = false } = {}) {
     await openGoals();
     await challenge.getByText("수령 완료", { exact: true }).waitFor();
     assert.equal(await claim.count(), 0);
+    assert.equal(await challenge.getByText(/필요한 저장 공간/).count(), 0);
     assert.deepEqual(await read(), rewarded);
     console.log(JSON.stringify({ audit: "inherited-research-reward", path: touch ? "legacy-outpost" : "inheritance",
       turn: before.turnCount, slotsBefore: before.storageCap - before.resources.candy, candyBefore: before.resources.candy,
@@ -761,10 +767,16 @@ async function verifyInheritedResearchReward(snapshot, { touch = false } = {}) {
 }
 
 async function verifyGoldForecast(snapshot) {
-  async function reading(root, label, received, overflow) {
+  assert.equal(snapshot.mapSnapshot.filter(site => site.owner === "player").length, worldMapNodes.length);
+  const goldCap = snapshot.storageCap;
+  const startingGold = snapshot.resources.gold;
+  const gross = (worldMapNodes.length - 1) * 3;
+  const incomeAt = gold => Math.min(gross, goldCap - gold);
+  async function reading(root, label, gold) {
     const forecast = root.getByRole("group", { name: label, exact: true });
+    const received = incomeAt(gold);
     await forecast.getByText(`받을 자금 +${received}`, { exact: true }).waitFor();
-    await forecast.getByText(`상한으로 못 받는 자금 ${overflow}`, { exact: true }).waitFor();
+    await forecast.getByText(`상한으로 못 받는 자금 ${gross - received}`, { exact: true }).waitFor();
   }
 
   for (const touch of [false, true]) {
@@ -784,24 +796,24 @@ async function verifyGoldForecast(snapshot) {
         else await page.keyboard.press("Escape");
         await shop.waitFor({ state: "hidden" });
       };
-      const afterTurn = async (turn, income) => {
+      const afterTurn = async (turn, gold) => {
         await use(page.locator("#nextTurn"));
         await page.waitForFunction(({ key, turn }) => JSON.parse(localStorage.getItem(key))?.turnCount === turn, { key, turn });
         const settled = await read();
-        assert.equal(settled.resources.gold, 50);
-        assert.ok(settled.lastLog.includes(`확보 지역 수입 · 자금 +${income}`));
-        await reading(page, now, 0, 117);
+        assert.equal(settled.resources.gold, goldCap);
+        assert.equal(settledTerritoryGold(settled), incomeAt(gold));
+        await reading(page, now, goldCap);
         return settled;
       };
 
       assert.deepEqual(await read(), snapshot);
-      await reading(page, now, 30, 87);
+      await reading(page, now, startingGold);
       const nextTurn = page.locator("#nextTurn");
       assert.ok((await nextTurn.getAttribute("aria-describedby")).split(" ").includes("base-gold-preview"));
       const shopHint = page.getByText("행동력이 더 필요하면 상점에서 충전권 구매 전후를 비교하세요.", { exact: true });
       await shopHint.waitFor();
       if (touch) {
-        await afterTurn(47, 30);
+        await afterTurn(snapshot.turnCount + 1, startingGold);
         await openShop();
         assert.ok(await button("구매", shop).isDisabled());
         assert.equal(await shop.getByRole("group", { name: afterPurchase, exact: true }).count(), 0);
@@ -816,37 +828,42 @@ async function verifyGoldForecast(snapshot) {
         await shopHint.waitFor();
       }
 
+      const beforePurchase = touch ? goldCap : startingGold;
+      const remainingGold = beforePurchase - ENERGY_CHARGE_COST;
       await openShop();
-      await shop.getByText("다음 턴 자금 저장 상한 50", { exact: true }).waitFor();
-      await reading(shop, now, touch ? 0 : 30, touch ? 117 : 87);
-      await reading(shop, afterPurchase, touch ? 5 : 35, touch ? 112 : 82);
-      await shop.getByText("다음 턴 예상 잔액 · 바로 넘기면 50 · 충전권 구매 후 50", { exact: true }).waitFor();
+      await shop.getByText(`다음 턴 자금 저장 상한 ${goldCap}`, { exact: true }).waitFor();
+      await reading(shop, now, beforePurchase);
+      await reading(shop, afterPurchase, remainingGold);
+      await shop.getByText(`다음 턴 예상 잔액 · 바로 넘기면 ${goldCap} · 충전권 구매 후 ${goldCap}`, { exact: true }).waitFor();
       await shop.getByText(/다음 턴에는 행동력이 5까지 회복됩니다/).waitFor();
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
       assert.ok(await shop.evaluate(dialog => dialog.scrollWidth <= dialog.clientWidth));
       await use(button("구매", shop));
-      await page.getByRole("heading", { name: `상점 · 자금 ${touch ? 45 : 15}`, exact: true }).waitFor();
-      await reading(shop, now, touch ? 5 : 35, touch ? 112 : 82);
+      await page.getByRole("heading", { name: `상점 · 자금 ${remainingGold}`, exact: true }).waitFor();
+      await reading(shop, now, remainingGold);
       const purchased = await read();
-      assert.equal(purchased.resources.gold, touch ? 45 : 15);
+      assert.equal(purchased.resources.gold, remainingGold);
       assert.equal(purchased.energy, touch ? 3 : 2);
       await closeShop();
-      await reading(page, now, touch ? 5 : 35, touch ? 112 : 82);
+      await reading(page, now, remainingGold);
       await shopHint.waitFor({ state: "hidden" });
-      const settled = await afterTurn(touch ? 48 : 47, touch ? 5 : 35);
+      const settled = await afterTurn(snapshot.turnCount + (touch ? 2 : 1), remainingGold);
       assert.deepEqual(settled.caughtSpeciesIds, snapshot.caughtSpeciesIds);
       await page.reload();
       await base.waitFor();
-      await reading(page, now, 0, 117);
+      await reading(page, now, goldCap);
       assert.deepEqual(await read(), settled);
     }, { touch });
   }
-  console.log(JSON.stringify({ audit: "gold-forecast", turn: snapshot.turnCount, gold: snapshot.resources.gold,
-    keyboardSettled: 35, touchSettled: [30, 5], goldCap: 50, reloaded: true }));
+  console.log(JSON.stringify({ audit: "gold-forecast", turn: snapshot.turnCount, gold: startingGold,
+    keyboardSettled: incomeAt(startingGold - ENERGY_CHARGE_COST), touchSettled: [incomeAt(startingGold), incomeAt(goldCap - ENERGY_CHARGE_COST)],
+    goldCap, reloaded: true }));
 }
 
 async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   const { seed, picks } = profile;
+  const minjiGuidance = useGuidance && seed === 226;
+  const keepMinjiTeam = minjiGuidance && !baselineData;
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
   if (baselineData) await useHistoricalBattleData(page);
   const errors = [];
@@ -876,10 +893,10 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   const dexAttempts = [];
   const totals = { charges: 0, candies: 0, hunts: 0, added: 0, growthTurns: 0, supplyTurns: 0, observedIsolationTurns: 0,
     missedGrossGold: 0, forfeitedGold: 0, lost: [], retries: 0, counterHunts: 0 };
-  const candyActions = { singles: 0, batches: 0, quantityChanges: 0 };
+  const candyActions = { singles: 0, batches: 0, quantityChanges: 0, pcCharges: 0, pcVisits: 0 };
   let shortcutCharges = 0;
   const favor = { stages: [], turns: [], healItemsProduced: 0, recovery: [], sashProtection: [], hunts: [],
-    actionPower: { hunts: 0, clearing: 0, construction: 0, assignments: 0 }, charges: 0, tool: 0, material: 0 };
+    actionPower: { hunts: 0, clearing: 0, construction: 0, assignments: 0 }, charges: 0, pcCharges: 0, tool: 0, material: 0 };
   const ledger = { turnRefill: 0, purchasedRefill: 0, income: 0, raids: [], chargeEvents: [], candyPerTurn: [] };
   const settlements = { construction: 0, clearing: 0, assignments: 0, harvest: {}, inheritances: [],
     outpostAssignments: 0, outpostHunts: 0, outpostCharges: 0, outpostTurns: 0, placements: [], remoteMaterialUsed: 0, sash: null };
@@ -893,6 +910,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   let registeelId;
   let aceIds;
   let thirdStarterId;
+  let iceCounterId;
   let region = 0;
   let battleSite = "draft";
   const audit = trainingAudit ? auditCases.get(seed) : undefined;
@@ -999,7 +1017,14 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
         if (!expected) totals.lost.push(site.id);
       }
     }
-    const maintained = manageFavor && registeelId ? await maintainFavor(after) : after;
+    if (keepMinjiTeam) {
+      for (const id of [...aceIds, thirdStarterId]) {
+        assert.ok(after.roster.some(member => member.id === id), `Minji's starter ${id} departed at turn ${after.turnCount}`);
+      }
+      favor.healItemsProduced += after.resources.healItem - before.resources.healItem;
+      if (reason === "favor") favor.turns.push(after.turnCount);
+    }
+    const maintained = (manageFavor && registeelId) || keepMinjiTeam ? await maintainFavor(after) : after;
     if (productionCrew && !settlements.sash && maintained.resources.tool >= 3) return finishOutpostCraft(maintained);
     return maintained;
   }
@@ -1012,16 +1037,17 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     return state.resources.gold >= minimumGold;
   }
 
-  async function charge() {
+  async function charge(scope = page) {
     const before = manageFavor || quickCharge ? await save() : null;
     if (dexRefill) assert.ok(canBuyCharge(before), "The purchase must follow the refill strategy");
-    const shortcut = button(/^충전권 구매/);
+    const shortcut = button(/^충전권 구매/, scope);
     if (quickCharge && await shortcut.isVisible()) {
       await tap(shortcut);
       await page.waitForFunction(({ key, gold }) => JSON.parse(localStorage.getItem(key))?.resources.gold === gold,
         { key, gold: before.resources.gold - ENERGY_CHARGE_COST });
       shortcutCharges++;
     } else {
+      assert.ok(scope === page, "The PC must offer its own charge button when candy and funds remain");
       await tap(button("상점"));
       const shop = page.getByRole("dialog", { name: /상점/ });
       await tap(button("구매", shop));
@@ -1065,7 +1091,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     assert.deepEqual((await save()).entryOrder, next);
   }
 
-  async function identify(target, fromMap = false, destination = fromMap ? "월드맵" : "본거지") {
+  async function identifyEncounter(target) {
     const before = await save();
     await tap(target);
     await tap(button(/본인확인서 대조/));
@@ -1090,14 +1116,23 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       console.log(`Dex capture: ${dexCount} species · ${species.get(id).nameKr}`);
     }
     if (dexRefill) dexAttempts.push({ id, chance, rng, caught });
-    await tap(button(fromMap ? "월드맵으로" : "본거지로"));
-    const arrival = heading(destination);
-    await (destination === "본거지" && endingRun ? arrival.or(ending) : arrival).waitFor();
     totals.hunts++;
     const after = await save();
     assert.equal(after.roster.length, before.roster.length + Number(caught));
     totals.added += Number(caught);
-    return caught ? after.roster.at(-1) : null;
+    return { member: caught ? after.roster.at(-1) : null, after };
+  }
+
+  async function leaveIdentification(fromMap = false, destination = fromMap ? "월드맵" : "본거지") {
+    await tap(button(fromMap ? "월드맵으로" : "본거지로"));
+    const arrival = heading(destination);
+    await (destination === "본거지" && endingRun ? arrival.or(ending) : arrival).waitFor();
+  }
+
+  async function identify(target, fromMap = false, destination = fromMap ? "월드맵" : "본거지") {
+    const { member } = await identifyEncounter(target);
+    await leaveIdentification(fromMap, destination);
+    return member;
   }
 
   const pc = () => page.getByRole("dialog", { name: /보유 포켓몬/ });
@@ -1106,11 +1141,16 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   async function useRecovery(state, member) {
     await tap(button(/포켓몬 \d/));
     await selectMember(pc(), member.id);
+    const ready = state.energy ? state : await charge(pc());
+    if (!state.energy) {
+      favor.charges++;
+      favor.pcCharges++;
+    }
     await tap(button("회복 아이템 사용", pc()));
     await close(pc());
     const recovered = await save();
     assert.equal(recovered.resources.healItem, state.resources.healItem - 1);
-    assert.equal(recovered.energy, state.energy - 1);
+    assert.equal(recovered.energy, ready.energy - 1);
     const updated = recovered.roster.find(candidate => candidate.id === member.id);
     assert.equal(updated.favor, Math.min(member.favCeil, member.favor + 15));
     assert.equal(updated.departurePending, undefined);
@@ -1119,16 +1159,18 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   }
 
   async function maintainFavor(state) {
-    const important = new Set([...aceIds, thirdStarterId, operations.dragon?.id, operations.ghostId, dark.worker?.id, flying.worker?.id]);
+    const important = new Set([...aceIds, thirdStarterId, iceCounterId, operations.dragon?.id, operations.ghostId, dark.worker?.id, flying.worker?.id]);
     const atRisk = state.roster.filter(member => member.departurePending &&
       (important.has(member.id) || member.jobId === "research" || member.jobId === "heal"));
     for (const member of atRisk) {
       if (!state.resources.healItem) break;
-      if (!state.energy && canBuyCharge(state)) {
-        state = await charge();
-        favor.charges++;
+      if (!state.energy) {
+        if (!canBuyCharge(state)) break;
+        if (!quickCharge) {
+          state = await charge();
+          favor.charges++;
+        }
       }
-      if (!state.energy) break;
       state = await useRecovery(state, member);
       if (member.id === flying.worker?.id) flying.recoveryEnergy++;
     }
@@ -1592,7 +1634,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     return save();
   }
 
-  async function setUpFavorProduction() {
+  async function setUpRecoveryClinic() {
     const state = await save();
     const waiting = state.roster.filter(member => member.buildingId === state.buildings[0].id && !member.jobId);
     if (waiting.length) {
@@ -1603,6 +1645,10 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     await clearSupportPlot(2);
     await buildSupportFacility(2, "치료소");
     await staffSupportFacility(2, "치료소", "heal", "회복 아이템 생산", "페어리", 18);
+  }
+
+  async function setUpFavorProduction() {
+    await setUpRecoveryClinic();
     await clearSupportPlot(3);
     const recovered = await energy(1, false, "favor");
     assert.ok(recovered.resources.healItem > 0, "The clinic produced at least one recovery item");
@@ -1671,16 +1717,21 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     const beforeIncome = ledger.income;
     const beforeRecovery = favor.recovery.length;
     const beforeDefense = operations.defenseEnergy;
-    const exploration = { attempts: 0, captured: 0, duplicate: 0 };
+    const exploration = { attempts: 0, captured: 0, duplicate: 0, continued: 0, fieldCharges: 0 };
     let current = start;
+    let continuedEnergy;
     while (current.caughtSpeciesIds.length < target) {
-      await heading("본거지").waitFor();
       assert.equal(await ending.count(), 0);
       assert.ok(exploration.attempts < 80, `The campaign could not reach ${target} species within 80 exploration attempts`);
-      const ready = await energy(2);
-      const member = await conductHunt(false);
-      const after = await save();
-      assert.equal(after.energy, ready.energy - 2);
+      if (continuedEnergy === undefined) {
+        await heading("본거지").waitFor();
+        continuedEnergy = (await energy(2)).energy - 2;
+        await tap(button(/탐험 행동력 2/));
+      }
+      await heading("야생 탐험").waitFor();
+      const { member, after } = await identifyEncounter(page.locator(".hunt-target").first());
+      assert.equal(after.energy, continuedEnergy);
+      continuedEnergy = undefined;
       const caughtId = member?.pokemon.pokemonRowid;
       const isNew = member && !current.caughtSpeciesIds.includes(caughtId);
       assert.deepEqual(after.caughtSpeciesIds, isNew ? [...current.caughtSpeciesIds, caughtId] : current.caughtSpeciesIds);
@@ -1690,6 +1741,22 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
         if (!isNew) exploration.duplicate++;
       }
       current = after;
+      const keepHunting = button(/^탐험 계속/);
+      if (current.caughtSpeciesIds.length < target) {
+        if (quickCharge && current.energy < 2 && canBuyCharge(current) && await button(/^충전권 구매/).count()) {
+          current = await charge();
+          exploration.fieldCharges++;
+        }
+        if (await keepHunting.count() && await keepHunting.isEnabled()) {
+          continuedEnergy = current.energy - 2;
+          await tap(keepHunting);
+          exploration.continued++;
+          continue;
+        }
+      } else if (current.caughtSpeciesIds.length >= 25 && current.mapSnapshot.every(spot => spot.owner === "player")) {
+        assert.equal(await keepHunting.count(), 0, "The completed campaign returns to the ending");
+      }
+      await leaveIdentification();
     }
     const purchased = ledger.purchasedRefill - beforePurchased;
     const turnRefill = ledger.turnRefill - beforeRefills;
@@ -1741,32 +1808,41 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       await base();
     }
 
+    const status = page.locator(".base-campaign-status");
+    await status.getByText(/보상 수령 가능/).waitFor();
     const goals = page.getByRole("dialog", { name: "관측 목표와 도감" });
     await button("목표·도감").press("Enter");
     await goals.getByText("최종 목표 · 거점 40/40곳 확보 · 도감 25/25종 등록").waitFor();
     const rewardRow = threshold => goals.getByRole("list", { name: "도감 보상" })
       .getByRole("listitem").filter({ has: page.getByText(`${threshold}종 기록`, { exact: true }) });
-    let room = await save();
-    if (room.resources.gold + 10 > room.storageCap) {
-      assert.ok(await button("저장 공간 부족", rewardRow(25)).isDisabled());
-      assert.deepEqual(room.claimedDexRewards, []);
-      await close(goals);
-      while (room.resources.gold + 10 > room.storageCap) room = await charge();
-      await button("목표·도감").press("Enter");
-    }
-    const rewardRoomCharges = totals.charges - endingCharges;
-    const beforeRewards = await save();
-    for (const threshold of [10, 25]) {
+    const claimReward = async threshold => {
       const claim = button("보상 받기", rewardRow(threshold));
       assert.ok(await claim.isEnabled(), `No room for the ${threshold}-species reward`);
       await claim.press("Enter");
       await rewardRow(threshold).getByText("수령 완료").waitFor();
+    };
+    const beforeRewards = await save();
+    await claimReward(10);
+    let room = await save();
+    if (room.resources.gold + 10 > room.storageCap) {
+      assert.ok(await button("저장 공간 부족", rewardRow(25)).isDisabled());
+      assert.deepEqual(room.claimedDexRewards, [10]);
+      await close(goals);
+      assert.match(await status.innerText(), /보상 저장 공간 필요/);
+      await button("목표·도감").press("Enter");
+      assert.match(await rewardRow(25).innerText(), new RegExp(`필요한 저장 공간 · 자금 ${room.resources.gold + 10 - room.storageCap}`));
+      await close(goals);
+      while (room.resources.gold + 10 > room.storageCap) room = await charge();
+      await status.getByText(/보상 수령 가능/).waitFor();
+      await button("목표·도감").press("Enter");
     }
+    const rewardRoomCharges = totals.charges - endingCharges;
+    await claimReward(25);
     await rewardRow(50).getByText("25종 남음").waitFor();
     const rewarded = await save();
     assert.deepEqual(rewarded.claimedDexRewards, [10, 25]);
     assert.deepEqual(rewarded.resources, { ...beforeRewards.resources, candy: beforeRewards.resources.candy + 3,
-      tm: beforeRewards.resources.tm + 3, gold: beforeRewards.resources.gold + 10 });
+      tm: beforeRewards.resources.tm + 3, gold: beforeRewards.resources.gold - rewardRoomCharges * ENERGY_CHARGE_COST + 10 });
     await page.reload();
     await heading("본거지").waitFor();
     assert.deepEqual(await save(), rewarded);
@@ -1774,6 +1850,22 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     for (const threshold of [10, 25]) await rewardRow(threshold).getByText("수령 완료").waitFor();
     assert.equal(await button("보상 받기", goals).count(), 0);
     assert.deepEqual(errors, []);
+    const full = { ...rewarded, claimedDexRewards: [10], resources: { ...rewarded.resources,
+      tm: rewarded.storageCap - 1, gold: rewarded.storageCap - 4, candy: rewarded.storageCap - 1 } };
+    await withCampaignCopy(full, async ({ page: touchPage, read, button: touchButton }) => {
+      await touchPage.locator(".base-campaign-status").getByText(/보상 저장 공간 필요/).waitFor();
+      await touchButton("목표·도감").tap();
+      const row = touchPage.getByRole("list", { name: "도감 보상" }).getByRole("listitem").filter({ hasText: "25종 기록" });
+      await row.getByText("필요한 저장 공간 · 기술머신 2 · 자금 6", { exact: true }).waitFor();
+      const blocked = touchButton("저장 공간 부족", row);
+      assert.ok(await blocked.isDisabled());
+      await blocked.evaluate(button => button.click());
+      const challenge = touchPage.getByRole("list", { name: "선택 도전 과제" });
+      await challenge.getByText("필요한 저장 공간 · 경험치 사탕 1", { exact: true }).waitFor();
+      assert.ok(await touchButton("저장 공간 부족", challenge).isDisabled());
+      assert.deepEqual(await read(), full);
+      assert.equal(await touchPage.evaluate(() => document.documentElement.scrollWidth), 390);
+    }, { touch: true });
     console.log(JSON.stringify({ seed, audit: "ending", strategy: dexDuringCampaign ? "during" : "after",
       territoryTurn: cleared.turnCount, territoryDex: cleared.caughtSpeciesIds.length, endingTurn: current.turnCount,
       endingDex: current.caughtSpeciesIds.length, totalHunts: totals.hunts, chargesAtClear, endingCharges, rewardRoomCharges,
@@ -1821,12 +1913,19 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       if (!state.resources.candy) throw new Error("Assigned researchers produced no candy");
       await energy(1);
       await tap(button(/포켓몬 \d/));
+      candyActions.pcVisits++;
       const dialog = page.getByRole("dialog", { name: /보유 포켓몬/ });
       await tap(dialog.locator(`[data-install-pick="${id}"]`));
       for (;;) {
         const current = await save();
         const selectedMember = current.roster.find(member => member.id === id);
-        if (!current.energy || !current.resources.candy || selectedMember.level >= level) break;
+        if (!current.resources.candy || selectedMember.level >= level) break;
+        if (!current.energy) {
+          if (!quickCharge || !canBuyCharge(current)) break;
+          await charge(dialog);
+          candyActions.pcCharges++;
+          continue;
+        }
         const count = batchCandy ? Math.min(current.energy, current.resources.candy, candyCostToLevel(selectedMember, level)) : 1;
         if (count > 1) {
           await tap(dialog.getByText("사탕 여러 개 먹이기", { exact: true }));
@@ -1886,32 +1985,35 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
   async function improveResearch() {
     const state = await save();
     await openResearch();
-    const upgrades = [];
+    const options = [];
+    const workerRow = name => dojo().getByRole("listitem").filter({ hasText: name });
     const output = async () => (await dojo().getByText(/경험치 사탕 \+\d+ \/ 최대 \d+/).allTextContents())
       .reduce((sum, line) => sum + Number(line.match(/\+(\d+)/)[1]), 0);
-    let expected = await output();
+    const forecast = await output();
     for (const member of state.roster.filter(member => member.jobId === "research")) {
-      const row = dojo().getByRole("listitem").filter({ hasText: member.pokemon.nameKr });
-      const line = await row.getByText(/턴당 최대 사탕/).textContent();
-      const [, level, from, to, candy] = line.match(/Lv\.(\d+).*최대 사탕 (\d+) → (\d+)개.*사탕 (\d+)개/).map(Number);
-      if (candy <= 15) upgrades.push({ id: member.id, name: member.pokemon.nameKr, level, from, to, candy });
+      const line = await workerRow(member.pokemon.nameKr).getByText(/턴당 기본 사탕/).textContent();
+      const [, level, from, to, candy, energy] = line.match(/Lv\.(\d+).*기본 사탕 (\d+) → (\d+)개.*사탕 (\d+)개.*행동력 (\d+)/).map(Number);
+      assert.equal(energy, candy);
+      options.push({ id: member.id, name: member.pokemon.nameKr, level, from, to, candy });
     }
     await close(dojo());
+    const upgrades = options.filter(option => option.candy <= 15);
+    console.log(JSON.stringify({ seed, guide: "research-options", forecast, options, selected: upgrades.map(({ name }) => name) }));
     upgrades.sort((a, b) => a.candy / (a.to - a.from) - b.candy / (b.to - b.from));
     for (const upgrade of upgrades) {
       const before = await save();
       const spent = totals.candies;
       await grow(upgrade.id, upgrade.level);
       assert.equal(totals.candies - spent, upgrade.candy);
-      expected += upgrade.to - upgrade.from;
+      await openResearch();
+      const reading = await workerRow(upgrade.name).getByText(/경험치 사탕 \+\d+ \/ 최대 \d+/).textContent();
+      assert.ok(Number(reading.match(/최대 (\d+)/)[1]) >= upgrade.to);
       const decision = { seed, guide: "research", name: upgrade.name, level: upgrade.level, candy: upgrade.candy,
-        production: expected, turns: (await save()).turnCount - before.turnCount };
+        production: await output(), turns: (await save()).turnCount - before.turnCount };
+      await close(dojo());
       guidance.push(decision);
       console.log(JSON.stringify(decision));
     }
-    await openResearch();
-    assert.equal(await output(), expected);
-    await close(dojo());
   }
 
   async function planMinji() {
@@ -1939,6 +2041,56 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       turns: (await save()).turnCount - before.turnCount };
     guidance.push(decision);
     console.log(JSON.stringify(decision));
+  }
+
+  async function prepareMinjiIce() {
+    const site = "se-09";
+    const scout = await viewTactics(site);
+    const iceGroups = await scout.types.getByRole("option", { name: /얼음/ }).evaluateAll(options =>
+      options.map(option => ({ value: option.value, name: option.textContent })));
+    assert.ok(iceGroups.some(({ name }) => name === "얼음") && iceGroups.some(({ name }) => name === "풀 · 얼음"));
+    async function readIceGroups({ tactics, types }) {
+      const attacks = tactics.getByRole("list", { name: "아군 공격 상성" });
+      const readings = [];
+      for (const { value, name } of iceGroups) {
+        await types.selectOption(value);
+        readings.push({ types: name, attacks: await attacks.getByRole("listitem").allTextContents() });
+      }
+      return readings;
+    }
+    const forecastBefore = await readIceGroups(scout);
+    await base();
+    const before = await save();
+    const fighter = await supportHunt(async () => {
+      await openResearch();
+      await tap(button(/^훈련 /, dojo()));
+      await tap(button(/격투 타입 탐색/, dojo()));
+    }, "격투");
+    iceCounterId = fighter.id;
+    const caught = await save();
+    const growthScout = await viewTactics(site);
+    await growthScout.types.selectOption({ label: "얼음" });
+    await tap(button("PC에서 약점 기술 확인", growthScout.tactics));
+    await selectMember(pc(), fighter.id);
+    const nextAttack = await pc().getByText(/다음 공격 후보.*Lv\.7 땅고르기.*사탕 21개.*행동력 21/).textContent();
+    const nextDamage = await pc().getByText(/명중 시 예상 피해.*→/).textContent();
+    await close(pc());
+    assert.deepEqual(await save(), caught, "Previewing the next move does not spend candy or energy");
+    await base();
+    const level = minjiIceLevel;
+    const candy = candyCostToLevel(fighter, level);
+    await grow(fighter.id, level);
+    const trained = await save();
+    await setParty([fighter.id, ...trained.entryOrder]);
+    const ready = await save();
+    const forecastAfter = await readIceGroups(await viewTactics(site));
+    for (const { attacks } of forecastAfter) {
+      assert.match(attacks.find(line => line.startsWith(fighter.pokemon.nameKr)) ?? "", /예상 피해 \d/);
+    }
+    assert.deepEqual(await save(), ready, "Looking at the damage forecast leaves the campaign state intact");
+    await base();
+    console.log(JSON.stringify({ seed, guide: "ice preparation", site, fighter: fighter.pokemon.nameKr, level, candy,
+      turns: trained.turnCount - before.turnCount, nextAttack, nextDamage, forecastBefore, forecastAfter }));
   }
 
   async function prepare(id) {
@@ -2008,7 +2160,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     const battle = await playCampaignBattle(page, 240, trace || useTactics, useTactics ? bippaTactics : undefined);
     if (trace) target.battle = battle;
     logs.push({ id, turn: state.turnCount, ...battle, ...(flyingEncounter ? { flyingEncounter } : {}) });
-    if (!battle.won || battle.choices >= 50) console.log(JSON.stringify({ seed, ...logs.at(-1) }));
+    if (!battle.won || battle.choices >= 50 || keepMinjiTeam && id === "se-09") console.log(JSON.stringify({ seed, ...logs.at(-1) }));
     const inheritance = useOutposts && battle.won && inheritedFacilities[id];
     if (inheritance) {
       const choice = page.getByRole("region", { name: "AI 건물 승계" });
@@ -2056,9 +2208,12 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       }
       await base();
       totals.retries++;
-      const state = await save();
-      await grow(aceIds[0], state.roster.find(member => member.id === aceIds[0]).level + 2, "retry");
-      await grow(aceIds[1], state.roster.find(member => member.id === aceIds[1]).level + 1, "retry");
+      for (const [index, levels] of [2, 1].entries()) {
+        const state = await save();
+        const member = state.roster.find(member => member.id === aceIds[index]);
+        assert.ok(member, `${id}: trained Pokémon ${aceIds[index]} left the roster before retrying on turn ${state.turnCount}`);
+        await grow(member.id, member.level + levels, "retry");
+      }
     }
     throw new Error(`${id} exhausted four attempts`);
   }
@@ -2217,7 +2372,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     }
     await page.goto(url);
     for (const [index, pick] of picks.entries()) {
-      await heading(`스타팅 선택 ${index + 1}/3`).waitFor();
+      await heading(`동료 영입 ${index}/3`).waitFor();
       await page.locator("[data-draft-target]").nth(pick).press("Enter");
     }
     await tap(button("본거지로 이동"));
@@ -2258,8 +2413,11 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
       if (region === 1) await research(3);
       if (manageFavor && region === 1) await setUpFavorProduction();
       if (useFrontier && region === 1) await recruitDragon();
-      if (useGuidance && seed === 226 && region === 1) await improveResearch();
-      if (useGuidance && seed === 226 && region === 3) await planMinji();
+      if (minjiGuidance && region === 1) {
+        await improveResearch();
+        if (keepMinjiTeam) await setUpRecoveryClinic();
+      }
+      if (minjiGuidance && region === 3) await planMinji();
       else for (const [index, level] of goals[region].entries()) await grow(aceIds[index], level);
       for (const id of routes[region].filter(id => id !== "southwest")) {
         if (darkAudit && id === "se-10") {
@@ -2277,6 +2435,7 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
           await heading("본거지").waitFor();
         }
         if (useGuidance && seed === 7 && id === "se-06") await planBippa();
+        if (keepMinjiTeam && id === "se-09") await prepareMinjiIce();
         const inspectNorthwest = flyingDecisionAudit && flyingMode === "observe" && id === "nw-02";
         if ((flyingBattleAudit && id === "nw-02") || inspectNorthwest) {
           flyingBattleCheckpoints = flyingSample || inspectNorthwest ? {} : { arrival: await save() };
@@ -2339,6 +2498,12 @@ async function play(profile, researchSite = "outpost", dexRefill, flyingMode) {
     }
     const cleared = await save();
     assert.equal(cleared.mapSnapshot.filter(site => site.owner === "player").length, 40);
+    if (keepMinjiTeam) {
+      assert.ok(favor.recovery.some(({ name }) => name === "앗차프"));
+      assert.equal(favor.healItemsProduced - favor.recovery.length, cleared.resources.healItem);
+      console.log(JSON.stringify({ seed, guide: "starter recovery", setupTurns: favor.turns.length, production: favor.healItemsProduced,
+        uses: favor.recovery.length, recovery: favor.recovery, retained: draft.roster.map(member => member.pokemon.nameKr) }));
+    }
     assert.deepEqual(errors, []);
     await page.reload();
     await (dexDuringCampaign ? ending : heading("본거지")).waitFor();

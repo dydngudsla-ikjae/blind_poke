@@ -15,16 +15,17 @@ import buildSign from "../../assets/field-build-sign.webp";
 import clearSign from "../../assets/field-clear-sign.webp";
 import credential from "../../assets/field-credential.webp";
 import useFieldMotion from "../components/useFieldMotion";
+import { isRapidPointerRepeat, readPointerClick, type PointerClick } from "../components/pointerClick";
 import { ENERGY_PER_TURN, isFreeWorker } from "../game/gameReducer";
-import { departureWarnings, ENERGY_CHARGE_COST } from "../domain/economy";
+import { departureWarnings, ENERGY_CHARGE_COST, HELD_ITEM_COST } from "../domain/economy";
 import { HUNT_ENERGY_COST } from "../domain/jobs";
-import { forecastGold } from "../domain/production";
-import { advanceTerritoryLoyalty, TERRITORY_GOLD } from "../domain/territorySupply";
+import { forecastGold, forecastIntrusionLoss } from "../domain/production";
+import { advanceTerritoryLoyalty } from "../domain/territorySupply";
 import { activeIntrusion, activeObservation } from "../domain/frontierOperations";
 import { worldMapNodes } from "../domain/worldMap";
 import { canOperateSettlement, HOME_SITE, settlementAt, settlementName } from "../domain/settlements";
 import { useGame } from "../game/GameProvider";
-import { SPRITE } from "../game/gameHelpers";
+import { duplicateRosterLabels, SPRITE } from "../game/gameHelpers";
 import { BasePanels, buildings, GoldForecast, QuickChargeButton, type BasePanel } from "./BasePanels";
 import { CampaignStatus } from "./CampaignGoals";
 import InheritanceChoice from "./InheritanceChoice";
@@ -49,18 +50,21 @@ const managementTools = [
 ] as const;
 const BaseWaterShader = lazy(() => import("../components/BaseWaterShader").catch(() => ({ default: () => null })));
 
-export default function BaseScreen() {
+type OpenMap = (siteId: string | null, showReport?: boolean) => void;
+
+export default function BaseScreen({ onOpenMap }: { onOpenMap: OpenMap }) {
   const { state } = useGame();
   const siteId = state.siteViewId ?? HOME_SITE;
-  return <SettlementScreen key={siteId} siteId={siteId} />;
+  return <SettlementScreen key={siteId} siteId={siteId} onOpenMap={onOpenMap} />;
 }
 
-function SettlementScreen({ siteId }: { siteId: string }) {
+function SettlementScreen({ siteId, onOpenMap }: { siteId: string; onOpenMap: OpenMap }) {
   const { state, dispatch } = useGame();
   const [panel, setPanel] = useState<BasePanel | null>(() => state.facilityOpening
     ? { kind: "facility", ...state.facilityOpening } : null);
   const heading = useRef<HTMLHeadingElement>(null);
   const exploreCommand = useRef<HTMLButtonElement>(null);
+  const lastTurnClick = useRef<PointerClick>(null);
   const showWater = useFieldMotion();
   const settlement = settlementAt(state, siteId)!;
   const home = siteId === HOME_SITE;
@@ -69,23 +73,26 @@ function SettlementScreen({ siteId }: { siteId: string }) {
   const portrait = state.trainerId ? trainerPortrait(state.trainerId) : undefined;
   const resting = state.roster.filter(member => isFreeWorker(state, member)).slice(0, trail.length);
   const assignedCount = state.roster.filter(member => !isFreeWorker(state, member)).length;
+  const craftableTools = Math.floor(state.resources.tool / HELD_ITEM_COST);
   const imminentLosses = useMemo(() => advanceTerritoryLoyalty(state.territories).lost, [state.territories]);
   const favorWarnings = departureWarnings(state.roster);
   const firstWarning = favorWarnings[0];
+  const warningName = firstWarning && (duplicateRosterLabels(state.roster).get(firstWarning.member.id) ?? firstWarning.member.pokemon.nameKr);
   const imminentDepartures = favorWarnings.filter(({ turns }) => turns === 0).length;
   const firstLostSite = worldMapNodes.find(node => node.name === imminentLosses[0]);
-  const hasTurnWarning = imminentLosses.length > 0 || imminentDepartures > 0;
   const favorNotice = firstWarning && (
     <div className="base-supply-warning base-departure-warning">
-      <span id="base-departure-warning" role="status">{firstWarning.turns === 0 ? "다음 턴 이탈 예정" : `이탈 경고까지 ${firstWarning.turns}턴`} · {firstWarning.member.pokemon.nameKr}{imminentDepartures > 1 ? ` 외 ${imminentDepartures - 1}마리` : ""}</span>
+      <span id="base-departure-warning" role="status">{firstWarning.turns === 0 ? "다음 턴 이탈 예정" : `이탈 경고까지 ${firstWarning.turns}턴`} · {warningName}{imminentDepartures > 1 ? ` 외 ${imminentDepartures - 1}마리` : ""}</span>
       <button className="base-button" aria-haspopup="dialog" onClick={() => setPanel({ kind: "pc", memberId: firstWarning.member.id, prioritizeWarnings: true })}>우호도 관리</button>
     </div>
   );
   const intrusion = activeIntrusion(state.territories, state.frontier.intrusion);
   const observation = activeObservation(state.territories, state.frontier.espionage?.observation);
+  const undefended = intrusion && !intrusion.defenderId;
+  const undetected = observation && !observation.detectorId;
+  const hasTurnWarning = imminentLosses.length > 0 || imminentDepartures > 0 || Boolean(undefended || undetected);
   const turnDetails = [home && "base-gold-preview", imminentLosses.length && "base-supply-warning", firstWarning && "base-departure-warning",
-    intrusion && !intrusion.defenderId && "base-intrusion-warning",
-    observation && !observation.detectorId && "base-espionage-warning"].filter(Boolean).join(" ");
+    undefended && "base-intrusion-warning", undetected && "base-espionage-warning"].filter(Boolean).join(" ");
   const goldReading = useMemo(() => home ? forecastGold(state) : null, [home, state]);
   const turnHint = state.energy < HUNT_ENERGY_COST
     ? state.resources.gold >= ENERGY_CHARGE_COST
@@ -103,7 +110,9 @@ function SettlementScreen({ siteId }: { siteId: string }) {
   }
 
   return (
-    <section className="field-base" aria-labelledby="base-title" data-home={home}>
+    <section className="field-base" aria-labelledby="base-title" data-home={home} onClickCapture={event => {
+      if (event.target instanceof Element && !event.target.closest("#nextTurn")) lastTurnClick.current = null;
+    }}>
       <div className="base-stage">
         <header className="base-hud">
           <h1 className="base-title" id="base-title" data-base-heading ref={heading} tabIndex={-1}>{name}</h1>
@@ -201,9 +210,14 @@ function SettlementScreen({ siteId }: { siteId: string }) {
           <nav className="base-tools" aria-label="본거지 관리">
             {managementTools.filter(({ kind }) => home || kind !== "settings").map(({ kind, label, art }) => (
               <button type="button" className="base-button" key={kind} aria-haspopup="dialog"
+                aria-label={kind === "resources" ? label : undefined}
+                aria-describedby={kind === "resources" && craftableTools > 0 ? "base-tools-ready" : undefined}
                 data-action={kind === "settings" ? "settings" : undefined} onClick={() => setPanel({ kind })}>
                 <img className="base-tool-art" src={art} alt="" width="112" height="112" />
                 <span>{label}{kind === "pc" && <> <b>{state.roster.length}</b></>}</span>
+                {kind === "resources" && craftableTools > 0 && (
+                  <small className="base-action-cost base-tools-ready" id="base-tools-ready">제작 {craftableTools}개</small>
+                )}
               </button>
             ))}
           </nav>
@@ -220,14 +234,22 @@ function SettlementScreen({ siteId }: { siteId: string }) {
             <button className="base-button base-map" data-action="map"
               onPointerEnter={() => preload(atlas, { as: "image" })}
               onFocus={() => preload(atlas, { as: "image" })}
-              onClick={() => transitionFieldView(() => dispatch({ type: "PATCH", patch: { screen: "map", siteViewId: null,
-                mapFocusId: home ? state.mapFocusId : siteId } }), "map")}>
+              onClick={() => onOpenMap(home ? state.mapFocusId : siteId)}>
               <img src={chart} className="base-command-art" alt="" width="168" height="168" />
               <span>지도</span>
             </button>
-            <button className="base-button base-next" id="nextTurn"
+            <button className="base-button base-next" id="nextTurn" type="button"
               data-risk={hasTurnWarning}
-              aria-describedby={turnDetails || undefined} onClick={() => dispatch({ type: "NEXT_TURN" })}>
+              aria-describedby={turnDetails || undefined}
+              onKeyDown={event => {
+                if (event.repeat && (event.key === "Enter" || event.key === " ")) event.preventDefault();
+              }}
+              onClick={event => {
+                const click = readPointerClick(event);
+                if (isRapidPointerRepeat(lastTurnClick.current, click)) return;
+                lastTurnClick.current = click;
+                dispatch({ type: "NEXT_TURN", expectedTurn: state.turnCount });
+              }}>
               <img src={hourglass} className="base-command-art" alt="" width="168" height="168" key={state.turnCount} data-turned={state.turnCount > 0} />
               {hasTurnWarning && <i className="base-next-alert" aria-hidden="true">!</i>}
               <span>다음 턴</span>
@@ -243,9 +265,19 @@ function SettlementScreen({ siteId }: { siteId: string }) {
               <span id="base-supply-warning" role="status">
                 다음 턴에 {firstLostSite.name}{imminentLosses.length > 1 ? ` 외 ${imminentLosses.length - 1}곳이` : "이"} 미점령지로 바뀝니다.
               </span>
-              <button className="base-button" onClick={() => transitionFieldView(() => dispatch({ type: "PATCH", patch: {
-                screen: "map", siteViewId: null, mapFocusId: firstLostSite.id,
-              } }), "map")}>보급로 보기</button>
+              <button className="base-button" onClick={() => onOpenMap(firstLostSite.id, true)}>보급로 보기</button>
+            </div>
+          )}
+          {undefended && (
+            <div className="base-supply-warning base-departure-warning">
+              <span id="base-intrusion-warning" role="status">적 침투 예고 · {settlementName(intrusion.targetId)} · 다음 턴 자금 손실 예상 {forecastIntrusionLoss(state)}</span>
+              <button className="base-button" onClick={() => onOpenMap(intrusion.targetId, true)}>치안 대응</button>
+            </div>
+          )}
+          {undetected && (
+            <div className="base-supply-warning base-departure-warning">
+              <span id="base-espionage-warning" role="status">적 첩보 신호 · {settlementName(observation.targetId)} · 다음 턴 정산</span>
+              <button className="base-button" onClick={() => onOpenMap(observation.targetId, true)}>첩보 탐지 대응</button>
             </div>
           )}
         </section>
@@ -275,20 +307,6 @@ function SettlementScreen({ siteId }: { siteId: string }) {
           <button className="base-button" onClick={() => dispatch({ type: "PATCH", patch: { siteViewId: null } })}>본거지로</button>
         </div>}
         {!home && <InheritanceChoice siteId={siteId} />}
-        {intrusion && !intrusion.defenderId && (
-          <div className="base-supply-warning base-departure-warning">
-            <span id="base-intrusion-warning" role="status">적 침투 예고 · {worldMapNodes.find(node => node.id === intrusion.targetId)?.name} · 다음 턴 자금 수입 {TERRITORY_GOLD} 위험</span>
-            <button className="base-button" onClick={() => transitionFieldView(() =>
-              dispatch({ type: "PATCH", patch: { screen: "map", mapFocusId: intrusion.targetId } }), "map")}>치안 대응</button>
-          </div>
-        )}
-        {observation && !observation.detectorId && (
-          <div className="base-supply-warning base-departure-warning">
-            <span id="base-espionage-warning" role="status">적 첩보 신호 · {settlementName(observation.targetId)} · 다음 턴 정산</span>
-            <button className="base-button" onClick={() => transitionFieldView(() =>
-              dispatch({ type: "PATCH", patch: { screen: "map", mapFocusId: observation.targetId } }), "map")}>첩보 탐지 대응</button>
-          </div>
-        )}
         {imminentDepartures === 0 && favorNotice}
       </div>
       {panel && <BasePanels panel={panel} siteId={siteId} onClose={() => setPanel(null)} />}

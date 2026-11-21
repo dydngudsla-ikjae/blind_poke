@@ -3,7 +3,7 @@ import type { ClearingOrder, GameAction, GameState, OutpostState } from "./gameT
 import { advanceMemberFavor, canUseGrowthItem, ENERGY_CHARGE_COST, ENERGY_CHARGE_GAIN, GROWTH_ITEMS, GROWTH_ITEM_ENERGY_COST, HELD_ITEM_COST, isHeldItemId, RESOURCE_LABELS } from "../domain/economy";
 import { BUILDING_TYPES, constructionTurns, isBuildingType, projectedConstructionTurns } from "../domain/construction";
 import { GROUND_TYPE, HUNT_ENERGY_COST, MAX_PLOTS, MAX_RESEARCH_WORKERS, hasPokemonType, isJobId, jobDefinitions, researcherCount, supportsJob, type JobId } from "../domain/jobs";
-import { forecastProduction } from "../domain/production";
+import { forecastGold, forecastIntrusionLoss, forecastProduction } from "../domain/production";
 import { advanceTerritoryLoyalty, MAX_LOYALTY, suppliedTerritories } from "../domain/territorySupply";
 import { canOperateSettlement, clearingSiteOf, HOME_SITE, inheritanceCandidates, makeOutpost, outpostIsOwned,
   settlementAt, settlementName } from "../domain/settlements";
@@ -14,6 +14,7 @@ import { STARTING_TERRITORY_IDS, worldMapNodes } from "../domain/worldMap";
 import { awardResources, DEX_REWARDS, dojoResearchChallengeRoute, endingReady, FIRST_VICTORY_REWARD, hasFirstVictory, INHERITED_RESEARCH_REWARD } from "./campaign";
 import { createTerritories, restoreTerritories } from "./territories";
 import { openCampaignRegions } from "./territoryFactions";
+import { duplicateRosterLabels } from "./gameHelpers";
 import type { ParsedMapSave } from "../services/saveSchemas";
 
 export const ENERGY_PER_TURN = 5;
@@ -181,15 +182,29 @@ export function isFreeWorker(state: GameState, member: RosterMember) {
   return !member.buildingId && !member.jobId && !clearingSiteOf(state, member.id) && !isOnFrontierDuty(state.frontier, member.id);
 }
 
-export function canReassignWorker(state: GameState, member: RosterMember) {
+export function workerReassignmentBlocker(state: GameState, member: RosterMember) {
+  const siteId = clearingSiteOf(state, member.id);
+  if (siteId) return { kind: "clearing", siteId } as const;
+  if (isOnFrontierDuty(state.frontier, member.id)) return { kind: "frontier" } as const;
   const current = member.buildingId && state.buildings.find(building => building.id === member.buildingId);
-  return !clearingSiteOf(state, member.id) && !isOnFrontierDuty(state.frontier, member.id) &&
-    (!current || (current.status !== "constructing" && canOperateSettlement(state, current.siteId)));
+  if (!current) return null;
+  if (!canOperateSettlement(state, current.siteId)) return { kind: "isolated", building: current } as const;
+  if (current.status === "constructing") return { kind: "construction", building: current } as const;
+  return null;
+}
+
+export function canReassignWorker(state: GameState, member: RosterMember) {
+  return workerReassignmentBlocker(state, member) === null;
 }
 
 export function canOfferJob(state: GameState, building: BuildingState, member: RosterMember, jobId: JobId) {
   return canOperateSettlement(state, building.siteId) && isJobId(jobId) && supportsJob(building, member.pokemon, jobId) &&
     canReassignWorker(state, member) && (jobId !== "research" || researcherCount(state.roster, building.id) < MAX_RESEARCH_WORKERS);
+}
+
+export function canContinueHunt(state: GameState) {
+  return state.screen === "identify" && state.selectedPokemonId !== null && state.huntTypeId === null && !state.counterHunt &&
+    (state.endingSeen || !endingReady(state));
 }
 
 function setClearing(state: GameState, siteId: string, order: ClearingOrder | null): GameState {
@@ -204,13 +219,16 @@ function freeBuilders(state: GameState, ids: string[]) {
 
 function nextTurn(state: GameState, data?: GameDataBundle): GameState {
   const production = forecastProduction(state);
+  const { received, overflow } = forecastGold(state, production);
   const { territories, lost } = advanceTerritoryLoyalty(state.territories);
   const supplied = suppliedTerritories(state.territories);
+  const memberLabels = duplicateRosterLabels(state.roster);
   const lostSites = new Set(Object.keys(state.outposts).filter(id => outpostIsOwned(state, id) && !outpostIsOwned({ territories }, id)));
   const lastLog: string[] = [];
   let inheritedResearchCompleted = state.inheritedResearchCompleted;
   const challengeDojos = new Set(inheritedResearchCompleted ? [] : dojoResearchChallengeRoute(state).dojos.map(dojo => dojo.id));
   if (production.income) lastLog.push("확보 지역 수입 · 자금 +" + production.income);
+  if (overflow > 0) lastLog.push(`자금 정산 · 받은 자금 +${received} · 상한으로 못 받은 자금 ${overflow}`);
   for (const name of lost) lastLog.push(`${name} 상실 · 충성도 0 · 미점령 전환`);
   const frontierLogStart = lastLog.length;
   if (production.storageCap > state.storageCap) lastLog.push("냉장 · 저장 상한 +" + (production.storageCap - state.storageCap));
@@ -228,8 +246,9 @@ function nextTurn(state: GameState, data?: GameDataBundle): GameState {
     if (reading.materialLimited) change.push("재료 부족");
     if (reading.storageLimited) change.push("저장 공간 부족");
     const plot = `${building.plotIndex + 1}번 부지`;
+    const name = memberLabels.get(member.id) ?? member.pokemon.nameKr;
     lastLog.push([building.siteId && building.siteId !== HOME_SITE ? `${settlementName(building.siteId)} ${plot}` : plot,
-      job.name, member.pokemon.nameKr, ...change].join(" · "));
+      job.name, name, ...change].join(" · "));
   }
   const returning = new Set<string>();
   const buildings = state.buildings.map(building => {
@@ -249,7 +268,7 @@ function nextTurn(state: GameState, data?: GameDataBundle): GameState {
   for (const previous of state.roster) {
     const carry = production.carry.get(previous.id);
     const { member, departed, protectedBySash } = advanceMemberFavor(carry ? { ...previous, productionCarry: carry } : previous);
-    const name = member.pokemon.nameKr;
+    const name = memberLabels.get(member.id) ?? member.pokemon.nameKr;
     if (departed) {
       departedIds.add(member.id);
       const item = member.heldItem;
@@ -273,6 +292,11 @@ function nextTurn(state: GameState, data?: GameDataBundle): GameState {
   }
   const entryOrder = state.entryOrder.filter(id => !departedIds.has(id));
   const { frontier, log } = advanceFrontier({ ...state, roster, entryOrder }, territories, data);
+  const intrusion = activeIntrusion(state.territories, state.frontier.intrusion);
+  if (intrusion && !intrusion.defenderId) {
+    const loss = forecastIntrusionLoss(state, production);
+    log.push(`${settlementName(intrusion.targetId)} · 침투로 실제 자금 손실 ${loss}`);
+  }
   lastLog.splice(frontierLogStart, 0, ...log);
   if (!lastLog.length) lastLog.push("턴이 진행되고 행동력이 회복되었습니다.");
   return { ...state, buildings, lastLog, territories, frontier, roster, outposts, inheritedResearchCompleted,
@@ -287,11 +311,17 @@ function nextTurn(state: GameState, data?: GameDataBundle): GameState {
 export function gameReducer(state:GameState, action:GameAction, data?:GameDataBundle):GameState {
   switch(action.type){
     case "PATCH": return {...state,...action.patch};
+    case "PICK_STARTER":
     case "ADD_MEMBER": {
+      if (action.type === "PICK_STARTER" &&
+        (state.screen !== "draft" || state.draftRound !== action.expectedRound || state.draftRound >= 3)) return state;
       if (state.roster.some(member => member.id === action.member.id)) return state;
       const id = action.member.pokemon.pokemonRowid;
       const caughtSpeciesIds = state.caughtSpeciesIds.includes(id) ? state.caughtSpeciesIds : [...state.caughtSpeciesIds, id];
-      return {...state,roster:[...state.roster,action.member],nextMemberId:state.nextMemberId+1,caughtSpeciesIds};
+      const added = { ...state, roster: [...state.roster, action.member], nextMemberId: state.nextMemberId + 1, caughtSpeciesIds };
+      if (action.type === "ADD_MEMBER") return added;
+      const draftRound = state.draftRound + 1;
+      return { ...added, draftRound, screen: draftRound === 3 ? "trainerReveal" : "draft" };
     }
     case "SET_ENTRY_ORDER": {const validIds=new Set(state.roster.map(member=>member.id));const entryOrder=action.memberIds.filter((id,index,list)=>validIds.has(id)&&list.indexOf(id)===index).slice(0,6);return {...state,entryOrder,message:action.memberIds.length>6?"전투 엔트리는 최대 6마리입니다.":""};}
     case "START_BUILDING": {
@@ -374,6 +404,10 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
     case "START_HUNT":
       if (state.screen !== "base" || state.energy < HUNT_ENERGY_COST) return state;
       return {...state, screen:"hunt",energy:state.energy-HUNT_ENERGY_COST,huntTypeId:action.typeId??null,counterHunt:null};
+    case "CONTINUE_HUNT":
+      if (!canContinueHunt(state) || state.energy < HUNT_ENERGY_COST) return state;
+      return { ...state, screen: "hunt", energy: state.energy - HUNT_ENERGY_COST,
+        selectedPokemonId: null, selectedTypeName: null, selectedScan: null };
     case "START_COUNTER_HUNT": {
       const { territoryId, typeIds } = action;
       if (!canSearchForCounter(state, territoryId) || state.energy < HUNT_ENERGY_COST || !typeIds.length || typeIds.length > 2 ||
@@ -391,7 +425,8 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
         selectedPokemonId:null, selectedTypeName:null, selectedScan:null, huntTypeId:null, counterHunt:null };
     }
     case "USE_GROWTH_ITEM": {
-      const { item, memberId, count = 1 } = action;
+      const { item, memberId, count = 1, expectedEnergy } = action;
+      if (expectedEnergy !== undefined && expectedEnergy !== state.energy) return state;
       const member = state.roster.find(entry => entry.id === memberId);
       if (!member || !canUseGrowthItem(state, member, item, count)) return state;
       const grown = item === "candy" ? GROWTH_ITEMS.candy.effect(member, count) : GROWTH_ITEMS[item].effect(member);
@@ -400,7 +435,8 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
         roster: state.roster.map(entry => entry === member ? grown : entry) };
     }
     case "CRAFT_HELD_ITEM": {
-      const { item } = action;
+      const { item, expectedParts } = action;
+      if (expectedParts !== undefined && expectedParts !== state.resources.tool) return state;
       if (!isHeldItemId(item) || state.resources.tool < HELD_ITEM_COST) return state;
       const items = { ...state.resources.items, [item]: (state.resources.items[item] ?? 0) + 1 };
       return { ...state, resources: { ...state.resources, tool: state.resources.tool - HELD_ITEM_COST, items } };
@@ -422,7 +458,9 @@ export function gameReducer(state:GameState, action:GameAction, data?:GameDataBu
       if (state.energy >= ENERGY_PER_TURN || state.resources.gold < ENERGY_CHARGE_COST) return state;
       return { ...state, energy: Math.min(ENERGY_PER_TURN, state.energy + ENERGY_CHARGE_GAIN),
         resources: { ...state.resources, gold: state.resources.gold - ENERGY_CHARGE_COST } };
-    case "NEXT_TURN": return nextTurn(state, data);
+    case "NEXT_TURN":
+      if (action.expectedTurn !== undefined && action.expectedTurn !== state.turnCount) return state;
+      return nextTurn(state, data);
     case "CLAIM_DEX_REWARD": {
       const reward = DEX_REWARDS.find(entry => entry.threshold === action.threshold);
       if (!reward || state.caughtSpeciesIds.length < reward.threshold || state.claimedDexRewards.includes(reward.threshold)) return state;

@@ -104,13 +104,20 @@ async function prepareEntry(page, play, roster, { touch = false, energyShort = f
   await close(entry);
   assert.deepEqual((await play.read()).entryOrder, []);
   assert.ok(await opener.evaluate(button => button === document.activeElement));
+  assert.equal(await opener.locator("small").textContent(), "편성 0/6");
   await play.use(opener);
   for (const member of roster) await play.use(entry.locator(`[data-pc-member="${member.id}"]`));
   await close(entry);
-  assert.ok(await reportHeading.evaluate(heading => heading === document.activeElement));
+  await opener.waitFor({ timeout: 3000 });
+  assert.ok(await opener.evaluate(button => button === document.activeElement));
+  assert.equal(await opener.locator("small").textContent(), `편성 ${roster.length}/6`);
   assert.equal(await challenge.isDisabled(), energyShort);
   if (energyShort) await play.report.getByText("행동력이 부족합니다.", { exact: true }).waitFor();
   assert.deepEqual((await play.read()).entryOrder, roster.map(member => member.id));
+  const arranged = await play.read();
+  await play.use(opener);
+  await close(entry);
+  assert.deepEqual(await play.read(), arranged);
 }
 
 async function chooseOpeningLead(page, play, [first, lead, ...reserves]) {
@@ -135,6 +142,55 @@ async function chooseOpeningLead(page, play, [first, lead, ...reserves]) {
   await play.use(comparison);
   await attacks.waitFor({ state: "hidden" });
   return lead.pokemon.nameKr;
+}
+
+async function verifyDuplicateOpeningLead(touch) {
+  const page = await profile(touch ? { width: 390, height: 844 } : { width: 1440, height: 900 }, touch);
+  const play = controls(page, touch);
+  await page.evaluate(async key => {
+    const lapras = (await fetch("/data/pokemon.json").then(response => response.json())).find(record => record.pokemonRowid === 131);
+    const roster = [15, -15, 0].map((hp, index) => ({ id: `mon-${index + 1}`, pokemon: lapras, level: 1,
+      exp: 0, favor: 70, favFloor: 20, favCeil: 85, aptitude: 50, iv: { hp } }));
+    localStorage.setItem(key, JSON.stringify({ v: 4, roster, entryOrder: ["mon-1", "mon-2"], energy: 5,
+      nextMemberId: 4, introPending: false }));
+  }, key);
+  await page.reload();
+  await play.openMap();
+  await play.use(play.node("southwest"));
+  await play.use(play.button(/정찰하기/));
+  const opening = play.report.getByRole("region", { name: "첫 도전 준비" });
+  await play.use(opening.getByText(/선봉 비교/));
+  const second = play.button("라프라스 2번 선봉으로", opening);
+  await second.waitFor({ timeout: 2500 });
+  await opening.getByRole("listitem").filter({ hasText: "라프라스 2번" }).getByText("Lv.1", { exact: true }).waitFor();
+  assert.equal(await opening.getByText("라프라스 3번", { exact: false }).count(), 0);
+  const before = await play.read();
+  if (touch) {
+    await second.scrollIntoViewIfNeeded();
+    const { x, y, width, height } = await second.boundingBox();
+    const point = [x + width / 2, y + height / 2];
+    await page.touchscreen.tap(...point);
+    await play.button("라프라스 2번 현재 선봉", opening).waitFor();
+    assert.equal(await page.evaluate(([clientX, clientY]) => document.elementFromPoint(clientX, clientY)
+      ?.closest("button")?.getAttribute("aria-label"), point), "라프라스 1번 선봉으로");
+    await page.touchscreen.tap(...point);
+  } else await play.use(second);
+  const selected = await play.read();
+  assert.deepEqual(selected.entryOrder, ["mon-2", "mon-1"]);
+  assert.equal(selected.energy, before.energy);
+  await play.use(play.report.getByText("상성·교대 분석", { exact: true }));
+  const attacks = play.report.getByRole("list", { name: "아군 공격 상성" });
+  await attacks.getByText(/^라프라스 2번 ·/).waitFor();
+  await attacks.getByText(/^라프라스 1번 ·/).waitFor();
+  await page.reload();
+  await play.openMap();
+  await play.use(play.node("southwest"));
+  assert.deepEqual(await play.read(), selected);
+  await play.use(play.button(/거점 도전/, play.report));
+  const player = page.locator('.duel-vitals[data-side="player"]');
+  await player.getByRole("heading", { name: "라프라스 2번", exact: true }).waitFor();
+  assert.equal(await player.locator("meter").getAttribute("max"), "257");
+  await page.close();
 }
 
 function chargeForecast(shop) {
@@ -178,14 +234,18 @@ async function chargeFromReport(page, play, { buy = true, touch = false } = {}) 
 
 try {
   browser = await chromium.launch({ channel: "chrome" });
+  await verifyDuplicateOpeningLead(false);
+  await verifyDuplicateOpeningLead(true);
+  console.log("Duplicate lead Chrome passed: numbered scout comparisons, one reorder, reload and selected IV in battle");
   const desktop = await profile({ width: 1440, height: 900 });
   const play = controls(desktop);
   for (let round = 1; round <= 3; round++) {
-    await play.heading(`스타팅 선택 ${round}/3`).waitFor();
+    await play.heading(`동료 영입 ${round - 1}/3`).waitFor();
     await play.use(desktop.locator("[data-draft-target]").first());
   }
   await play.use(play.button("본거지로 이동"));
   await play.openMap();
+  assert.ok(await play.heading("월드맵").evaluate(heading => heading === document.activeElement));
 
   const fresh = await play.read();
   const trainers = fresh.mapSnapshot.filter(spot => spot.owner === "trainer").map(spot => spot.trainerId);
@@ -234,8 +294,12 @@ try {
   await desktop.locator('.duel-vitals[data-side="player"]').getByRole("heading", { name: desktopLead, exact: true }).waitFor();
   await win(desktop, play);
   await reviewFirstReward(desktop, play);
+  await desktop.emulateMedia({ reducedMotion: "no-preference" });
   await play.use(play.button("월드맵으로"));
   await play.heading("남부 거점").waitFor();
+  await desktop.waitForFunction(() => !document.documentElement.hasAttribute("data-field-transition"));
+  assert.ok(await play.heading("남부 거점").evaluate(heading => heading === document.activeElement));
+  await desktop.emulateMedia({ reducedMotion: "reduce" });
   assert.equal(await play.node("south").getAttribute("data-status"), "owned");
   assert.equal(await play.faction("south").count(), 0);
   assert.equal(await desktop.locator('[data-route="home|south"]').getAttribute("data-owned-route"), "true");
@@ -274,7 +338,8 @@ try {
   await play.use(play.button("구매", baseShop));
   await play.use(play.button("닫기", baseShop));
   await play.openMap();
-  await play.use(play.node("southeast"));
+  assert.equal(await play.node("southeast").getAttribute("aria-pressed"), "true", "Return from the shop to the selected site");
+  await play.heading("동남 거점").waitFor();
   assert.ok(await play.button(/거점 도전/, play.report).isEnabled());
   const baseCharge = await play.read();
 
@@ -333,19 +398,60 @@ try {
     await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: start.x + 34, y: start.y + 10 }] });
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     await mobile.waitForFunction(before => document.querySelector(".atlas-board").getAttribute("style") !== before, before);
+
+    const marker = await touch.node("island").boundingBox();
+    assert.ok(marker);
+    const markerStart = { x: marker.x + marker.width / 2, y: marker.y + marker.height / 2 };
+    assert.equal(await mobile.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("[data-node]")?.getAttribute("data-node"), markerStart), "island");
+    const beforeMarkerDrag = await mobileBoard.getAttribute("style");
+    const selectedBeforeDrag = await mobile.locator('.atlas-node[aria-pressed="true"]').getAttribute("data-node");
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [markerStart] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: markerStart.x, y: markerStart.y - 18 }] });
+    await mobile.waitForFunction(before => document.querySelector(".atlas-board").getAttribute("style") !== before, beforeMarkerDrag);
+    const firstMarkerMove = await mobileBoard.getAttribute("style");
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: markerStart.x, y: markerStart.y - 28 }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    assert.notEqual(await mobileBoard.getAttribute("style"), beforeMarkerDrag, "확대 지도는 거점 위에서 밀어도 이동해야 합니다.");
+    assert.notEqual(await mobileBoard.getAttribute("style"), firstMarkerMove, "거점에서 시작한 드래그를 중간에 놓치면 안 됩니다.");
+    assert.equal(await view.getAttribute("data-dragging"), null);
+    assert.equal(await mobile.locator('.atlas-node[aria-pressed="true"]').getAttribute("data-node"), selectedBeforeDrag);
+    assert.equal(await touch.button(/보고 펴기/).getAttribute("aria-expanded"), "false");
+
     await touch.use(touch.node("west"));
     await mobile.locator('[data-node="west"][aria-pressed="true"]').waitFor();
     assert.equal(await reportToggle.getAttribute("aria-expanded"), "true");
     await touch.use(touch.button(/정찰하기/));
     await touch.heading("서부 거점").waitFor();
+    const viewBeforeReturn = await mobileBoard.getAttribute("style");
+    const reportBeforeReturn = await touch.read();
+    await touch.use(touch.button("본거지로"));
+    await touch.openMap();
+    await touch.heading("서부 거점").waitFor();
+    assert.ok(await touch.heading("월드맵").evaluate(heading => heading === document.activeElement));
+    assert.equal(await mobileBoard.getAttribute("style"), viewBeforeReturn, "본거지에서 돌아오면 확대 배율과 위치가 유지되어야 합니다.");
+    assert.equal(await touch.node("west").getAttribute("aria-pressed"), "true");
+    assert.deepEqual(await touch.read(), reportBeforeReturn);
     await touch.use(touch.button("지도 전체 보기"));
     await mobile.waitForFunction(() => document.querySelector(".atlas-board").style.transform.endsWith("scale(1)"));
     await touch.use(touch.faction("south"));
     await touch.heading("남부 거점").waitFor();
+    const legacyEntry = touch.button("엔트리 편성", touch.report);
+    const legacyBefore = await touch.read();
+    await legacyEntry.waitFor({ timeout: 3000 });
+    await touch.use(legacyEntry);
+    const formation = mobile.getByRole("dialog", { name: /전투 엔트리 편성/ });
+    const reserve = save.roster[1];
+    await touch.use(formation.locator(`[data-pc-member="${reserve.id}"]`));
+    await touch.use(formation.locator('[data-entry-slot="1"] [data-entry-direction="up"]'));
+    await touch.use(touch.button("닫기", formation));
+    await formation.waitFor({ state: "hidden" });
+    assert.ok(await legacyEntry.evaluate(button => button === document.activeElement));
+    assert.deepEqual(await touch.read(), { ...legacyBefore, entryOrder: [reserve.id, save.roster[0].id] });
     await touch.shot(`touch-${viewport.width}-trainer-report`);
     await touch.use(touch.button(/거점 도전/));
     await touch.heading("거점 배틀").waitFor();
     assert.equal(await mobile.locator(".duel-opponent").textContent(), rival.nameKr);
+    await mobile.locator('.duel-vitals[data-side="player"]').getByRole("heading", { name: reserve.pokemon.nameKr, exact: true }).waitFor();
     assert.equal(await touch.button("포켓몬 살피기").count(), 0);
 
     const firstBattle = { ...fresh, energy: viewport.width === 320 ? 2 : fresh.energy };
@@ -357,6 +463,8 @@ try {
     await touch.heading("남부 거점").waitFor();
     await prepareEntry(mobile, touch, fresh.roster, { touch: true });
     const mobileLead = await chooseOpeningLead(mobile, touch, fresh.roster);
+    await touch.use(touch.button("지도 확대"));
+    const beforeBattleView = await mobileBoard.getAttribute("style");
     await touch.use(touch.button(/거점 도전/));
     await mobile.locator('.duel-vitals[data-side="player"]').getByRole("heading", { name: mobileLead, exact: true }).waitFor();
     await win(mobile, touch);
@@ -364,6 +472,9 @@ try {
     await reviewFirstReward(mobile, touch, { touch: true, spend });
     await touch.use(touch.button("월드맵으로"));
     await touch.heading("남부 거점").waitFor();
+    assert.ok(await touch.heading("남부 거점").evaluate(heading => heading === document.activeElement));
+    assert.equal(await mobileBoard.getAttribute("style"), beforeBattleView);
+    assert.equal(await touch.node("south").getAttribute("aria-pressed"), "true");
     const victory = await touch.read();
     assert.equal(victory.energy, firstBattle.energy - 2 - Number(spend));
     assert.equal(victory.resources.gold - fresh.resources.gold, 5);
@@ -396,6 +507,15 @@ try {
       assert.deepEqual(savedCharge.resources, charged.resources);
       assert.deepEqual(savedCharge.mapSnapshot, charged.mapSnapshot);
       assert.equal(savedCharge.energy, 0);
+      await touch.openMap();
+      await touch.use(touch.node("southeast"));
+      await touch.use(touch.button("본거지로"));
+      await touch.use(mobile.locator("#nextTurn"));
+      assert.equal((await touch.read()).turnCount, savedCharge.turnCount + 1);
+      assert.equal((await touch.read()).energy, 5);
+      await touch.openMap();
+      assert.equal(await touch.node("southeast").getAttribute("aria-pressed"), "true", "Return to the selected site after a turn");
+      assert.ok(await touch.button(/거점 도전/, touch.report).isEnabled());
     } else {
       await mobile.evaluate(({ key, fresh }) => localStorage.setItem(key, JSON.stringify({ ...fresh, energy: 1 })), { key, fresh });
       await mobile.reload();

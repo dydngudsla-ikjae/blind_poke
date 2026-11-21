@@ -87,7 +87,7 @@ export default function HuntScreen() {
                 : request ? `${request.nameKr} 타입 탐색` : "숲 공터"}</span>
               <h1 id="hunt-title" ref={heading} tabIndex={-1}>야생 탐험</h1>
             </div>
-            <div className="draft-scanner-status" data-locked={Boolean(target)}>
+            <div className="draft-observation-status" data-locked={Boolean(target)}>
               <span className="draft-status-light" aria-hidden="true" />
               {target ? "초점 맞음" : "초점 탐색 중"}
             </div>

@@ -1,4 +1,4 @@
-import { battleMoves, buildCombatant, campaignLearnLevels, effectiveAttack, pickMoveset } from "../domain/battle";
+import { battleMoves, buildCombatant, moveAccuracy, nextOrdinaryAttack } from "../domain/battle";
 import type { GameDataBundle, RosterMember } from "../domain/types";
 import "./PokemonBattleProfile.css";
 
@@ -17,13 +17,7 @@ export default function PokemonBattleProfile({ member, data, journal = false }: 
   member: RosterMember; data: GameDataBundle; journal?: boolean;
 }) {
   const mon = buildCombatant(member, data, member.id);
-  const current = new Set(mon.moves.map(move => move.id));
-  let next;
-  for (const level of campaignLearnLevels(member.pokemon, data)) {
-    if (level <= member.level) continue;
-    const move = effectiveAttack(pickMoveset(member.pokemon, level, data).filter(item => !current.has(item.id)), [], data);
-    if (move) { next = { level, move }; break; }
-  }
+  const next = nextOrdinaryAttack(member.pokemon, member.level, data);
   const types = mon.types.map(id => data.types.find(type => type.typeRowid === id)?.nameKr).filter(Boolean);
   const stats = [
     ["hp", "최대 HP", mon.maxHp], ["atk", "공격", mon.stats.atk], ["satk", "특수공격", mon.stats.satk],
@@ -61,14 +55,15 @@ export default function PokemonBattleProfile({ member, data, journal = false }: 
       <div className="pokemon-move-notes">
         <h3>장착 기술</h3>
         <ul>
-          {battleMoves(mon).map(move => (
-            <li key={move.id}><strong>{move.name}</strong><span>{[
+          {battleMoves(mon).map(move => {
+            const accuracy = moveAccuracy(move, mon);
+            return <li key={move.id}><strong>{move.name}</strong><span>{[
               move.typeName, move.damageClass === 2 ? "물리" : move.damageClass === 3 ? "특수" : "변화",
               move.weightPower ? "위력 상대 체중에 따라" : move.power > 0 ? "위력 " + move.power : null,
-              move.accuracy ? "명중 " + move.accuracy + "%" : "명중 판정 없음", move.maxPp ? "PP " + move.maxPp : null,
+              accuracy === null ? "명중 판정 없음" : `명중 ${accuracy}%`, move.maxPp ? `PP ${move.maxPp}` : null,
               move.selfKO ? "사용자 기절" : move.recoil ? "반동" : null,
-            ].filter(Boolean).join(" · ")}</span></li>
-          ))}
+            ].filter(Boolean).join(" · ")}</span></li>;
+          })}
         </ul>
         <p>{next ? <>다음 공격기 <strong>Lv.{next.level} {next.move.name}</strong></> : "이후 장착될 새 공격기 없음"}</p>
       </div>

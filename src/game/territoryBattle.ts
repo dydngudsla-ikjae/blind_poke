@@ -59,13 +59,17 @@ export function territoryOpponents(state: GameState, data: GameDataBundle, id: s
   const easyWild = data.pokemon.filter(earlyWild);
   if (firstVictory) {
     const pokemon = data.pokemon.find(entry => entry.pokemonRowid === 10) ?? easyWild[0] ?? data.pokemon[0];
-    return pokemon ? { node, enemyName, firstVictory, pool: [pokemon] } : null;
+    return pokemon ? { node, enemyName, firstVictory, pool: [pokemon], revealedTeam: null } : null;
   }
   const trainerIds = new Set(trainer?.pokemon.map(pokemon => pokemon.id));
   const trainerTeam = data.pokemon.filter(pokemon => trainerIds.has(pokemon.pokemonRowid));
   const wild = node.region === 1 ? easyWild : data.pokemon.filter(pokemon => !pokemon.details?.isLegendary && !pokemon.details?.isMythical);
   const pool = trainerTeam.length ? trainerTeam : wild.length ? wild : data.pokemon;
-  return { node, enemyName, firstVictory, pool };
+  const intel = state.frontier.intel[id];
+  const revealed = intel && !intel.memberId ? intel.pokemonIds.map(pokemonId => pool.find(pokemon => pokemon.pokemonRowid === pokemonId)) : [];
+  const revealedTeam = revealed.length > 0 && revealed.every(pokemon => pokemon !== undefined)
+    ? { members: revealed, reversed: intel?.reversed } : null;
+  return { node, enemyName, firstVictory, pool, revealedTeam };
 }
 
 export function trainerGrowth(state: GameState, territoryId: string, region: number) {
@@ -89,20 +93,17 @@ export function prepareTerritoryBattle(state: GameState, data: GameDataBundle, i
   if (!canBattle(state, id)) return null;
   const opponents = territoryOpponents(state, data, id);
   if (!opponents) return null;
-  const { node, enemyName, firstVictory, pool } = opponents;
+  const { node, enemyName, firstVictory, pool, revealedTeam } = opponents;
   if (firstVictory) {
     return { territoryId: id, enemyName, firstVictory, enemyTeam: [{ pokemonId: pool[0].pokemonRowid, level: FIRST_BATTLE_LEVEL }] };
   }
-  const intel = state.frontier.intel[id];
-  const revealed = intel && !intel.memberId ? intel.pokemonIds.map(pokemonId => pool.find(pokemon => pokemon.pokemonRowid === pokemonId)) : [];
-  const reportAvailable = revealed.length > 0 && revealed.every(pokemon => pokemon !== undefined);
   // Draw levels in the original order so a prepared lead only changes deployment order.
-  const team = reportAvailable ? (intel.reversed ? [...revealed].reverse() : revealed)
+  const team = revealedTeam ? (revealedTeam.reversed ? [...revealedTeam.members].reverse() : revealedTeam.members)
     : samplePokemon(pool, node.region === 1 ? 1 : 2);
   const level = territoryEnemyLevel(state, node.region, id);
   if (!team.length) return null;
   const enemyTeam = team.map(pokemon => ({ pokemonId: pokemon.pokemonRowid, level: rnd(level, level + 1) }));
-  if (reportAvailable ? intel.reversed : prefersSecondDefender(id, enemyTeam.map(entry => entry.pokemonId),
+  if (revealedTeam ? revealedTeam.reversed : prefersSecondDefender(id, enemyTeam.map(entry => entry.pokemonId),
     activeDefensePreparation(state, id), data)) enemyTeam.reverse();
   return {
     territoryId: id,

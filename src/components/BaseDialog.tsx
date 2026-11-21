@@ -1,14 +1,16 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from "react";
 
 export default function BaseDialog({
   title,
   onClose,
   wide = false,
+  initialFocus,
   children,
 }: {
   title: string;
   onClose: () => void;
   wide?: boolean;
+  initialFocus?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -19,6 +21,7 @@ export default function BaseDialog({
     if (!element) return;
     const opener = document.activeElement;
     element.showModal();
+    initialFocus?.current?.focus();
 
     return () => {
       element.close();

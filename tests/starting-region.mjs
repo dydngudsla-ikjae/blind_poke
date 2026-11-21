@@ -102,7 +102,7 @@ async function play({ seed, picks }, saveFirstCandy = false) {
     }, seed);
     await page.goto(url);
     for (const [round, pick] of picks.entries()) {
-      await heading(`스타팅 선택 ${round + 1}/3`).waitFor();
+      await heading(`동료 영입 ${round}/3`).waitFor();
       await page.locator("[data-draft-target]").nth(pick).press("Enter");
     }
     await button("본거지로 이동").click();
@@ -145,10 +145,25 @@ async function play({ seed, picks }, saveFirstCandy = false) {
             if (saveFirstCandy) assert.deepEqual(counter, ppReplay.counter);
             else ppReplay.counter = counter;
           }
-          await button("엔트리 편성", readiness).click();
+          if (reviewPp) {
+            const tactics = page.locator("details.atlas-tactics").filter({ hasText: "상성·교대 분석" });
+            await tactics.getByText("상성·교대 분석", { exact: true }).press("Enter");
+            const types = tactics.getByLabel("정찰한 상대 후보 타입");
+            const flyingGhost = types.getByRole("option", { name: /비행.*고스트|고스트.*비행/ });
+            await types.selectOption(await flyingGhost.getAttribute("value"));
+            await tactics.getByText("미편성 동료 · 1마리", { exact: true }).press("Enter");
+            await tactics.getByRole("list", { name: "미편성 동료 공격 상성" })
+              .getByText(/라프라스.*물대포.*예상 피해 8.*유효 PP 합계 25/).waitFor();
+            await button("라프라스 편성에서 보기", tactics).press("Enter");
+          } else {
+            await button("대응 전력 편성", readiness).click();
+          }
           const entry = page.getByRole("dialog", { name: /전투 엔트리 편성/ });
-          await entry.locator(`[data-pc-member="${counter.id}"]`).click();
+          const counterCard = entry.locator(`[data-pc-member="${counter.id}"]`);
+          if (reviewPp) assert.ok(await counterCard.evaluate(card => document.activeElement === card));
+          await counterCard.click();
           await button("닫기", entry).click();
+          if (reviewPp) await page.getByText("상성·교대 분석", { exact: true }).press("Enter");
           ready = await save();
           if (ready.energy < 2) {
             await base();
@@ -182,6 +197,9 @@ async function play({ seed, picks }, saveFirstCandy = false) {
           await button("PC에서 약점 기술 확인", tactics).press("Enter");
           const pc = page.getByRole("dialog", { name: /보유 포켓몬/ });
           await pc.getByRole("heading", { name: "라프라스 Lv.1" }).waitFor();
+          const levelGain = pc.locator(".base-weakness [aria-live='polite']");
+          await levelGain.getByText(/레벨 상승 효과.*Lv[.]2 물대포.*사탕 1개.*행동력 1/).waitFor({ timeout: 3000 });
+          await levelGain.getByText(/같은 기술의 명중 시 피해 8 → 9/).waitFor({ timeout: 3000 });
           const forecast = await pc.locator('.base-weakness [aria-live="polite"]').innerText();
           if (saveFirstCandy) {
             assert.equal(ready.resources.candy, 1);

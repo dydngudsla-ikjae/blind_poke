@@ -116,7 +116,7 @@ async function play({ seed, picks, advanceTurn, nearCapacity }, route = "direct"
     }, seed);
     await page.goto(url);
     for (const [round, pick] of picks.entries()) {
-      await heading(`스타팅 선택 ${round + 1}/3`).waitFor();
+      await heading(`동료 영입 ${round}/3`).waitFor();
       await page.locator("[data-draft-target]").nth(pick).press("Enter");
     }
     await button("본거지로 이동").click();

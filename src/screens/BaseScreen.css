@@ -453,6 +453,14 @@
   color: #ffdc9b;
   font: 650 10px/1.2 var(--field-mono);
 }
+.base-tools-ready {
+  border-color: #d5b579;
+  background: #eed7a7;
+  color: #3c2d1b;
+  font-family: var(--field-text);
+  text-shadow: none;
+  pointer-events: none;
+}
 @media (prefers-reduced-motion: no-preference) {
   :is(.base-command-art, .base-tool-art) { transition: transform 220ms cubic-bezier(.2,.8,.2,1), filter 220ms ease; }
   .base-dock .base-button:is(:hover, :focus-visible):not(:disabled) img { transform: translateY(-3px); filter: drop-shadow(0 2px 8px #f7c56281); }
@@ -758,7 +766,7 @@
 .base-dialog .base-button:hover:not(:disabled) { border-color: #53674a; background: #e7e5ca; }
 .base-dialog .base-button.base-next { background: #365235; color: #fff5dc; }
 .base-dialog .base-button.base-next:hover:not(:disabled) { background: #465f3d; }
-.base-dialog :is(button, summary, select):focus-visible { outline: 2px solid #996017; outline-offset: 2px; }
+.base-dialog :is(button, summary, select, input, .base-entry-slot):focus-visible { outline: 2px solid #996017; outline-offset: 2px; }
 .base-dialog .base-dialog-close:focus-visible { outline-offset: -3px; }
 .base-help { margin: 0; color: var(--base-muted); font-size: 13px; }
 .base-staffing-forecast {
@@ -791,7 +799,7 @@
 .base-weakness > summary { min-height: 44px; padding-block: 12px; font-weight: 650; cursor: pointer; }
 .base-weakness-types { display: flex; flex-wrap: wrap; gap: 8px; margin-block-end: 8px; }
 .base-weakness-types label, .base-held-member { display: grid; flex: 1 1 130px; gap: 4px; color: var(--base-muted); font-size: 13px; }
-.base-weakness-types select, .base-held-member select {
+.base-weakness-types select, .base-held-member select, .base-pc-search input {
   min-height: 44px;
   padding-inline: 7px;
   border: 1px solid var(--base-line);
@@ -848,6 +856,8 @@
 .base-facility-choice img { width: 100%; height: 78px; object-fit: contain; }
 .base-member img { width: 48px; height: 48px; object-fit: contain; }
 .base-member b { position: absolute; inset: 4px 6px auto auto; font-size: 11px; }
+.base-member-level { color: var(--base-muted); font: 600 11px/1.15 var(--field-mono); }
+.base-dialog .base-member[data-new-partner] { border-bottom-color: #8a682d; }
 .base-member[aria-pressed="true"], .base-facility-choice[aria-pressed="true"] {
   border-bottom-color: #65794f;
   background: radial-gradient(ellipse at 50% 57%, #a5a96f50, transparent 76%);
@@ -889,9 +899,15 @@
 
 .base-entry-slot[data-filled="true"] { border-bottom-style: solid; color: var(--base-ink); }
 .base-entry-index { color: var(--base-mint); font-family: var(--field-mono); }
-.base-entry-member { display: flex; align-items: center; gap: 6px; cursor: grab; }
+.base-entry-member { display: flex; align-items: center; gap: 6px; min-width: 0; cursor: grab; }
 .base-entry-member img { width: 38px; height: 38px; object-fit: contain; }
+.base-entry-member-info { display: grid; gap: 2px; min-width: 0; }
 .base-entry-member small { color: var(--base-muted); }
+.base-entry-book .base-entry-attack-note {
+  color: var(--base-amber);
+  font: 600 11px/1.35 var(--field-text);
+  overflow-wrap: anywhere;
+}
 .base-entry-controls { display: flex; gap: 3px; margin-left: auto; }
 .base-entry-controls button { min-width: 34px; padding-inline: 5px; }
 
@@ -923,6 +939,9 @@
 .base-shift-list img { width: 40px; height: 40px; object-fit: contain; }
 .base-workorder .base-job-choice { flex: 1 1 auto; }
 .base-workorder .base-assign-confirm { justify-self: stretch; }
+.base-worker-details summary { min-height: 44px; align-content: center; cursor: pointer; }
+.base-worker-restrictions { display: grid; gap: 4px; list-style: none; padding: 0; }
+.base-worker-restrictions b { color: var(--base-ink); }
 .base-partner-summary {
   width: 100%;
   padding: 3px 0 7px;
@@ -939,6 +958,17 @@
 .base-partner-summary dd { margin: 0; font-weight: 700; }
 .base-dialog :is(.base-supply-warning, .base-gold-forecast) { background: #b7aa7140; color: var(--base-ink); }
 .base-pc-index { min-width: 0; display: grid; gap: 11px; }
+.base-pc-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--base-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.base-pc-search input { width: 100%; font: 500 16px var(--field-text); }
+.base-pc-search input::placeholder { color: var(--base-muted); }
 .base-pc-roster {
   max-height: min(62dvh, 470px);
   overflow: auto;

@@ -424,5 +424,36 @@ html[data-field-transition="map"]::view-transition-new(atlas-report) { animation
 .atlas-report .base-button { --base-ink: #fff4d8; min-height: 44px; }
 .atlas-report .base-inheritance { color: var(--field-ink); background: #e9dbba; }
 .atlas-tactics-body ul { margin: 0; padding-inline-start: 18px; }
+.atlas-tactics-body .atlas-attack-lines { padding: 0; list-style: none; }
+.atlas-attack-lines li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block: 5px;
+  border-block-start: 1px solid #77683f55;
+}
+.atlas-attack-lines p { min-width: 0; overflow-wrap: anywhere; }
+.atlas-attack-lines .base-button { flex: none; min-width: 72px; }
+.atlas-attack-lines .base-button[aria-disabled="true"] { background: #4d5432; }
 .atlas-tactics-threat { border-inline-start: 2px solid #77683f; padding-inline-start: 8px; }
 .atlas-tactics-threat p { overflow-wrap: anywhere; }
+.atlas-reserve > summary {
+  min-height: 44px;
+  align-content: center;
+  color: #594925;
+  font-weight: 700;
+  cursor: pointer;
+}
+.atlas-reserve > ul { display: grid; padding: 0; list-style: none; }
+.atlas-reserve li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding-block: 6px;
+  border-block-start: 1px solid #77683f55;
+}
+.atlas-reserve p { flex: 1 1 160px; overflow-wrap: anywhere; }
+.atlas-reserve-actions { display: flex; flex-wrap: wrap; gap: 6px; }

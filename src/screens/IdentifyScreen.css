@@ -98,7 +98,6 @@
   -webkit-tap-highlight-color: #a57e4938;
 }
 
-.identify-console-header,
 .identify-chance > div,
 .identify-record-header {
   display: flex;
@@ -108,17 +107,17 @@
 }
 
 .identify-console-header {
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--field-line);
+  margin-bottom: -3px;
 }
 
 .identify-console h2 { color: #412819; font: 700 clamp(21px, 2vw, 29px)/1.2 "Batang", "바탕", serif; }
 .identify-console h3 { font-size: 14px; }
-.identify-console-header span,
 .identify-chance label,
 .identify-record-header span,
 .identify-form label { color: var(--field-muted); font-size: 12px; }
-.identify-console-header b { margin-left: 4px; color: var(--field-mint); }
+.identify-observation .draft-measurements { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.identify-observation .draft-measurements .draft-detected-type { grid-column: auto; display: block; }
+.identify-observation .draft-detected-type dd { margin-top: 2px; }
 .identify-chance strong { color: var(--field-mint); font: 600 23px/1 var(--field-mono); font-variant-numeric: tabular-nums; }
 .identify-chance meter {
   display: block;
@@ -228,6 +227,14 @@
 }
 .identify-outcome-jobs { font-size: 13px; color: var(--field-muted); margin-top: 5px; }
 .identify-placement-hint { margin: 4px 0 0; }
+.identify-counter-reading {
+  margin-top: 9px;
+  padding-top: 7px;
+  border-top: 1px solid var(--field-line);
+  color: var(--field-ink);
+  font-size: 13px;
+}
+.identify-counter-reading p { margin: 3px 0 0; color: var(--field-muted); }
 .identify-outcome-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .identify-profile-button { min-height: 44px; color: #fff2d2; }
 .identify-profile-button span { color: #e8c989; }
@@ -237,23 +244,28 @@
 .identify-controls {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   min-height: 61px;
   padding: 7px 5px 9px;
 }
+.identify-controls small { color: #e8c989; }
+.identify-continue-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.identify-continue-actions button:disabled { opacity: .55; cursor: default; }
 
 html[data-field-transition="analysis"] .hunt-target[data-scan-transfer] .hunt-optical-trace,
-html[data-field-transition="analysis"] .identify-trace { view-transition-name: scanner-contact; }
-html[data-field-transition="analysis"]::view-transition-group(scanner-contact) {
+html[data-field-transition="analysis"] .identify-trace { view-transition-name: optical-contact; }
+html[data-field-transition="analysis"]::view-transition-group(optical-contact) {
   z-index: 2;
   animation-duration: 460ms;
   animation-timing-function: cubic-bezier(.22, .7, .24, 1);
 }
 html[data-field-transition="analysis"]::view-transition-group(observatory-scene) { animation-duration: 460ms; }
-html[data-field-transition="analysis"] .identify-console { view-transition-name: scanner-console; }
-html[data-field-transition="analysis"]::view-transition-new(scanner-console) { animation: scanner-console-in 340ms 100ms both ease-out; }
+html[data-field-transition="analysis"] .identify-console { view-transition-name: observation-console; }
+html[data-field-transition="analysis"]::view-transition-new(observation-console) { animation: observation-console-in 340ms 100ms both ease-out; }
 
-@keyframes scanner-console-in {
+@keyframes observation-console-in {
   from { transform: translateX(10px); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
@@ -303,6 +315,6 @@ html[data-field-transition="analysis"]::view-transition-new(scanner-console) { a
 }
 
 @media (max-width: 380px) {
-  .identify-view .draft-scanner-status { white-space: normal; max-width: 44%; }
+  .identify-view .draft-observation-status { white-space: normal; max-width: 44%; }
   .identify-tools button { align-items: center; }
 }

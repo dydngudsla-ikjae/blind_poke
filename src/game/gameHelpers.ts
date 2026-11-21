@@ -5,6 +5,20 @@ export const ART=(id:number)=>`https://raw.githubusercontent.com/PokeAPI/sprites
 export const SPRITE=(p:PokemonRecord)=>p.details?.sprites?.front_default||ART(p.pokemonRowid);
 export const rnd=(a:number,b:number)=>Math.floor(Math.random()*(b-a+1))+a;
 
+export function duplicateRosterLabels(roster: readonly RosterMember[]) {
+  const byName = new Map<string, string[]>();
+  for (const { id, pokemon } of roster) {
+    const sameName = byName.get(pokemon.nameKr);
+    if (sameName) sameName.push(id);
+    else byName.set(pokemon.nameKr, [id]);
+  }
+  const labels = new Map<string, string>();
+  for (const [name, ids] of byName) {
+    if (ids.length > 1) ids.forEach((id, index) => labels.set(id, `${name} ${index + 1}번`));
+  }
+  return labels;
+}
+
 export function samplePokemon(pool:PokemonRecord[],count:number,excluded=new Set<number>()){
   const available=pool.filter(p=>!excluded.has(p.pokemonRowid)); const out:PokemonRecord[]=[];
   while(out.length<count&&available.length) out.push(available.splice(rnd(0,available.length-1),1)[0]);

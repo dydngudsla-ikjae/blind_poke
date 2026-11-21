@@ -1,20 +1,26 @@
 import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import forest from "../../assets/observatory-forest.webp";
 import BaseDialog from "../components/BaseDialog";
+import EntryModal from "../components/EntryModal";
 import PokemonBattleProfile from "../components/PokemonBattleProfile";
+import ScanMeasurements from "../components/ScanMeasurements";
 import useFieldMotion from "../components/useFieldMotion";
+import { isRapidPointerRepeat, readPointerClick, type PointerClick } from "../components/pointerClick";
+import { effectiveAttack, effectiveness, pickMoveset } from "../domain/battle";
 import { resolveCapture, type CaptureResult } from "../domain/capture";
 import { HINT_DECAY, WRONG_DECAY, nextProfessorTopic, professorTopics, type ClueNote } from "../domain/identification";
 import { trainerRelation, TRAINER_RELATION_MODIFIER } from "../domain/trainerAffinity";
-import { hasPokemonType, jobDefinitions, jobIds, type JobId } from "../domain/jobs";
+import { hasPokemonType, HUNT_ENERGY_COST, jobDefinitions, jobIds, type JobId } from "../domain/jobs";
 import { canOperateSettlement, HOME_SITE, settlementName } from "../domain/settlements";
 import type { PokemonRecord, RosterMember } from "../domain/types";
+import { worldMapNodes } from "../domain/worldMap";
 import { DEX_REWARDS, endingReady } from "../game/campaign";
 import { useGame } from "../game/GameProvider";
 import { ART, createMember, SPRITE } from "../game/gameHelpers";
-import { canOfferJob } from "../game/gameReducer";
+import { canContinueHunt, canOfferJob } from "../game/gameReducer";
 import type { FacilityOpening, GameState } from "../game/gameTypes";
-import { buildings } from "./BasePanels";
+import { preparedTypeLabel } from "../game/territoryReadiness";
+import { buildings, QuickChargeButton } from "./BasePanels";
 import transitionFieldView from "./transitionFieldView";
 import "./FieldOptics.css";
 import "./IdentifyScreen.css";
@@ -67,14 +73,15 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
   const [attempts, setAttempts] = useState(0);
   const [result, setResult] = useState<CaptureResult | "giveup" | null>(null);
   const [recordedAtStart] = useState(() => state.caughtSpeciesIds.includes(pokemon.pokemonRowid));
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [outcomePanel, setOutcomePanel] = useState<"profile" | "entry" | null>(null);
   const captureResolved = useRef(false);
   const composingGuess = useRef(false);
+  const lastAnalysisClick = useRef<PointerClick>(null);
   const title = useRef<HTMLHeadingElement>(null);
   const outcome = useRef<HTMLHeadingElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const journal = useRef<HTMLDetailsElement>(null);
-  const observed = clues.some(clue => clue.topic === "직접 관찰");
+  const nextHunt = useRef<HTMLButtonElement>(null);
   const compared = clues.some(clue => clue.topic === "본인확인서");
   const nextConsultation = nextProfessorTopic(consultation, clues);
   const favor = Math.max(candidate.favFloor, candidate.favor - clues.length * HINT_DECAY - attempts * WRONG_DECAY);
@@ -90,6 +97,11 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
   const types = [pokemon.type1Rowid, pokemon.type2Rowid].map(id => data.types.find(type => type.typeRowid === id)?.nameKr)
     .filter((name, index, all): name is string => Boolean(name) && all.indexOf(name) === index);
   const jobs = jobIds.filter(id => hasPokemonType(pokemon, jobDefinitions[id].typeId));
+  const counter = state.counterHunt;
+  const counterSite = counter && worldMapNodes.find(site => site.id === counter.territoryId);
+  const counterMove = counter && result === "captured"
+    ? effectiveAttack(pickMoveset(pokemon, candidate.level, data), counter.typeIds, data) : undefined;
+  const inEntry = state.entryOrder.includes(candidate.id);
   const nextPlacement = result === "captured" ? placementHint(state, candidate, jobs) : null;
   const opening = nextPlacement?.opening && (state.endingSeen || !endingReady(state)) ? nextPlacement.opening : undefined;
   const dexCount = state.caughtSpeciesIds.length;
@@ -132,10 +144,6 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
     addClue(name, text);
   }
 
-  function observe() {
-    if (!observed) addClue("직접 관찰", `신체 정보: 키 ${pokemon.heightM ?? "?"} m · 몸무게 ${pokemon.weightKg ?? "?"} kg`);
-  }
-
   function compareSilhouette() {
     if (!compared) addClue("본인확인서", "본인확인서에서 외곽 실루엣을 대조했습니다.");
   }
@@ -144,7 +152,7 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
     event.preventDefault();
     if (result || captureResolved.current || composingGuess.current || !guess.trim()) return;
     if (guess.trim() !== pokemon.nameKr) {
-      setAttempts(current => current + 1);
+      setAttempts(current => current === attempts ? current + 1 : current);
       return;
     }
     captureResolved.current = true;
@@ -158,7 +166,21 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
   }
 
   return (
-    <section className="draft-station identify-station field-brass-station" aria-labelledby="identify-title">
+    <section className="draft-station identify-station field-brass-station" aria-labelledby="identify-title"
+      onClickCapture={event => {
+        const button = event.target instanceof Element ? event.target.closest("button") : null;
+        if (!button) return;
+        const click = readPointerClick(event);
+        if (isRapidPointerRepeat(lastAnalysisClick.current, click)) {
+          event.preventDefault();
+          event.stopPropagation();
+        } else lastAnalysisClick.current = button.matches("[data-identify-action]:not(:disabled, [aria-disabled=true])") ? click : null;
+      }}
+      onKeyDown={event => {
+        if (event.target instanceof HTMLButtonElement && event.repeat && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+        }
+      }}>
       <div className="draft-device">
         <div className="identify-layout">
           <div className="draft-view identify-view" role="group" aria-label="확대 렌즈" style={lensStyle} data-result={result}>
@@ -175,10 +197,10 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
             )}
             <header className="draft-view-header">
               <div className="draft-mission">
-                <span className="draft-location">숲 공터</span>
+                <span className="draft-location">{counterSite ? `${counterSite.name} 대응 탐색` : "숲 공터"}</span>
                 <h1 id="identify-title" ref={title} tabIndex={-1}>개체 식별</h1>
               </div>
-              <p className="draft-scanner-status" data-locked={!result || result === "captured"}>
+              <p className="draft-observation-status" data-locked={!result || result === "captured"}>
                 <span className="draft-status-light" aria-hidden="true" />
                 {status}
               </p>
@@ -199,8 +221,10 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
           <aside className="identify-console field-note-paper" aria-labelledby="analysis-title">
             <header className="identify-console-header">
               <h2 id="analysis-title">개체 분석</h2>
-              <span>감지 타입 <b>{state.selectedTypeName ?? "미확인"}</b></span>
             </header>
+            <div className="identify-observation" role="group" aria-label="야외 관측 기록">
+              <ScanMeasurements pokemon={pokemon} shownType={state.selectedTypeName ?? "미확인"} />
+            </div>
             <div className="identify-chance">
               <div><label htmlFor="capture-chance">포획률</label><strong>{probability}%</strong></div>
               <meter id="capture-chance" min={0} max={100} value={favor} />
@@ -232,23 +256,28 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
                   </div>
                   {jobs.length > 0 && <p className="identify-outcome-jobs">가능 직무 · {jobs.map(id => jobDefinitions[id].name).join(" · ")}</p>}
                   {nextPlacement && <p className="identify-placement-hint">{nextPlacement.text}</p>}
+                  {counter && <div className="identify-counter-reading" role="group" aria-label="거점 대응 기술">
+                    <strong>{preparedTypeLabel(counter.typeIds, data)} 대응 기술</strong>
+                    <p>{counterMove ? `${counterMove.name} · 상성 ${effectiveness(counterMove.typeRowid, counter.typeIds, data)}배`
+                      : `Lv.${candidate.level} · 유효한 일반 공격 없음`}</p>
+                  </div>}
                   <div className="identify-outcome-actions">
+                    {counterMove && <button className="hunt-return identify-profile-button" type="button" aria-haspopup="dialog"
+                      onClick={() => setOutcomePanel("entry")}>{inEntry ? "엔트리 확인" : "새 동료 편성"} <span aria-hidden="true">→</span></button>}
                     {opening && <button className="hunt-return identify-profile-button" type="button" aria-haspopup="dialog" onClick={() => leaveExploration(opening)}>
                       {buildings[jobDefinitions[opening.jobId].building].label} 배치 준비 <span aria-hidden="true">→</span>
                     </button>}
-                    <button className="hunt-return identify-profile-button" type="button" onClick={() => setProfileOpen(true)}>새 동료 보기 <span aria-hidden="true">→</span></button>
+                    <button className="hunt-return identify-profile-button" type="button" aria-haspopup="dialog"
+                      onClick={() => setOutcomePanel("profile")}>새 동료 보기 <span aria-hidden="true">→</span></button>
                   </div>
                 </>}
               </div>
             ) : (
               <div className="identify-tools" aria-label="단서 조회" role="group">
-                <button aria-disabled={!nextConsultation} onClick={consult}>
+                <button data-identify-action aria-disabled={!nextConsultation} onClick={consult}>
                   박사와 상담하기 <small>{nextConsultation ? `다음 단서 · ${nextConsultation.name}` : "상담 완료"}</small>
                 </button>
-                <button aria-disabled={observed} onClick={observe}>
-                  직접 관찰하기 <small>{observed ? "관찰 완료" : "키·몸무게"}</small>
-                </button>
-                <button aria-disabled={compared} onClick={compareSilhouette}>
+                <button data-identify-action aria-disabled={compared} onClick={compareSilhouette}>
                   본인확인서 대조 <small>{compared ? "대조 완료" : "외곽 실루엣"}</small>
                 </button>
               </div>
@@ -267,17 +296,21 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
             </details>
 
             {!result && (
-              <form className="identify-form" ref={form} onSubmit={submit}>
+              <form className="identify-form" ref={form} onSubmit={submit} onKeyDown={event => {
+                if (event.key === "Enter" && (event.repeat || composingGuess.current || event.nativeEvent.isComposing)) {
+                  event.preventDefault();
+                }
+              }}>
                 <label htmlFor="identify-guess">포켓몬 이름</label>
                 <div>
-                  <input id="identify-guess" name="guess" value={guess} onChange={event => setGuess(event.target.value)}
+                  <input id="identify-guess" name="guess" value={guess} onChange={event => {
+                    lastAnalysisClick.current = null;
+                    setGuess(event.target.value);
+                  }}
                     onCompositionStart={() => { composingGuess.current = true; }}
                     onCompositionEnd={() => { composingGuess.current = false; }}
-                    onKeyDown={event => {
-                      if (event.key === "Enter" && (composingGuess.current || event.nativeEvent.isComposing)) event.preventDefault();
-                    }}
                     autoComplete="off" spellCheck={false} placeholder="포켓몬 이름 입력" />
-                  <button className="identify-submit" disabled={!guess.trim()}>식별</button>
+                  <button className="identify-submit" data-identify-action disabled={!guess.trim()}>식별</button>
                 </div>
                 <button type="button" className="identify-giveup" onClick={() => setResult("giveup")}>식별 포기</button>
               </form>
@@ -286,10 +319,19 @@ function Analysis({ pokemon }: { pokemon: PokemonRecord }) {
         </div>
         <footer className="identify-controls">
           <button className="hunt-return" onClick={() => leaveExploration()}><span aria-hidden="true">←</span> {state.counterHunt ? "월드맵으로" : "본거지로"}</button>
+          {result && canContinueHunt(state) && <div className="identify-continue-actions">
+            <QuickChargeButton requiredEnergy={HUNT_ENERGY_COST} nextAction={nextHunt} />
+            <button className="hunt-return identify-profile-button" type="button" ref={nextHunt}
+              disabled={state.energy < HUNT_ENERGY_COST}
+              onClick={() => transitionFieldView(() => dispatch({ type: "CONTINUE_HUNT" }))}>
+              탐험 계속 <small>행동력 {HUNT_ENERGY_COST}</small><span aria-hidden="true">→</span>
+            </button>
+          </div>}
         </footer>
-        {profileOpen && result === "captured" && <BaseDialog title={pokemon.nameKr + " · 새 동료"} onClose={() => setProfileOpen(false)} wide>
+        {outcomePanel === "profile" && result === "captured" && <BaseDialog title={pokemon.nameKr + " · 새 동료"} onClose={() => setOutcomePanel(null)} wide>
           <PokemonBattleProfile member={candidate} data={data} />
         </BaseDialog>}
+        {outcomePanel === "entry" && result === "captured" && <EntryModal recruitedMemberId={candidate.id} onClose={() => setOutcomePanel(null)} />}
       </div>
     </section>
   );

@@ -1,4 +1,4 @@
-import { buildCombatant, calculateDamage, campaignLearnLevels, effectiveAttack, effectiveness, pickMoveset, TACKLE } from "../domain/battle";
+import { buildCombatant, calculateDamage, campaignLearnLevels, effectiveAttack, effectiveness, pickMoveset, TACKLE, type Combatant } from "../domain/battle";
 import { candyCostToLevel, candyMember } from "../domain/economy";
 import type { GameDataBundle, PokemonRecord, RosterMember } from "../domain/types";
 import type { GameState } from "./gameTypes";
@@ -45,14 +45,94 @@ export function nextWeaknessMove(member: RosterMember, data: GameDataBundle, tar
   return null;
 }
 
-export function territoryTactics(state: GameState, data: GameDataBundle, territoryId: string) {
-  if (!canSearchForCounter(state, territoryId)) return [];
+function scoutedOpponents(state: GameState, data: GameDataBundle, territoryId: string) {
+  if (!canSearchForCounter(state, territoryId)) return null;
   const opponents = territoryOpponents(state, data, territoryId);
+  if (!opponents) return null;
+  const level = territoryEnemyLevel(state, opponents.node.region, territoryId);
+  return { ...opponents, pool: opponents.revealedTeam?.members ?? opponents.pool,
+    levels: opponents.firstVictory ? [FIRST_BATTLE_LEVEL] : [level, level + 1] };
+}
+
+function scoutCombatants(members: PokemonRecord[], levels: number[], data: GameDataBundle) {
+  return members.flatMap(pokemon => levels.map(level => buildCombatant({ pokemon, level }, data, "scout")));
+}
+
+function forecastAttacks(actor: Combatant, foes: Combatant[], typeIds: number[], data: GameDataBundle, ppDamage?: number[]) {
+  let effectivePp = 0;
+  const options = actor.moves.filter(move => effectiveAttack([move], [], data)).map(move => {
+    const multiplier = effectiveness(move.typeRowid, typeIds, data);
+    if (multiplier > 0) effectivePp += move.pp;
+    const hits = foes.map((foe, index) => {
+      const damage = multiplier > 0 ? Math.min(foe.maxHp, calculateDamage(actor, foe, move, data)) : 0;
+      if (ppDamage) ppDamage[index] += move.pp * damage;
+      return damage;
+    });
+    const score = hits.reduce((sum, damage) => sum + damage, 0) * (move.accuracy || 100);
+    return { move, multiplier, minDamage: Math.min(...hits), maxDamage: Math.max(...hits), score };
+  });
+  const best = options.sort((a, b) => b.score - a.score || b.multiplier - a.multiplier)[0];
+  return { best, effectivePp };
+}
+
+function scoutedMatchup(state: GameState, data: GameDataBundle, territoryId: string, typeIds: number[]) {
+  const opponents = scoutedOpponents(state, data, territoryId);
+  if (!opponents || !typeIds.length) return [];
+  const typeKey = [...typeIds].sort((a, b) => a - b).join("-");
+  const candidates = opponents.pool.filter(pokemon => pokemonTypes(pokemon).join("-") === typeKey);
+  return scoutCombatants(candidates, opponents.levels, data);
+}
+
+export function reserveAttackForecast(state: GameState, data: GameDataBundle, territoryId: string, typeIds: number[]) {
+  const reserves = state.roster.filter(member => !state.entryOrder.includes(member.id));
+  if (!reserves.length) return [];
+  const foes = scoutedMatchup(state, data, territoryId, typeIds);
+  if (!foes.length) return [];
+
+  return reserves.flatMap(member => {
+    const actor = buildCombatant(member, data, member.id);
+    const { best, effectivePp } = forecastAttacks(actor, foes, typeIds, data);
+    return best && effectivePp > 0 ? [{ member, best, effectivePp }] : [];
+  }).sort((a, b) => b.best.score - a.best.score || b.effectivePp - a.effectivePp);
+}
+
+export function nextLevelScoutedAttack(state: GameState, data: GameDataBundle, territoryId: string, member: RosterMember, typeIds: number[]) {
+  const foes = scoutedMatchup(state, data, territoryId, typeIds);
+  if (!foes.length) return null;
+  const { best: current } = forecastAttacks(buildCombatant(member, data, member.id), foes, typeIds, data);
+  if (!current || current.multiplier <= 0) return null;
+  const candy = candyCostToLevel(member, member.level + 1);
+  const trained = buildCombatant(candyMember(member, candy), data, member.id);
+  const sameMove = trained.moves.filter(move => move.id === current.move.id);
+  const { best: attack } = forecastAttacks({ ...trained, moves: sameMove }, foes, typeIds, data);
+  return attack && attack.score > current.score ? { level: trained.level, candy, current, attack } : null;
+}
+
+export function nextStrongerScoutedMove(state: GameState, data: GameDataBundle, territoryId: string, member: RosterMember, typeIds: number[]) {
+  const foes = scoutedMatchup(state, data, territoryId, typeIds);
+  if (!foes.length) return null;
+  const actor = buildCombatant(member, data, member.id);
+  const { best: current } = forecastAttacks(actor, foes, typeIds, data);
+  const currentMoves = new Set(actor.moves.map(move => move.id));
+  for (const level of campaignLearnLevels(member.pokemon, data)) {
+    if (level <= member.level) continue;
+    const candy = candyCostToLevel(member, level);
+    const trained = candyMember(member, candy);
+    const { best: attack } = forecastAttacks(buildCombatant(trained, data, member.id), foes, typeIds, data);
+    if (attack && !currentMoves.has(attack.move.id) && attack.score > (current?.score ?? 0)) {
+      return { level: trained.level, candy, current, attack };
+    }
+  }
+  return null;
+}
+
+export function territoryTactics(state: GameState, data: GameDataBundle, territoryId: string) {
+  const opponents = scoutedOpponents(state, data, territoryId);
+  if (!opponents) return [];
   const entries = battleEntries(state).map(member => ({
     member, actor: buildCombatant(member, data, member.id),
   }));
-  if (!opponents || !entries.length) return [];
-  const level = territoryEnemyLevel(state, opponents.node.region, territoryId);
+  if (!entries.length) return [];
   const forecastPp = !opponents.firstVictory && opponents.node.region === 1;
   const candidates = new Map<string, { typeIds: number[]; attackTypes: Set<number>; members: PokemonRecord[] }>();
   for (const pokemon of opponents.pool) {
@@ -61,28 +141,18 @@ export function territoryTactics(state: GameState, data: GameDataBundle, territo
     const key = typeIds.join("-");
     const group = candidates.get(key) ?? { typeIds, attackTypes: new Set<number>(), members: [] };
     group.members.push(pokemon);
-    const moves = opponents.firstVictory ? [TACKLE] : [...pickMoveset(pokemon, level, data), ...pickMoveset(pokemon, level + 1, data)];
+    const moves = opponents.firstVictory ? [TACKLE] : opponents.levels.flatMap(level => pickMoveset(pokemon, level, data));
     for (const move of moves) {
       if (move.typeRowid !== null && (move.power > 0 || move.weightPower)) group.attackTypes.add(move.typeRowid);
     }
     candidates.set(key, group);
   }
   return [...candidates].map(([key, { typeIds, attackTypes, members }]) => {
-    const team = entries.map(({ member, actor }) => {
-      const options = actor.moves.filter(move => effectiveAttack([move], [], data))
-        .map(move => ({ move, multiplier: effectiveness(move.typeRowid, typeIds, data) }))
-        .sort((a, b) => b.multiplier - a.multiplier);
-      const effective = options.filter(option => option.multiplier > 0).map(option => option.move);
-      return { member, actor, best: options[0], effective };
-    });
-    const ppShortfall = forecastPp && team.some(({ effective }) => effective.length > 0) && members.some(pokemon =>
-      [level, level + 1].some(candidateLevel => {
-        const foe = buildCombatant({ pokemon, level: candidateLevel }, data, "scout");
-        const total = team.reduce((sum, { actor, effective }) => sum + effective.reduce((damage, move) =>
-          damage + move.pp * calculateDamage(actor, foe, move, data), 0), 0);
-        return total < foe.maxHp;
-      }));
-    const attacks = team.map(({ member, best, effective }) => ({ member, best, effectivePp: effective.reduce((sum, move) => sum + move.pp, 0) }));
+    const foes = scoutCombatants(members, opponents.levels, data);
+    const ppDamage = forecastPp ? foes.map(() => 0) : undefined;
+    const attacks = entries.map(({ member, actor }) => ({ member, ...forecastAttacks(actor, foes, typeIds, data, ppDamage) }));
+    const ppShortfall = ppDamage !== undefined && attacks.some(({ effectivePp }) => effectivePp > 0) &&
+      foes.some((foe, index) => ppDamage[index] < foe.maxHp);
     const threats = [...attackTypes].flatMap(typeId => {
       const matchups = entries.map(({ member, actor }) => ({ member, multiplier: effectiveness(typeId, actor.types, data) }));
       const weak = matchups.filter(({ multiplier }) => multiplier > 1).map(({ member }) => member);
@@ -90,17 +160,18 @@ export function territoryTactics(state: GameState, data: GameDataBundle, territo
       const switches = matchups.filter(({ multiplier }) => multiplier <= 1).sort((a, b) => a.multiplier - b.multiplier);
       return [{ typeId, weak, switches }];
     }).sort((a, b) => b.weak.length - a.weak.length || a.typeId - b.typeId);
-    return { key, typeIds, attacks, ppShortfall, threats };
+    return { key, typeIds, attacks, ppShortfall, threats, reported: Boolean(opponents.revealedTeam) };
   }).sort((a, b) => (b.threats[0]?.weak.length ?? 0) - (a.threats[0]?.weak.length ?? 0) || a.key.localeCompare(b.key));
 }
 
 export function uncoveredTerritoryTypes(state: GameState, data: GameDataBundle, territoryId: string) {
-  if (!canSearchForCounter(state, territoryId)) return [];
+  const opponents = scoutedOpponents(state, data, territoryId);
+  if (!opponents) return [];
   const entries = battleEntries(state);
   if (!entries.length) return [];
   const moves = entries.flatMap(member => pickMoveset(member.pokemon, member.level, data));
   const groups = new Map<string, { key: string; typeIds: number[] }>();
-  for (const pokemon of territoryOpponents(state, data, territoryId)?.pool ?? []) {
+  for (const pokemon of opponents.pool) {
     const typeIds = pokemonTypes(pokemon);
     const key = typeIds.join("-");
     if (key && !groups.has(key) && !effectiveAttack(moves, typeIds, data)) groups.set(key, { key, typeIds });

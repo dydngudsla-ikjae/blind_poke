@@ -1,4 +1,4 @@
-import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import { Component, useEffect, useLayoutEffect, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { GameNotice } from "./components/GameNotice";
 import type { GameDataBundle } from "./domain/types";
 import { endingReady } from "./game/campaign";
@@ -10,7 +10,8 @@ import { EndingScreen } from "./screens/CampaignGoals";
 import DraftScreen from "./screens/DraftScreen";
 import HuntScreen from "./screens/HuntScreen";
 import IdentifyScreen from "./screens/IdentifyScreen";
-import MapScreen from "./screens/MapScreen";
+import MapScreen, { type MapViewportSnapshot } from "./screens/MapScreen";
+import transitionFieldView from "./screens/transitionFieldView";
 
 class GameErrorBoundary extends Component<{children:ReactNode},{error:Error|null}>{
   state={error:null as Error|null};
@@ -24,12 +25,36 @@ class GameErrorBoundary extends Component<{children:ReactNode},{error:Error|null
   ) : this.props.children;}
 }
 
-function ScreenRouter(){const {state}=useGame();switch(state.screen){
-  case "draft":
-  case "trainerReveal":return <DraftScreen/>;
-  case "base":return !state.endingSeen && endingReady(state) ? <EndingScreen /> : <BaseScreen/>;case "hunt":return <HuntScreen/>;
-  case "identify":return <IdentifyScreen/>;case "map":return <MapScreen/>;case "battle":return <BattleScreen/>;
-}}
+function ScreenRouter() {
+  const { state, dispatch } = useGame();
+  const mapViewport = useRef<MapViewportSnapshot | null>(null);
+  const previousScreen = useRef(state.screen);
+  const mapReportRequested = useRef(false);
+  const resumeReport = state.mapFocusId !== null &&
+    (mapReportRequested.current || ["battle", "hunt", "identify"].includes(previousScreen.current));
+
+  useLayoutEffect(() => {
+    previousScreen.current = state.screen;
+    if (state.screen === "map") mapReportRequested.current = false;
+  }, [state.screen]);
+
+  function openMap(siteId: string | null, showReport = false) {
+    transitionFieldView(() => {
+      mapReportRequested.current = showReport;
+      dispatch({ type: "PATCH", patch: { screen: "map", siteViewId: null, mapFocusId: siteId } });
+    }, "map");
+  }
+
+  switch (state.screen) {
+    case "draft":
+    case "trainerReveal": return <DraftScreen />;
+    case "base": return !state.endingSeen && endingReady(state) ? <EndingScreen /> : <BaseScreen onOpenMap={openMap} />;
+    case "hunt": return <HuntScreen />;
+    case "identify": return <IdentifyScreen />;
+    case "map": return <MapScreen viewportSnapshot={mapViewport} resumeReport={resumeReport} />;
+    case "battle": return <BattleScreen />;
+  }
+}
 
 export default function App() {
   const [data, setData] = useState<GameDataBundle | null>(null);

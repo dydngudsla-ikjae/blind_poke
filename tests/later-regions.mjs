@@ -13,6 +13,20 @@ const errors = [];
 const spot = (save, id) => save.mapSnapshot.find(site => site.id === id);
 let browser;
 
+async function assertTurnNotice(page, id, response) {
+  await page.locator(`#${id}`).waitFor();
+  const nextTurn = page.locator("#nextTurn");
+  const notices = page.getByRole("region", { name: "다음 턴 경고" });
+  assert.equal(await notices.locator(`#${id}`).count(), 1);
+  assert.equal(await nextTurn.getAttribute("data-risk"), "true");
+  assert.ok((await nextTurn.getAttribute("aria-describedby")).split(/\s+/).includes(id));
+  const [noticeBox, nextBox, buttonBox] = await Promise.all([
+    notices.boundingBox(), nextTurn.boundingBox(), notices.getByRole("button", { name: response, exact: true }).boundingBox(),
+  ]);
+  assert.ok(noticeBox.y >= nextBox.y + nextBox.height && noticeBox.y - nextBox.y - nextBox.height < 24);
+  assert.ok(buttonBox.height >= 44);
+}
+
 async function visit({ mobile = false, save, legacy = false } = {}) {
   const page = await browser.newPage({ viewport: { width: mobile ? 390 : 1440, height: 900 },
     isMobile: mobile, hasTouch: mobile, reducedMotion: "reduce" });
@@ -44,7 +58,7 @@ async function visit({ mobile = false, save, legacy = false } = {}) {
   async function turn() {
     if (await heading("월드맵").count()) await use(button("본거지로"));
     const before = await read();
-    await use(page.locator("#nextTurn"));
+    await page.locator("#nextTurn").press("Enter");
     await page.waitForFunction(({ key, count }) => JSON.parse(localStorage.getItem(key)).turnCount === count,
       { key: saveKey, count: before.turnCount + 1 });
     return read();
@@ -102,6 +116,25 @@ async function visit({ mobile = false, save, legacy = false } = {}) {
   return { page, use, button, heading, node, read, report, map, turn, win, battle };
 }
 
+async function chargeForOrder(session, section, order, duplicate = false) {
+  const before = await session.read();
+  const charge = section.getByRole("button", { name: /충전권 구매/ });
+  assert.equal(before.energy, 0);
+  assert.ok(before.resources.gold >= 5);
+  assert.ok(await order.isDisabled());
+  assert.equal(await charge.count(), 1, "행동력이 없는 전선 작전에서 그 자리에서 충전할 수 있어야 합니다.");
+  assert.match(await charge.textContent(), /자금 5 · 행동력 \+2/);
+  assert.ok((await charge.boundingBox()).height >= 44);
+  if (duplicate) await charge.evaluate(button => { button.click(); button.click(); });
+  else await session.use(charge);
+  await charge.waitFor({ state: "hidden" });
+  assert.ok(await order.isEnabled());
+  assert.ok(await order.evaluate(button => document.activeElement === button));
+  const after = await session.read();
+  assert.deepEqual(after, { ...before, energy: 2, resources: { ...before.resources, gold: before.resources.gold - 5 } });
+  return after;
+}
+
 async function verifyWorkshopSabotage(border, opened) {
   const worker = { ...border.roster[0], id: "mon-5", pokemon: species.find(pokemon => pokemon.pokemonRowid === 197) };
   const { "nw-04": _formerOutpost, ...outposts } = border.outposts;
@@ -114,13 +147,16 @@ async function verifyWorkshopSabotage(border, opened) {
     if (await scan.count()) await session.use(scan);
     await facilities(session).waitFor();
   }
-  async function send(session) {
+  async function send(session, refill = false) {
     await scout(session, "nw-04");
-    const before = await session.read();
     await facilities(session).getByText("제작소 · 가동 중", { exact: true }).waitFor();
     assert.equal(await session.report.getByRole("region", { name: "AI 건물 승계" }).count(), 0);
-    await session.page.getByLabel("파견할 악 타입").selectOption(worker.id);
-    await session.use(session.button(/악 타입 시설 방해/));
+    const selection = session.page.getByLabel("파견할 악 타입");
+    await selection.selectOption(worker.id);
+    const order = session.button(/악 타입 시설 방해/);
+    const before = refill ? await chargeForOrder(session, facilities(session), order, true) : await session.read();
+    assert.equal(await selection.inputValue(), worker.id);
+    await session.use(order);
     await facilities(session).getByText(/악 타입 시설 방해 파견 완료/).waitFor();
     await facilities(session).getByText("제작소 · 다음 턴 생산 중단", { exact: true }).waitFor();
     const queued = await session.read();
@@ -144,9 +180,10 @@ async function verifyWorkshopSabotage(border, opened) {
   assert.deepEqual(warned.frontier.intrusion, { sourceId: "nw-04", targetId: "nw-01" });
   await severed.page.close();
 
-  const prevented = await visit({ save: afterCut, mobile: true });
+  const prevented = await visit({ save: { ...afterCut, energy: 0, resources: { ...afterCut.resources, gold: 5 },
+    mapSnapshot: afterCut.mapSnapshot.map(site => site.id === "nw-04" ? { ...site, scouted: true } : site) }, mobile: true });
   await prevented.map();
-  const queued = await send(prevented);
+  const queued = await send(prevented, true);
   await prevented.page.reload();
   await prevented.map();
   await scout(prevented, "nw-04");
@@ -189,10 +226,11 @@ async function verifyEnemyObservation(border) {
   const snapshot = { ...border, frontier: { intel: {}, intrusion: null, quietTurns: 3 },
     roster: [{ ...border.roster[0], pokemon: species.find(pokemon => pokemon.pokemonRowid === 254) }, ...border.roster.slice(1), detector],
     nextMemberId: 6, mapSnapshot: border.mapSnapshot.map(site => site.id === challengerId ? { ...site, trainerId: "shauna", scouted: true } : site) };
-  const initial = await visit({ save: snapshot });
+  const initial = await visit({ save: snapshot, mobile: true });
   const warned = await initial.turn();
   const signal = initial.page.locator("#base-espionage-warning");
   await signal.getByText(/북서 1거점/).waitFor();
+  await assertTurnNotice(initial.page, "base-espionage-warning", "첩보 탐지 대응");
   assert.doesNotMatch(await signal.textContent(), /북서 2거점|사나/);
   assert.equal(warned.frontier.intrusion, null);
   assert.deepEqual(warned.frontier.espionage.observation, { sourceId: challengerId, targetId: "nw-01", trainerId: "shauna" });
@@ -234,6 +272,7 @@ async function verifyEnemyObservation(border) {
   await watched.use(watched.button("첩보 탐지 대응"));
   const response = watched.report.getByRole("region", { name: "비행 탐지 대응" });
   await response.getByText("적 첩보 신호 · 다음 턴 정산", { exact: true }).waitFor();
+  assert.ok(await watched.heading("북서 1거점").evaluate(heading => heading === document.activeElement));
   assert.doesNotMatch(await response.textContent(), /북서 2거점|사나/);
   await response.getByLabel("탐지할 비행 타입").selectOption(detector.id);
   await watched.use(response.getByRole("button", { name: /비행 탐지/ }));
@@ -256,6 +295,23 @@ async function verifyEnemyObservation(border) {
   await watched.map();
   await watched.win(challengerId, { expectedLineup: baseline, draws, inheritance: "승계 포기" });
   await watched.page.close();
+
+  const secondDetector = { ...detector, id: "mon-6" };
+  const exhausted = await visit({ mobile: true, save: { ...warned, energy: 0,
+    roster: [...warned.roster, secondDetector], nextMemberId: 7 } });
+  await exhausted.use(exhausted.button("첩보 탐지 대응"));
+  const exhaustedResponse = exhausted.report.getByRole("region", { name: "비행 탐지 대응" });
+  const detectorSelect = exhaustedResponse.getByLabel("탐지할 비행 타입");
+  await detectorSelect.selectOption({ label: `피죤투 2번 · Lv.${secondDetector.level}` });
+  const detect = exhaustedResponse.getByRole("button", { name: /비행 탐지/ });
+  await chargeForOrder(exhausted, exhaustedResponse, detect);
+  assert.equal(await detectorSelect.inputValue(), secondDetector.id);
+  await exhausted.use(detect);
+  await exhaustedResponse.getByText(/적 첩보 차단/).waitFor();
+  const recovered = await exhausted.read();
+  assert.equal(recovered.energy, 1);
+  assert.equal(recovered.frontier.espionage.observation.detectorId, secondDetector.id);
+  await exhausted.page.close();
 
   function battleInputs({ lastLog, frontier, ...save }) {
     const { espionage, ...otherOperations } = frontier;
@@ -295,10 +351,12 @@ async function verifyEnemyObservation(border) {
   console.log(JSON.stringify({ audit: "Shauna Flying battle comparison", site: challengerId, warningTurn: warned.turnCount,
     battleTurn: prepared.turnCount, entry, comparison }));
 
-  const recon = await visit({ save: prepared });
+  const recon = await visit({ save: { ...prepared, energy: 0 } });
   await recon.map();
   await recon.use(recon.node(challengerId));
-  const send = recon.button(/고스트 첩보 파견/);
+  const ghostOrders = recon.report.getByRole("region", { name: "고스트 첩보" });
+  const send = ghostOrders.getByRole("button", { name: /고스트 첩보 파견/ });
+  await chargeForOrder(recon, ghostOrders, send);
   await fixBattleDraws(send, draws.slice(0, 2));
   await recon.use(send);
   await recon.report.getByText(/고스트 첩보 진행 중/).waitFor();
@@ -325,7 +383,7 @@ try {
   browser = await chromium.launch({ channel: "chrome" });
   const fresh = await visit();
   for (let round = 1; round <= 3; round++) {
-    await fresh.heading(`스타팅 선택 ${round}/3`).waitFor();
+    await fresh.heading(`동료 영입 ${round - 1}/3`).waitFor();
     await fresh.use(fresh.page.locator("[data-draft-target]").first());
   }
   await fresh.use(fresh.button("본거지로 이동"));
@@ -366,6 +424,7 @@ try {
   await desktop.use(desktop.button(/정찰하기/));
   await supplyPlan.getByText("확보하면 고립", { exact: true }).waitFor();
   await supplyPlan.getByText(/거점 1곳을 더 확보/).waitFor();
+  await supplyPlan.getByText("도전 포함 최소 행동력 4", { exact: true }).waitFor({ timeout: 3000 });
   const forecastRoute = key => desktop.page.locator(`[data-route="${key}"]`);
   for (const edge of ["island|nw-01", "nw-01|nw-04"]) {
     assert.equal(await forecastRoute(edge).getAttribute("data-supply-preview"), "true");
@@ -439,6 +498,7 @@ try {
   assert.deepEqual(await mobile.read(), stranded);
   assert.ok(await mobile.page.evaluate(() => document.documentElement.scrollWidth === innerWidth));
   const nextTurn = mobile.page.locator("#nextTurn");
+  let finalWarningSave;
   for (const [turn, loyalty] of [65, 30, 0].entries()) {
     if (turn === 2) {
       const notices = mobile.page.getByRole("region", { name: "다음 턴 경고" });
@@ -447,15 +507,51 @@ try {
       const descriptions = (await nextTurn.getAttribute("aria-describedby")).split(/\s+/);
       assert.ok(descriptions.includes(await warning.getAttribute("id")));
       assert.ok(descriptions.includes("base-gold-preview"));
+      await mobile.map();
+      const viewport = mobile.page.getByRole("group", { name: "섬 지도" });
+      const board = mobile.page.locator(".atlas-board");
+      for (let index = 0; index < 6; index++) await mobile.use(mobile.button("지도 확대"));
+      for (let index = 0; index < 7; index++) await viewport.press("ArrowLeft");
+      const panned = await board.getAttribute("style");
+      const markerIsInside = () => mobile.node("nw-04").evaluate(node => {
+        const marker = node.getBoundingClientRect();
+        const area = node.closest(".atlas-viewport").getBoundingClientRect();
+        const x = marker.left + marker.width / 2;
+        const y = marker.top + marker.height / 2;
+        return x >= area.left && x <= area.right && y >= area.top && y <= area.bottom;
+      });
+      assert.equal(await markerIsInside(), false);
+      await mobile.use(mobile.button("본거지로"));
       const beforeShortcut = await mobile.read();
+      finalWarningSave = beforeShortcut;
       await mobile.use(notices.getByRole("button", { name: "보급로 보기" }));
       await recovery.getByText(/미점령 전환까지 1턴/).waitFor();
+      assert.ok(await mobile.heading("북서 4거점").evaluate(heading => heading === document.activeElement));
+      assert.match(await board.getAttribute("style"), /scale\(2\.5\)/);
+      assert.notEqual(await board.getAttribute("style"), panned);
+      assert.equal(await markerIsInside(), true);
+      assert.equal(await mobile.node("nw-04").getAttribute("aria-pressed"), "true");
       const afterShortcut = await mobile.read();
       assert.equal(afterShortcut.energy, beforeShortcut.energy);
       assert.equal(afterShortcut.turnCount, beforeShortcut.turnCount);
       assert.deepEqual(afterShortcut.mapSnapshot, beforeShortcut.mapSnapshot);
     }
-    const snapshot = await mobile.turn();
+    let snapshot;
+    if (turn === 1) {
+      await nextTurn.scrollIntoViewIfNeeded();
+      const { x, y, width, height } = await nextTurn.boundingBox();
+      const point = [x + width / 2, y + height / 2];
+      const tap = () => mobile.page.touchscreen.tap(...point);
+      const next = (await mobile.read()).turnCount + 1;
+      await tap();
+      await mobile.page.waitForFunction(({ key, next }) => JSON.parse(localStorage.getItem(key)).turnCount === next,
+        { key: saveKey, next });
+      assert.ok(await mobile.page.evaluate(([a, b]) => Boolean(document.elementFromPoint(a, b)?.closest("#nextTurn")), point));
+      await tap();
+      await mobile.page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      snapshot = await mobile.read();
+      assert.equal(snapshot.turnCount, next, "A rapid second tap must leave the isolated outpost's final warning visible");
+    } else snapshot = await mobile.turn();
     const site = spot(snapshot, "nw-04");
     assert.equal(site.owner, loyalty ? "player" : "unoccupied");
     assert.equal(site.loyalty, loyalty);
@@ -467,6 +563,7 @@ try {
   await mobile.page.reload();
   await mobile.map();
   assert.deepEqual(await mobile.read(), lost);
+  assert.match(await mobile.page.locator(".atlas-board").getAttribute("style"), /scale\(1\)/);
   assert.equal(await mobile.node("nw-04").getAttribute("data-status"), "free");
   await mobile.use(mobile.node("nw-04"));
   await mobile.heading("북서 4거점").waitFor();
@@ -474,6 +571,29 @@ try {
   const reclaimedChoices = await mobile.win("nw-04", { receipt: /보급로 연결 필요/ });
   assert.equal(spot(await mobile.read(), "nw-04").loyalty, 100);
   await mobile.page.close();
+
+  const lastChance = await visit({ mobile: true, save: { ...finalWarningSave, energy: 1 } });
+  await lastChance.use(lastChance.button("보급로 보기"));
+  const repair = lastChance.report.getByRole("region", { name: "보급로 전망" });
+  await repair.getByText("복구에 최소 행동력 2", { exact: true }).waitFor();
+  await repair.getByText("· 현재 1", { exact: true }).waitFor();
+  await lastChance.use(lastChance.button("보급로 첫 거점 보기"));
+  await lastChance.heading("북서 1거점").waitFor();
+  const beforeCharge = await lastChance.read();
+  const charge = lastChance.button(/충전권 구매/);
+  await lastChance.use(charge);
+  await charge.waitFor({ state: "hidden" });
+  assert.deepEqual(await lastChance.read(), { ...beforeCharge, energy: 3,
+    resources: { ...beforeCharge.resources, gold: beforeCharge.resources.gold - 5 } });
+  await lastChance.win("nw-01");
+  assert.equal(spot(await lastChance.read(), "nw-04").loyalty, 30);
+  const savedInTime = await lastChance.turn();
+  assert.equal(spot(savedInTime, "nw-04").loyalty, 65);
+  assert.equal(savedInTime.resources.gold, beforeCharge.resources.gold - 5 + 33);
+  await lastChance.page.reload();
+  await lastChance.heading("본거지").waitFor();
+  assert.deepEqual(await lastChance.read(), savedInTime);
+  await lastChance.page.close();
 
   const older = await visit({ save: { ...closed, mapSnapshot: opened.mapSnapshot.map(site =>
     site.id.startsWith("nw-") ? { id: site.id, owner: site.id === "nw-04" ? "player" : "unoccupied",
@@ -493,11 +613,25 @@ try {
     nextMemberId: 5, storageCap: 500, resources: { ...existingCampaign.resources, gold: 0 } };
   await verifyWorkshopSabotage(border, opened);
   await verifyEnemyObservation(border);
-  const recon = await visit({ save: border, legacy: true });
+  const clinic = { id: "building-1", type: "clinic", plotIndex: 0, status: "active", remainingTurns: 0 };
+  const recon = await visit({ save: { ...border, buildings: [clinic] }, legacy: true });
+  async function openCureWork() {
+    await recon.use(recon.button("1번 부지 치료소 관리"));
+    const treatment = recon.page.getByRole("dialog", { name: "치료소 · 1번 부지" });
+    await recon.use(treatment.getByRole("button", { name: /치료 아이템 생산/ }));
+    return treatment;
+  }
   await recon.map();
   await recon.use(recon.node("nw-02"));
   assert.equal(await recon.button(/고스트 첩보 파견/).count(), 0);
   await recon.use(recon.button(/정찰하기/));
+  const openTactics = async () => {
+    await recon.use(recon.report.getByText("상성·교대 분석", { exact: true }));
+    const options = recon.report.getByLabel("정찰한 상대 후보 타입");
+    await options.waitFor();
+    return options.getByRole("option").evaluateAll(options => options.map(option => option.value).sort());
+  };
+  const beforeTypes = await openTactics();
   const beforeRecon = await recon.read();
   await recon.page.getByLabel("출발 거점").selectOption("nw-01");
   await recon.page.getByLabel("파견할 고스트").selectOption(scout.id);
@@ -505,10 +639,15 @@ try {
   await recon.page.evaluate(() => { Math.random = () => .999; });
   await recon.use(recon.button(/고스트 첩보 파견/));
   await recon.report.getByText(/고스트 첩보 진행 중/).waitFor();
+  assert.equal(await recon.report.getByText("고스트 첩보로 공개한 수비팀 기준", { exact: true }).count(), 0);
   const sent = await recon.read();
   assert.equal(sent.energy, beforeRecon.energy - 1);
   assert.equal(sent.frontier.intel["nw-02"].memberId, scout.id);
   await recon.page.reload();
+  let treatment = await openCureWork();
+  assert.match(await treatment.textContent(), /팬텀\s*·\s*전선 파견 중/);
+  assert.equal(await treatment.locator('[data-install-pick="mon-4"]').count(), 0);
+  await recon.use(treatment.getByRole("button", { name: "닫기" }));
   await recon.map();
   await recon.use(recon.node("nw-02"));
   await recon.report.getByText(/고스트 첩보 진행 중/).waitFor();
@@ -517,6 +656,9 @@ try {
   assert.equal(warned.frontier.intrusion.targetId, "nw-01");
   assert.equal(warned.frontier.espionage?.observation, undefined);
   assert.equal(warned.frontier.intel["nw-02"].memberId, undefined);
+  treatment = await openCureWork();
+  assert.ok(await treatment.locator('[data-install-pick="mon-4"]').isEnabled());
+  await recon.use(treatment.getByRole("button", { name: "닫기" }));
   await recon.page.reload();
   await recon.map();
   await recon.use(recon.node("nw-02"));
@@ -524,27 +666,52 @@ try {
   await teamReport.waitFor();
   const expectedTeam = await teamReport.getByRole("listitem").allTextContents();
   assert.equal(expectedTeam.length, 2);
+  const disclosed = await recon.read();
+  const disclosedTypes = [...new Set(disclosed.frontier.intel["nw-02"].pokemonIds.map(id => {
+    const pokemon = species.find(mon => mon.pokemonRowid === id);
+    return [...new Set([pokemon.type1Rowid, pokemon.type2Rowid].filter(type => type != null))].sort((a, b) => a - b).join("-");
+  }))].sort();
+  assert.ok(beforeTypes.length > disclosedTypes.length);
+  assert.deepEqual(await openTactics(), disclosedTypes);
+  await recon.report.getByText("고스트 첩보로 공개한 수비팀 기준", { exact: true }).waitFor();
+  assert.deepEqual(await recon.read(), disclosed);
+  console.log(JSON.stringify({ audit: "ghost scout lineup forecasts", beforeTypes, disclosedTypes, expectedTeam }));
   await recon.win("nw-02", { expectedTeam });
   assert.equal((await recon.read()).frontier.intel["nw-02"], undefined);
   await recon.page.close();
 
-  const guarded = await visit({ save: warned });
+  const guarded = await visit({ save: { ...warned, energy: 0 } });
   const baseWarning = guarded.page.locator("#base-intrusion-warning");
   await baseWarning.getByText(/북서 1거점/).waitFor();
+  await assertTurnNotice(guarded.page, "base-intrusion-warning", "치안 대응");
+  assert.match(await baseWarning.textContent(), /다음 턴 자금 손실 예상 3/);
   await guarded.use(guarded.button("치안 대응"));
   await guarded.heading("월드맵").waitFor();
   await guarded.report.getByText("적 침투 예고 · 다음 턴 정산").waitFor();
-  await guarded.use(guarded.button(/드래곤 방어/));
+  assert.ok(await guarded.heading("북서 1거점").evaluate(heading => heading === document.activeElement));
+  await guarded.report.getByText("다음 턴 자금 손실 예상 3", { exact: true }).waitFor();
+  const security = guarded.report.getByRole("region", { name: "치안 대응" });
+  const defend = security.getByRole("button", { name: /드래곤 방어/ });
+  const charged = await chargeForOrder(guarded, security, defend);
+  await guarded.use(defend);
   await guarded.report.getByText("드래곤 방어 배치 완료").waitFor();
   const defense = await guarded.read();
-  assert.equal(defense.energy, warned.energy - 1);
+  assert.equal(defense.energy, charged.energy - 1);
   assert.equal(defense.frontier.intrusion.defenderId, existingCampaign.roster[1].id);
   await guarded.page.reload();
   assert.deepEqual(await guarded.read(), defense);
+  await guarded.use(guarded.button("2번 미개척 부지"));
+  const clearingPanel = guarded.page.getByRole("dialog", { name: "땅 평탄화 · 2번 부지" });
+  assert.match(await clearingPanel.textContent(), /한카리아스\s*·\s*전선 파견 중/);
+  assert.equal(await clearingPanel.locator('[data-install-pick="mon-2"]').count(), 0);
+  await guarded.use(clearingPanel.getByRole("button", { name: "닫기" }));
   const defended = await guarded.turn();
-  assert.equal(defended.resources.gold - warned.resources.gold, 33);
+  assert.equal(defended.resources.gold - charged.resources.gold, 33);
   assert.ok(defended.lastLog.includes("북서 1거점 · 침투 차단"));
   assert.equal(spot(defended, "nw-01").loyalty, 100);
+  await guarded.use(guarded.button("2번 미개척 부지"));
+  assert.ok(await clearingPanel.locator('[data-install-pick="mon-2"]').isEnabled());
+  await guarded.use(clearingPanel.getByRole("button", { name: "닫기" }));
   for (const quietTurns of [2, 1, 0]) {
     const quiet = await guarded.turn();
     assert.deepEqual(quiet.frontier.intrusion, null);
@@ -553,21 +720,69 @@ try {
   assert.equal((await guarded.turn()).frontier.intrusion.targetId, "nw-01");
   await guarded.page.close();
 
-  const uncovered = { ...warned, roster: warned.roster.map(member => member.pokemon.pokemonRowid === 445 ?
+  const uncovered = { ...warned, energy: 0, roster: warned.roster.map(member => member.pokemon.pokemonRowid === 445 ?
     { ...member, pokemon: testTeam[0] } : member) };
   const undefended = await visit({ mobile: true, save: uncovered });
   await undefended.use(undefended.button("치안 대응"));
   await undefended.report.getByText("미배치 드래곤 타입이 필요합니다.").waitFor();
   assert.ok(await undefended.button(/드래곤 방어/).isDisabled());
+  assert.equal(await undefended.report.getByRole("button", { name: /충전권 구매/ }).count(), 0);
   assert.ok(await undefended.page.evaluate(() => document.documentElement.scrollWidth === innerWidth));
   const hit = await undefended.turn();
   assert.equal(hit.resources.gold - warned.resources.gold, 30);
   assert.deepEqual(spot(hit, "nw-01"), spot(defended, "nw-01"));
   assert.ok(hit.lastLog.includes("북서 1거점 · 적 침투 성공 · 턴당 수입 3 제외"));
+  const lossReceipt = undefended.page.getByRole("dialog", { name: "턴 기록" });
+  await undefended.use(undefended.button(`${hit.turnCount}턴, 턴 기록`));
+  await lossReceipt.getByText("북서 1거점 · 침투로 실제 자금 손실 3", { exact: true }).waitFor({ timeout: 2500 });
+  await undefended.use(lossReceipt.getByRole("button", { name: "닫기" }));
   await undefended.page.reload();
   const resumed = await undefended.turn();
   assert.equal(resumed.resources.gold - hit.resources.gold, 33);
   await undefended.page.close();
+
+  const lowFunds = { ...warned, energy: 0, resources: { ...warned.resources, gold: 4 } };
+  const short = await visit({ mobile: true, save: lowFunds });
+  await short.use(short.button("치안 대응"));
+  await short.report.getByText("자금이 부족합니다. 충전권 가격은 5입니다.", { exact: true }).waitFor();
+  assert.ok(await short.button(/드래곤 방어/).isDisabled());
+  assert.equal(await short.report.getByRole("button", { name: /충전권 구매/ }).count(), 0);
+  assert.deepEqual(await short.read(), lowFunds);
+  await short.page.close();
+
+  const cappedSave = { ...warned, storageCap: 50, resources: { ...warned.resources, gold: 49 },
+    roster: warned.roster.map(member => member.id === scout.id ? { ...member, favor: member.favFloor, departurePending: true } : member) };
+  const capped = await visit({ mobile: true, save: cappedSave });
+  await assertTurnNotice(capped.page, "base-intrusion-warning", "치안 대응");
+  await assertTurnNotice(capped.page, "base-departure-warning", "우호도 관리");
+  await capped.page.getByText(/다음 턴 자금 손실 예상 0/).waitFor();
+  const goldPreview = capped.page.getByRole("group", { name: "다음 턴 자금" });
+  await goldPreview.getByText("받을 자금 +1", { exact: true }).waitFor();
+  await goldPreview.getByText("상한으로 못 받는 자금 29", { exact: true }).waitFor();
+  await capped.use(capped.button("치안 대응"));
+  await capped.report.getByText("다음 턴 자금 손실 예상 0", { exact: true }).waitFor();
+  assert.deepEqual(await capped.read(), cappedSave);
+  const cappedResult = await capped.turn();
+  assert.equal(cappedResult.resources.gold, 50);
+  assert.ok(cappedResult.roster.every(member => member.id !== scout.id));
+  assert.ok(cappedResult.lastLog.includes("북서 1거점 · 적 침투 성공 · 턴당 수입 3 제외"));
+  const cappedReceipt = capped.page.getByRole("dialog", { name: "턴 기록" });
+  const adjusted = "자금 정산 · 받은 자금 +1 · 상한으로 못 받은 자금 29";
+  const cappedLoss = "북서 1거점 · 침투로 실제 자금 손실 0";
+  await capped.use(capped.button(`${cappedResult.turnCount}턴, 턴 기록`));
+  await cappedReceipt.getByText(adjusted, { exact: true }).waitFor();
+  await cappedReceipt.getByText(cappedLoss, { exact: true }).waitFor();
+  await cappedReceipt.getByText(/팬텀.*이탈/).waitFor();
+  await capped.page.reload();
+  await capped.use(capped.button(`${cappedResult.turnCount}턴, 턴 기록`));
+  await cappedReceipt.getByText(adjusted, { exact: true }).waitFor();
+  await cappedReceipt.getByText(cappedLoss, { exact: true }).waitFor();
+  assert.deepEqual(await capped.read(), cappedResult);
+  await capped.use(cappedReceipt.getByRole("button", { name: "닫기" }));
+  const capFilled = await capped.turn();
+  await capped.use(capped.button(`${capFilled.turnCount}턴, 턴 기록`));
+  await cappedReceipt.getByText("자금 정산 · 받은 자금 +0 · 상한으로 못 받은 자금 33", { exact: true }).waitFor();
+  await capped.page.close();
 
   const crafter = { ...opened.roster[0], id: "mon-4", pokemon: species.find(pokemon => pokemon.pokemonRowid === 25), level: 1, aptitude: 50 };
   const productionCampaign = { ...opened, resources: { ...opened.resources, material: 0, tool: 0 }, storageCap: 500, energy: 5,
@@ -587,10 +802,15 @@ try {
   const workshop = inherited.buildings.find(building => building.siteId === "nw-04");
   assert.deepEqual(workshop, { id: "building-2", siteId: "nw-04", type: "workshop", inherited: true, plotIndex: 0, status: "active", remainingTurns: 0 });
   assert.ok(inherited.roster.every(member => member.buildingId !== workshop.id));
+  await remote.use(remote.button("지도 확대"));
+  const remoteBoard = remote.page.locator(".atlas-board");
+  const beforeManagement = await remoteBoard.getAttribute("style");
   await manageSite(remote, "nw-04", "북서 4거점");
   await remote.page.getByText("고립 · 공사·개척·생산 중단").waitFor();
   assert.ok(await remote.button("2번 부지 건설").isDisabled());
   await remote.map();
+  assert.equal(await remoteBoard.getAttribute("style"), beforeManagement);
+  assert.equal(await remote.node("nw-04").getAttribute("aria-pressed"), "true");
   await remote.win("nw-01", { inheritance: "none" });
   await manageSite(remote, "nw-04", "북서 4거점");
   await remote.page.getByText("보급 연결 · 본거지와 재고 공유").waitFor();
@@ -642,6 +862,16 @@ try {
   const severed = { ...checkpoint, mapSnapshot: checkpoint.mapSnapshot.map(site => site.id === "nw-01" ?
     { ...site, owner: "unoccupied", loyalty: 0 } : site) };
   const halted = await visit({ save: severed, mobile: true });
+  await halted.use(halted.button("2번 미개척 부지"));
+  panel = halted.page.getByRole("dialog", { name: "땅 평탄화 · 2번 부지" });
+  await panel.getByText("한카리아스 · 북서 4거점 평탄화 중 · 고립으로 정지", { exact: true }).waitFor();
+  await halted.use(panel.getByRole("button", { name: "닫기" }));
+  await halted.use(halted.button("1번 부지 제작소 관리"));
+  panel = halted.page.getByRole("dialog", { name: workshopName });
+  await halted.use(panel.getByRole("button", { name: /부품 제작/ }));
+  await panel.getByText("피카츄 · 북서 4거점 1번 부지 고립 · 인력 회수 가능", { exact: true }).waitFor();
+  assert.equal(await panel.locator('[data-install-pick="mon-4"]').count(), 0);
+  await halted.use(panel.getByRole("button", { name: "닫기" }));
   await halted.map();
   await manageSite(halted, "nw-04", "북서 4거점");
   await halted.page.getByText("고립 · 공사·개척·생산 중단").waitFor();

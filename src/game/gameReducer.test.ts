@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GameDataBundle, RosterMember } from "../domain/types";
 import { worldMapNodes } from "../domain/worldMap";
-import { describeFirstVictoryReward } from "./campaign";
-import { forecastProduction } from "../domain/production";
+import { describeFirstVictoryReward, rewardStorageShortfall } from "./campaign";
+import { forecastIntrusionLoss, forecastProduction } from "../domain/production";
 import { enemyPartsSupply } from "../domain/frontierOperations";
 import { forecastSupplyRoute, isolatedTurnsRemaining, suppliedTerritories } from "../domain/territorySupply";
 import { gameSaveSchema, mapSnapshotSchema } from "../services/saveSchemas";
@@ -31,6 +31,38 @@ function reloadCampaign(state: ReturnType<typeof createInitialState>) {
   const map = Object.entries(state.territories).map(([id, spot]) => ({ id, ...spot }));
   return restoreGameState(JSON.parse(JSON.stringify(state)), map);
 }
+
+it("adds a starter and moves the draft forward in one action for the current round", () => {
+  const initial = createInitialState();
+  const first = gameReducer(initial, { type: "PICK_STARTER", member: member(), expectedRound: 0 });
+  expect(first).toMatchObject({ draftRound: 1, screen: "draft", nextMemberId: 2, caughtSpeciesIds: [1] });
+  const second = { ...member("mon-2"), pokemon: { ...member().pokemon, pokemonRowid: 4 } };
+  expect(gameReducer(first, { type: "PICK_STARTER", member: second, expectedRound: 0 })).toBe(first);
+  const restored = reloadCampaign(first);
+  const two = gameReducer(restored, { type: "PICK_STARTER", member: second, expectedRound: 1 });
+  const third = { ...member("mon-3"), pokemon: { ...member().pokemon, pokemonRowid: 7 } };
+  const revealed = gameReducer(two, { type: "PICK_STARTER", member: third, expectedRound: 2 });
+  expect(revealed).toMatchObject({ draftRound: 3, screen: "trainerReveal", caughtSpeciesIds: [1, 4, 7] });
+  expect(revealed.roster.map(entry => entry.id)).toEqual(["mon-1", "mon-2", "mon-3"]);
+  expect(gameReducer(revealed, { type: "PICK_STARTER", member: member("mon-4"), expectedRound: 3 })).toBe(revealed);
+});
+
+it("starts another ordinary hunt for the regular cost without carrying over the previous observation", () => {
+  const state: GameState = { ...createInitialState(), screen: "identify", energy: 2, selectedPokemonId: 1,
+    selectedTypeName: "풀", selectedScan: { x: .5, y: .5, number: 2 }, roster: [member()], caughtSpeciesIds: [1] };
+  const action = { type: "CONTINUE_HUNT" } as const;
+  const next = gameReducer(state, action);
+  expect(next).toEqual({ ...state, screen: "hunt", energy: 0, selectedPokemonId: null, selectedTypeName: null, selectedScan: null });
+  expect(gameReducer(next, action)).toBe(next);
+  for (const unavailable of [{ ...state, energy: 1 }, { ...state, huntTypeId: 12 },
+    { ...state, counterHunt: { territoryId: "south", typeIds: [8] } }]) {
+    expect(gameReducer(unavailable, action)).toBe(unavailable);
+  }
+  const ending = { ...state, caughtSpeciesIds: Array.from({ length: 25 }, (_, index) => index + 1),
+    territories: Object.fromEntries(Object.entries(state.territories).map(([id, site]) => [id, { ...site, owner: "player" as const }])) };
+  expect(gameReducer(ending, action)).toBe(ending);
+  expect(gameReducer({ ...ending, endingSeen: true }, action)).toMatchObject({ screen: "hunt", energy: 0 });
+});
 
 it("starts trainer growth at the legacy load turn and preserves its cap across reloads", () => {
   const legacy = frontierFixture();
@@ -114,6 +146,17 @@ describe("AI workshop supply and Dark operations", () => {
 });
 
 describe("frontier operations", () => {
+  it("forecasts the amount a pending intrusion actually removes after storage is applied", () => {
+    const warned = gameReducer(frontierFixture(), { type: "NEXT_TURN" });
+    for (const [space, expected] of [[32, 3], [28, 1], [27, 0]]) {
+      const ready = { ...warned, storageCap: 100, resources: { ...warned.resources, gold: 100 - space } };
+      const safe = { ...ready, frontier: { ...ready.frontier, intrusion: null } };
+      expect(forecastIntrusionLoss(ready)).toBe(expected);
+      expect(gameReducer(safe, { type: "NEXT_TURN" }).resources.gold - gameReducer(ready, { type: "NEXT_TURN" }).resources.gold).toBe(expected);
+      expect(forecastIntrusionLoss(safe)).toBe(0);
+    }
+  });
+
   it("dispatches one available Ghost to a scouted and supplied frontier, then saves the team for one battle", () => {
     const map = frontierFixture();
     const order = { type: "SEND_GHOST_RECON" as const, targetId: "nw-02", sourceId: "nw-01", memberId: "mon-2", pokemonIds: [94, 25] };
@@ -541,6 +584,20 @@ describe("game reducer",()=>{
     expect(restoreGameState(rewarded, null).claimedDexRewards).toEqual([10]);
     const full = { ...state, resources: { ...state.resources, candy: state.storageCap } };
     expect(gameReducer(full, claim)).toBe(full);
+  });
+  it("reports the missing space of each reward resource and blocks a partial payout", () => {
+    const base = createInitialState();
+    const full = { ...base, caughtSpeciesIds: Array.from({ length: 25 }, (_, index) => index + 1),
+      resources: { ...base.resources, tm: 49, gold: 55 } };
+    const reward = { tm: 3, gold: 10 };
+    const claim = { type: "CLAIM_DEX_REWARD", threshold: 25 } as const;
+    expect(rewardStorageShortfall(full, reward)).toEqual([["tm", 2], ["gold", 15]]);
+    expect(gameReducer(full, claim)).toBe(full);
+    const enough = { ...full, resources: { ...full.resources, tm: 47, gold: 40 } };
+    expect(rewardStorageShortfall(enough, reward)).toEqual([]);
+    const rewarded = gameReducer(enough, claim);
+    expect(rewarded.resources).toMatchObject({ tm: 50, gold: 50 });
+    expect(gameReducer(rewarded, claim)).toBe(rewarded);
   });
   it.each([false, true])("pays an existing outpost research completion only once (legacy=%s)", legacyOutpostResearch => {
     const claim = { type: "CLAIM_INHERITED_RESEARCH_REWARD" as const };

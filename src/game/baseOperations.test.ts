@@ -251,6 +251,7 @@ describe("next-turn gold forecast", () => {
     expect(forecastGold(purchase)).toEqual({ received: 35, overflow: 82, storageCap: 50 });
     const settled = gameReducer(purchase, { type: "NEXT_TURN" });
     expect(settled.lastLog).toContain("확보 지역 수입 · 자금 +35");
+    expect(settled.lastLog).toContain("자금 정산 · 받은 자금 +35 · 상한으로 못 받은 자금 82");
     expect(forecastGold(settled)).toEqual({ received: 0, overflow: 117, storageCap: 50 });
   });
 
@@ -269,7 +270,10 @@ describe("next-turn gold forecast", () => {
       frontier: { ...campaign.frontier, intrusion },
     };
     expect(forecastGold(state)).toEqual({ received: 28, overflow: 1, storageCap: 60 });
-    expect(gameReducer(state, { type: "NEXT_TURN" }).resources).toMatchObject({ gold: 60, material: 1 });
+    const hit = gameReducer(state, { type: "NEXT_TURN" });
+    expect(hit.resources).toMatchObject({ gold: 60, material: 1 });
+    expect(hit.lastLog).toContain("자금 정산 · 받은 자금 +28 · 상한으로 못 받은 자금 1");
+    expect(hit.lastLog).toContain("북서 1거점 · 침투로 실제 자금 손실 0");
 
     const defended = { ...state, frontier: { ...state.frontier, intrusion: { ...intrusion, defenderId: "mon-4" } } };
     expect(forecastGold(defended)).toEqual({ received: 28, overflow: 4, storageCap: 60 });

@@ -112,9 +112,18 @@ export function forecastProduction(state: ProductionState) {
   return calculateProduction(state, false);
 }
 
-export function forecastGold(state: ProductionState) {
-  const { resources, storageCap } = forecastProduction(state);
+export function forecastGold(state: ProductionState, { resources, storageCap } = forecastProduction(state)) {
   // Reuse the production order so mint workers compete for the same material in both readings.
   const uncappedGold = storageCap - resources.gold < 1 ? calculateProduction(state, true).resources.gold : resources.gold;
   return { received: resources.gold - state.resources.gold, overflow: uncappedGold - resources.gold, storageCap };
+}
+
+export function forecastIntrusionLoss(state: ProductionState, production?: ReturnType<typeof forecastProduction>) {
+  const { frontier } = state;
+  if (!frontier) return 0;
+  const intrusion = activeIntrusion(state.territories, frontier.intrusion);
+  if (!intrusion || intrusion.defenderId) return 0;
+  const hit = (production ?? forecastProduction(state)).resources.gold;
+  const guarded = forecastProduction({ ...state, frontier: { ...frontier, intrusion: null } }).resources.gold;
+  return guarded - hit;
 }

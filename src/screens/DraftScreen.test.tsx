@@ -11,13 +11,20 @@ const data:GameDataBundle={pokemon:[pokemon(1,"이상해씨"),pokemon(4,"파이�
 describe("DraftScreen",()=>{
   beforeEach(()=>localStorage.clear());
   afterEach(cleanup);
-  it("reveals type and measurements on focus without revealing the starter's identity",()=>{
-    render(<GameProvider data={data}><DraftScreen/></GameProvider>);
-    const choice=screen.getByRole("button",{name:"미확인 개체 1"});
+  it("lets players read traces directly in the clearing while keeping the starter's identity hidden",()=>{
+    const { container } = render(<GameProvider data={data}><DraftScreen/></GameProvider>);
+    const clearing = screen.getByRole("group", { name: "숲 공터" });
+    expect(clearing.querySelectorAll("[data-draft-target]")).toHaveLength(3);
+    expect(container.querySelector(".draft-aim, .draft-lock, .scanner-contact, .hunt-optics, .field-optic-bezel")).toBeNull();
+    expect(screen.getByRole("heading", { name: "첫 동료를 찾아서" })).toBeVisible();
+    const choice=screen.getByRole("button",{name:"고사리 그늘"});
     expect(screen.queryByText("풀")).not.toBeInTheDocument();
+    expect(choice).not.toHaveTextContent("동료로 맞이하기");
     fireEvent.focus(choice);
-    expect(screen.getByRole("heading",{name:"스타팅 선택 1/3"})).toBeVisible();
-    expect(screen.getByRole("heading",{name:"미확인 개체 1"})).toBeVisible();
+    expect(choice).toHaveTextContent("동료로 맞이하기");
+    expect(choice).toHaveAccessibleDescription("타입 단서 풀 키 0.7 m 몸무게 6.9 kg");
+    expect(screen.getByRole("heading",{name:"동료 영입 0/3"})).toBeVisible();
+    expect(screen.getByRole("heading",{name:"고사리 그늘"})).toBeVisible();
     expect(screen.getByText("풀")).toBeVisible();
     expect(screen.getByText("0.7 m")).toBeVisible();
     expect(screen.getByText("6.9 kg")).toBeVisible();
@@ -26,8 +33,9 @@ describe("DraftScreen",()=>{
 
   it("adds the selected starter to the persisted roster",async()=>{
     render(<GameProvider data={data}><DraftScreen/></GameProvider>);
-    expect(screen.getByRole("heading",{name:"스타팅 선택 1/3"})).toBeInTheDocument();
+    expect(screen.getByRole("heading",{name:"동료 영입 0/3"})).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button")[0]);
     await waitFor(()=>expect(JSON.parse(localStorage.getItem(GAME_SAVE_KEY)!).roster).toHaveLength(1));
+    expect(screen.getByRole("heading",{name:"동료 영입 1/3"})).toBeVisible();
   });
 });

@@ -32,7 +32,7 @@ function baseControls(page, touch) {
   }
   async function turn() {
     const next = (await read()).turnCount + 1;
-    await use(page.locator("#nextTurn"));
+    await page.locator("#nextTurn").press("Enter");
     await page.waitForFunction(({ key, next }) => JSON.parse(localStorage.getItem(key))?.turnCount === next, { key: saveKey, next });
   }
   async function build(plot, facility, crew, checkEstimate = false) {
@@ -93,6 +93,393 @@ async function openProfile({ touch = false } = {}) {
   page.on("pageerror", error => errors.push(error.message));
   await page.goto(server.resolvedUrls.local[0]);
   return page;
+}
+
+async function repeatActivation(page, action, touch, committed, physicalPointer = false) {
+  if (physicalPointer) {
+    await action.scrollIntoViewIfNeeded();
+    const { x, y, width, height } = await action.boundingBox();
+    const point = [x + width / 2, y + height / 2];
+    const activate = () => touch ? page.touchscreen.tap(...point) : page.mouse.click(...point);
+    await activate();
+    await committed();
+    await activate();
+  } else if (touch) await action.evaluate(button => { button.click(); button.click(); });
+  else {
+    await action.focus();
+    await page.keyboard.down("Enter");
+    await committed();
+    await page.keyboard.down("Enter");
+    await page.keyboard.up("Enter");
+  }
+  await committed();
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+}
+
+async function verifyRepeatedOrders(touch, physicalPointer = false) {
+  const page = await openProfile({ touch });
+  const base = baseControls(page, touch);
+  await page.evaluate(async key => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const roster = [{ id: "mon-1", pokemon: records.find(pokemon => pokemon.pokemonRowid === 1), level: 1, exp: 0,
+      favor: 22, favFloor: 20, favCeil: 85, aptitude: 50, iv: {}, buildingId: "building-1", jobId: "seed" }];
+    localStorage.setItem(key, JSON.stringify({ v: 4, roster, turnCount: 8, energy: 0, resources: { gold: 30, seed: 0 },
+      introPending: false, nextMemberId: 2, nextBuildingId: 2, entryOrder: ["mon-1"],
+      buildings: [{ id: "building-1", type: "farm", plotIndex: 0, status: "active", remainingTurns: 0 }] }));
+  }, saveKey);
+  await page.reload();
+
+  async function repeat(action, field, previous) {
+    const acted = () => page.waitForFunction(({ key, field, previous }) => JSON.parse(localStorage.getItem(key))[field] > previous,
+      { key: saveKey, field, previous });
+    await repeatActivation(page, action, touch, acted, physicalPointer);
+    return base.read();
+  }
+
+  const shop = await base.open("상점", /상점 · 자금/);
+  const purchased = await repeat(base.button("구매", shop), "energy", 0);
+  await base.close(shop);
+  const turnAction = page.locator("#nextTurn");
+  const settled = await repeat(turnAction, "turnCount", 8);
+  assert.deepEqual({ purchase: [purchased.resources.gold, purchased.energy], settlement: [settled.turnCount, settled.resources.seed],
+    waiting: settled.roster[0]?.departurePending }, { purchase: [25, 2], settlement: [9, 3], waiting: true },
+    "한 번의 명령으로 충전권과 턴을 중복 정산하면 안 됩니다.");
+  const warning = page.locator("#base-departure-warning");
+  await warning.getByText(/다음 턴 이탈 예정/).waitFor();
+  await page.reload();
+  await warning.getByText(/다음 턴 이탈 예정/).waitFor();
+  assert.deepEqual(await base.read(), settled);
+  await base.turn();
+  const next = await base.read();
+  assert.equal(next.turnCount, 10);
+  assert.deepEqual(next.roster, []);
+  assert.ok(next.lastLog.some(line => /이상해씨.*이탈/.test(line)));
+  await page.close();
+}
+
+async function verifyRepeatedInventoryActions(touch, physicalPointer = false) {
+  const page = await openProfile({ touch });
+  const base = baseControls(page, touch);
+  await page.evaluate(async ({ key, physicalPointer }) => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const roster = [{ id: "mon-1", pokemon: records.find(pokemon => pokemon.pokemonRowid === 1), level: 1, exp: 0,
+      favor: physicalPointer ? 20 : 30, favFloor: 20, favCeil: 85, aptitude: 50, iv: {}, departurePending: physicalPointer }];
+    localStorage.setItem(key, JSON.stringify({ v: 4, roster, energy: 5, resources: { candy: 3, healItem: 3, tool: 6 },
+      introPending: false, nextMemberId: 2, entryOrder: ["mon-1"] }));
+  }, { key: saveKey, physicalPointer });
+  await page.reload();
+
+  const used = (resource, previous) => () => page.waitForFunction(({ key, resource, previous }) =>
+    JSON.parse(localStorage.getItem(key)).resources[resource] < previous, { key: saveKey, resource, previous });
+  const pc = await base.open(physicalPointer ? "우호도 관리" : "포켓몬 1", /보유 포켓몬/);
+  const candy = base.button("사탕 먹이기", pc);
+  await repeatActivation(page, candy, touch, used("candy", 3), physicalPointer);
+  await repeatActivation(page, base.button("회복 아이템 사용", pc), touch, used("healItem", 3), physicalPointer);
+  const growth = await base.read();
+  await base.close(pc);
+  assert.equal(await page.locator("#base-departure-warning").count(), 0);
+  const equipment = await base.tools();
+  const craft = base.button("제작 3", equipment.locator("li", { hasText: "구애머리띠" }));
+  await repeatActivation(page, craft, touch, used("tool", 6), physicalPointer);
+  const crafted = await base.read();
+  assert.deepEqual({ growth: [growth.resources.candy, growth.resources.healItem, growth.roster[0].level,
+    growth.roster[0].exp, growth.roster[0].favor, growth.energy], crafted: [crafted.resources.tool, crafted.resources.items.choice_band] },
+  { growth: [2, 2, 2, 0, physicalPointer ? 35 : 45, 3], crafted: [3, 1] }, "사탕·회복·제작을 한 번씩만 처리해야 합니다.");
+  assert.equal(growth.roster[0].departurePending, undefined);
+  if (physicalPointer) await page.waitForTimeout(360);
+  await base.use(craft);
+  assert.equal((await base.read()).resources.items.choice_band, 2);
+  await base.close(equipment);
+  await base.open("포켓몬 1", /보유 포켓몬/);
+  await base.use(candy);
+  const afterCandy = await base.read();
+  assert.equal(afterCandy.roster[0].exp, 20);
+  assert.equal(afterCandy.energy, 2);
+  if (physicalPointer) {
+    await repeatActivation(page, base.button("회복 아이템 사용", pc), touch, used("healItem", 2), true);
+    const secondRecovery = await base.read();
+    assert.equal(secondRecovery.resources.healItem, 1);
+    assert.equal(secondRecovery.roster[0].favor, 50);
+    assert.equal(secondRecovery.energy, 1);
+  }
+  const finished = await base.read();
+  await page.reload();
+  await base.button("포켓몬 1").waitFor();
+  assert.deepEqual(await base.read(), finished);
+  await page.close();
+}
+
+async function verifyRosterSearch(touch) {
+  const page = await openProfile({ touch });
+  const base = baseControls(page, touch);
+  await page.evaluate(async key => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const roster = [...Array.from({ length: 23 }, (_, index) => index + 1), 445, 445].map((pokemonRowid, index) => ({
+      id: `mon-${index + 1}`, pokemon: records.find(pokemon => pokemon.pokemonRowid === pokemonRowid),
+      level: index === 24 ? 7 : 1, exp: index === 24 ? 120 : 0, favor: 55, favFloor: 20, favCeil: 85, aptitude: 50, iv: {},
+    }));
+    localStorage.setItem(key, JSON.stringify({ v: 3, roster, energy: 5, resources: { healItem: 1, candy: 1 }, introPending: false,
+      nextMemberId: 26, entryOrder: ["mon-1", "mon-2", "mon-3"] }));
+  }, saveKey);
+  await page.reload();
+  const dialog = await base.open("포켓몬 25", /보유 포켓몬/);
+  const before = await base.read();
+  const roster = dialog.getByRole("group", { name: "동료 선택" });
+  const cards = roster.locator("[data-install-pick]");
+  assert.equal(await cards.count(), 25);
+  if (touch) assert.ok(await roster.evaluate(list => list.scrollWidth > list.clientWidth));
+  const search = dialog.getByRole("searchbox", { name: "동료 찾기" });
+  assert.equal(await search.count(), 1, "25마리의 로스터에서는 이름이나 타입으로 동료를 찾아야 합니다.");
+  assert.ok((await search.boundingBox()).height >= 44);
+  await search.fill("드래곤");
+  assert.equal(await cards.count(), 2);
+  const first = roster.getByRole("button", { name: "한카리아스 1번 Lv.1", exact: true });
+  const second = roster.getByRole("button", { name: "한카리아스 2번 Lv.7", exact: true });
+  assert.equal(await second.count(), 1, "같은 종도 번호와 레벨로 원하는 개체를 찾을 수 있어야 합니다.");
+  assert.equal(await first.count(), 1);
+  await search.fill("땅");
+  assert.equal(await cards.count(), 2);
+  await dialog.getByRole("heading", { name: "이상해씨 Lv.1" }).waitFor();
+  await search.fill("  카리  ");
+  assert.equal(await second.count(), 1);
+  await base.use(second);
+  const individual = dialog.getByRole("heading", { name: "한카리아스 2번 Lv.7" });
+  await individual.waitFor();
+  await search.fill("존재하지 않는 이름");
+  await roster.getByText("일치하는 동료가 없습니다.").waitFor();
+  await individual.waitFor();
+  await search.fill("");
+  assert.equal(await cards.count(), 25);
+  assert.equal(await second.getAttribute("aria-pressed"), "true");
+  assert.deepEqual(await base.read(), before);
+  await base.use(base.button("회복 아이템 사용", dialog));
+  const recovered = await base.read();
+  assert.equal(recovered.roster.at(-1).favor, before.roster.at(-1).favor + 15);
+  assert.deepEqual(recovered.roster.slice(0, -1), before.roster.slice(0, -1));
+  assert.equal(recovered.resources.healItem, 0);
+  assert.equal(recovered.energy, 4);
+  await base.use(base.button("사탕 먹이기", dialog));
+  await dialog.getByRole("heading", { name: "한카리아스 2번 Lv.8" }).waitFor();
+  const trained = await base.read();
+  assert.equal(trained.energy, 3);
+  assert.equal(trained.resources.candy, 0);
+  assert.deepEqual(trained.roster.slice(0, -1), before.roster.slice(0, -1));
+  await base.close(dialog);
+  await page.reload();
+  await base.button("포켓몬 25").waitFor();
+  assert.deepEqual(await base.read(), trained);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth === innerWidth));
+  const entry = await base.open("엔트리", /전투 엔트리 편성/);
+  const entryCards = entry.getByRole("region", { name: "PC" });
+  await base.use(entryCards.getByRole("button", { name: "한카리아스 2번 Lv.8", exact: true }));
+  const positions = entry.getByRole("region", { name: "출전 순서" });
+  await positions.getByText("한카리아스 2번 Lv.8", { exact: true }).waitFor();
+  const earlier = positions.getByRole("button", { name: "한카리아스 2번 앞 순서로 이동", exact: true });
+  await base.use(earlier);
+  assert.deepEqual((await base.read()).entryOrder, ["mon-1", "mon-2", "mon-25", "mon-3"]);
+  assert.equal(await entryCards.getByRole("button", { name: "한카리아스 1번 Lv.1", exact: true }).getAttribute("aria-pressed"), "false");
+  if (!touch) {
+    assert.ok(await earlier.evaluate(button => button === document.activeElement), "순서를 바꿔도 초점은 같은 포켓몬을 따라가야 합니다.");
+    await page.keyboard.down("Enter");
+    assert.deepEqual((await base.read()).entryOrder, ["mon-1", "mon-25", "mon-2", "mon-3"]);
+    await page.keyboard.down("Enter");
+    await page.keyboard.up("Enter");
+    assert.deepEqual((await base.read()).entryOrder, ["mon-1", "mon-25", "mon-2", "mon-3"]);
+    await page.keyboard.press("Enter");
+    assert.deepEqual((await base.read()).entryOrder, ["mon-25", "mon-1", "mon-2", "mon-3"]);
+    assert.ok(await positions.locator('[data-entry-slot="0"]').evaluate(row => row === document.activeElement));
+    await positions.getByRole("button", { name: "한카리아스 2번 엔트리 해제" }).press("Enter");
+    assert.deepEqual((await base.read()).entryOrder, ["mon-1", "mon-2", "mon-3"]);
+    const removed = entryCards.getByRole("button", { name: "한카리아스 2번 Lv.8", exact: true, pressed: false });
+    assert.ok(await removed.evaluate(button => button === document.activeElement));
+  }
+  await page.close();
+}
+
+async function verifyEntryPointerBurst(touch) {
+  const page = await openProfile({ touch });
+  const base = baseControls(page, touch);
+  const initial = ["mon-1", "mon-2", "mon-3", "mon-4", "mon-5"];
+  await page.evaluate(async ({ key, initial }) => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const roster = records.slice(0, 7).map((pokemon, index) => ({
+      id: `mon-${index + 1}`, pokemon, level: 1, exp: 0, favor: 70, favFloor: 20, favCeil: 85, aptitude: 50, iv: {},
+    }));
+    localStorage.setItem(key, JSON.stringify({ v: 4, roster, energy: 5, resources: { gold: 12 }, introPending: false,
+      nextMemberId: 8, entryOrder: initial }));
+  }, { key: saveKey, initial });
+  await page.reload();
+
+  async function repeatAt(action, expected, message) {
+    await action.scrollIntoViewIfNeeded();
+    const rect = await action.boundingBox();
+    const x = rect.x + rect.width / 2;
+    const y = rect.y + rect.height / 2;
+    const activate = () => touch ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
+    await activate();
+    assert.deepEqual((await base.read()).entryOrder, expected);
+    await activate();
+    assert.deepEqual((await base.read()).entryOrder, expected, message);
+  }
+
+  const modal = await base.open("엔트리", /전투 엔트리 편성/);
+  const full = [...initial, "mon-6"];
+  const spare = modal.locator('[data-pc-member="mon-7"]');
+  await repeatAt(modal.locator('[data-pc-member="mon-6"]'), full, "A second tap must not undo entry registration");
+  assert.equal(await spare.getAttribute("aria-disabled"), "true");
+  const third = modal.locator('[data-entry-slot="2"]');
+  const moved = ["mon-1", "mon-3", "mon-2", "mon-4", "mon-5", "mon-6"];
+  await repeatAt(third.locator('[data-entry-direction="up"]'), moved, "A second tap must not move a different Pokémon");
+  const removed = moved.filter(id => id !== "mon-2");
+  await repeatAt(third.getByRole("button", { name: /엔트리 해제/ }), removed, "A second tap must not remove the next Pokémon");
+  await base.close(modal);
+
+  const pc = await base.open("포켓몬 7", /보유 포켓몬/);
+  await base.use(pc.locator('[data-install-pick="mon-7"]'));
+  const final = [...removed, "mon-7"];
+  await repeatAt(pc.getByRole("button", { name: "엔트리 등록", exact: true }), final, "A second tap must not undo PC registration");
+  await base.close(pc);
+  const saved = await base.read();
+  assert.equal(saved.energy, 5);
+  assert.equal(saved.resources.gold, 12);
+  await page.reload();
+  await base.open("엔트리", /전투 엔트리 편성/);
+  assert.deepEqual(await base.read(), saved);
+  await page.close();
+}
+
+async function verifyDuplicateDeparture(touch) {
+  const page = await openProfile({ touch });
+  const base = baseControls(page, touch);
+  await page.evaluate(async key => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const pokemon = records.find(record => record.pokemonRowid === 65);
+    const researcher = { pokemon, exp: 0, favFloor: 20, favCeil: 85, aptitude: 50, iv: {}, buildingId: "building-1", jobId: "research" };
+    localStorage.setItem(key, JSON.stringify({ v: 4, energy: 5, resources: { healItem: 1 }, introPending: false,
+      roster: [{ ...researcher, id: "mon-1", level: 4, favor: 20, heldItem: "focus_sash" },
+        { ...researcher, id: "mon-2", level: 7, favor: 22 }], entryOrder: ["mon-1", "mon-2"], nextMemberId: 3,
+      buildings: [{ id: "building-1", type: "dojo", plotIndex: 0, status: "active", remainingTurns: 0 }] }));
+  }, saveKey);
+  await page.reload();
+  const turn = page.locator("#nextTurn");
+  const warning = page.locator("#base-departure-warning");
+  await turn.waitFor();
+  await warning.getByText("이탈 경고까지 1턴 · 후딘 2번", { exact: true }).waitFor();
+  assert.deepEqual(await turn.evaluate(button => (button.getAttribute("aria-describedby") ?? "").split(/\s+/)
+    .filter(id => id && !document.getElementById(id))), [], "Turn descriptions must point to visible notices");
+
+  await base.turn();
+  const warned = await base.read();
+  await warning.getByText("다음 턴 이탈 예정 · 후딘 2번", { exact: true }).waitFor();
+  assert.match(await turn.getAttribute("aria-describedby"), /base-departure-warning/);
+  await page.reload();
+  await warning.getByText("다음 턴 이탈 예정 · 후딘 2번", { exact: true }).waitFor();
+  const pc = await base.open("우호도 관리", /보유 포켓몬/);
+  await pc.getByRole("heading", { name: "후딘 2번 Lv.7", exact: true }).waitFor();
+  assert.equal(await pc.locator('[data-install-pick="mon-2"]').getAttribute("aria-pressed"), "true");
+  await base.close(pc);
+  const turnLog = await base.open(/턴 기록/, "턴 기록");
+  await turnLog.getByText(/육성 연구 · 후딘 1번 · 경험치 사탕/).waitFor();
+  await turnLog.getByText(/육성 연구 · 후딘 2번 · 경험치 사탕/).waitFor();
+  await turnLog.getByText("후딘 2번 · 우호도 하한 · 다음 턴 이탈 예정", { exact: true }).waitFor();
+  await turnLog.getByText("후딘 1번 · 기합의띠로 이탈 방지", { exact: true }).waitFor();
+  await base.close(turnLog);
+  assert.deepEqual(await base.read(), warned);
+
+  await base.use(base.button("우호도 관리"));
+  await base.use(base.button("회복 아이템 사용", pc));
+  await base.close(pc);
+  const saved = await base.read();
+  assert.deepEqual(saved.roster.map(member => member.favor), [20, 35]);
+  assert.equal(saved.resources.healItem, 0);
+  await warning.waitFor({ state: "hidden" });
+
+  // Restore the same warned checkpoint to verify the alternative without recovery.
+  await page.evaluate(({ key, snapshot }) => localStorage.setItem(key, JSON.stringify(snapshot)), { key: saveKey, snapshot: warned });
+  await page.reload();
+  await base.turn();
+  const departed = await base.read();
+  assert.deepEqual(departed.roster.map(member => member.id), ["mon-1"]);
+  assert.deepEqual(departed.entryOrder, ["mon-1"]);
+  await page.reload();
+  const departureLog = await base.open(/턴 기록/, "턴 기록");
+  await departureLog.getByText("후딘 2번 · 우호도 하한 · 이탈", { exact: true }).waitFor();
+  assert.deepEqual(await base.read(), departed);
+  await page.close();
+}
+
+async function verifyDuplicateWorkers(touch) {
+  const page = await openProfile({ touch });
+  const base = baseControls(page, touch);
+  await page.evaluate(async key => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const roster = [65, 65, 445, 445].map((pokemonRowid, index) => ({
+      id: `mon-${index + 1}`, pokemon: records.find(pokemon => pokemon.pokemonRowid === pokemonRowid),
+      level: [1, 8, 1, 6][index], exp: 0, favor: 70, favFloor: 20, favCeil: 85, aptitude: 50, iv: {},
+      ...(index === 0 ? { buildingId: "building-1", jobId: "research", jobOrder: 1 } : {}),
+    }));
+    localStorage.setItem(key, JSON.stringify({ v: 4, roster, energy: 5, resources: { items: { choice_band: 1 } },
+      plotCap: 2, introPending: false, nextMemberId: 5, nextBuildingId: 2,
+      buildings: [{ id: "building-1", type: "dojo", plotIndex: 0, status: "active", remainingTurns: 0 }] }));
+  }, saveKey);
+  await page.reload();
+  let dialog = await base.tools();
+  const equipment = dialog.getByLabel("장착할 포켓몬");
+  const workerLabel = "후딘 2번 · Lv.8";
+  assert.equal(await equipment.locator("option").filter({ hasText: workerLabel }).count(), 1,
+    "같은 종의 도구 장착 대상에 PC의 개체 번호가 표시되어야 합니다.");
+  await equipment.selectOption({ label: workerLabel });
+  await base.use(base.button("장착", dialog.locator("li", { hasText: "구애머리띠" })));
+  await base.close(dialog);
+  const equipped = await base.read();
+  assert.equal(equipped.roster[1].heldItem, "choice_band");
+  assert.equal(equipped.roster[0].heldItem ?? null, null);
+  assert.equal(equipped.resources.items.choice_band, 0);
+  assert.equal(equipped.energy, 5);
+
+  dialog = await base.open("1번 부지 훈련소 관리", "훈련소 · 1번 부지");
+  await base.use(dialog.getByRole("group", { name: "시설 직무" }).getByRole("button", { name: /육성 연구/ }));
+  await base.use(dialog.getByRole("button", { name: "후딘 2번 Lv.8", exact: true }));
+  await dialog.getByText(/특수능력 50\/100.*구애머리띠/).waitFor();
+  await dialog.getByText("후보 기본 산출 2.16 · 다음 턴 2개 · 소수점 이월", { exact: true }).waitFor();
+  await base.use(base.button("직무 배치 · 행동력 1", dialog));
+  await dialog.getByRole("button", { name: "후딘 2번 회수", exact: true }).waitFor();
+  await base.use(dialog.getByRole("button", { name: "후딘 1번 회수", exact: true }));
+  await base.close(dialog);
+  const staffed = await base.read();
+  assert.deepEqual(staffed.roster.map(member => member.jobId ?? null), [null, "research", null, null]);
+  assert.equal(staffed.energy, 4);
+
+  dialog = await base.open("2번 부지 건설", "건설 · 2번 부지");
+  await base.use(dialog.getByRole("button", { name: "한카리아스 1번 Lv.1", exact: true }));
+  await base.use(dialog.getByRole("button", { name: "한카리아스 2번 Lv.6", exact: true }));
+  await base.use(dialog.locator("[data-build-confirm]"));
+  dialog = await base.open(/밭 공사 관리/, "밭 · 공사 관리");
+  await base.use(dialog.getByRole("button", { name: "한카리아스 2번 회수", exact: true }));
+  await base.close(dialog);
+  assert.equal((await base.read()).roster[2].buildingId, "building-2");
+
+  dialog = await base.open("3번 미개척 부지", "땅 평탄화 · 3번 부지");
+  assert.equal(await dialog.locator("[data-install-pick]").count(), 1);
+  const unavailable = dialog.getByText("현재 배치할 수 없는 포켓몬 1마리", { exact: true });
+  await base.use(unavailable);
+  await dialog.getByText("한카리아스 1번 · 본거지 2번 부지 공사 중", { exact: true }).waitFor();
+  await base.use(dialog.getByRole("button", { name: "한카리아스 2번 Lv.6", exact: true }));
+  await base.use(base.button("땅 평탄화 시작", dialog));
+  await dialog.getByText(/한카리아스 2번 작업 중/).waitFor();
+  await base.close(dialog);
+  const queued = await base.read();
+  assert.equal(queued.clearing.memberId, "mon-4");
+  assert.equal(queued.energy, 2);
+  await page.reload();
+  await base.button("포켓몬 4").waitFor();
+  assert.deepEqual(await base.read(), queued);
+  await base.turn();
+  const completed = await base.read();
+  assert.equal(completed.plotCap, 3);
+  assert.equal(completed.clearing, null);
+  assert.equal(completed.resources.candy - queued.resources.candy, 2);
+  await page.close();
 }
 
 async function verifyLegacyResearchStaff() {
@@ -216,12 +603,118 @@ async function verifySharedStaffing() {
   console.log("Shared staffing Chrome smoke passed: seed priority, outpost and kitchen forecasts, recorded stock and reload");
 }
 
+async function verifyRecoveryCharge(touch) {
+  const page = await openProfile({ touch });
+  if (touch) await page.setViewportSize({ width: 320, height: 568 });
+  const base = baseControls(page, touch);
+  const item = touch ? "healItem" : "food";
+  const actionName = touch ? "회복 아이템 사용" : "음식 주기";
+  await page.evaluate(async ({ key, item }) => {
+    const records = await fetch("/data/pokemon.json").then(response => response.json());
+    const roster = [976, 194].map((id, index) => ({
+      id: `mon-${index + 1}`, pokemon: records.find(record => record.pokemonRowid === id),
+      level: 1, exp: 0, favor: 18, favFloor: 18, favCeil: 75, aptitude: 50, iv: {}, departurePending: true,
+    }));
+    localStorage.setItem(key, JSON.stringify({ v: 4, introPending: false, roster, nextMemberId: 3,
+      entryOrder: roster.map(member => member.id), energy: 0, resources: { gold: 5, [item]: 2 } }));
+  }, { key: saveKey, item });
+  await page.reload();
+  await base.button("포켓몬 2").waitFor();
+  const before = await base.read();
+  const openRecovery = () => base.open("우호도 관리", /보유 포켓몬/);
+  const dialog = await openRecovery();
+  const action = base.button(actionName, dialog);
+  await dialog.getByRole("heading", { name: "가비루사 Lv.1", exact: true }).waitFor();
+  assert.ok(await action.isDisabled());
+  const charge = base.button(/충전권 구매.*자금 5.*행동력 \+2/, dialog);
+  await charge.waitFor({ timeout: 3000 });
+  let focusChecked = false;
+  const charged = async () => {
+    await page.waitForFunction(key => JSON.parse(localStorage.getItem(key)).energy === 2, saveKey);
+    if (!focusChecked) {
+      await page.waitForFunction(item => document.activeElement?.getAttribute("data-growth-item") === item, item);
+      focusChecked = true;
+    }
+  };
+  await repeatActivation(page, charge, touch, charged, touch);
+  assert.deepEqual(await base.read(), { ...before, energy: 2, resources: { ...before.resources, gold: 0 } });
+  await base.use(action);
+  const afterFirstRecovery = await base.read();
+  assert.deepEqual(afterFirstRecovery.roster.map(member => member.favor), [33, 18]);
+  const nextDeparture = base.button("다음 이탈 예정 · 우파", dialog);
+  await nextDeparture.waitFor({ timeout: 3000 });
+  const target = dialog.getByText("회복 대상 · 우파", { exact: true });
+  let targetFocusChecked = false;
+  await repeatActivation(page, nextDeparture, touch, async () => {
+    await target.waitFor();
+    if (!targetFocusChecked) {
+      assert.ok(await target.evaluate(element => element === document.activeElement));
+      targetFocusChecked = true;
+    }
+  }, touch);
+  assert.deepEqual(await base.read(), afterFirstRecovery);
+  await base.use(action);
+  assert.equal(await base.button(/다음 이탈 예정 ·/, dialog).count(), 0);
+  await base.close(dialog);
+  const recovered = await base.read();
+  assert.deepEqual(recovered.roster.map(member => member.favor), [33, 33]);
+  assert.equal(recovered.resources[item], 0);
+  assert.equal(recovered.energy, 0);
+  assert.equal(recovered.turnCount, before.turnCount);
+  await page.reload();
+  await base.button("포켓몬 2").waitFor();
+  assert.deepEqual(await base.read(), recovered);
+  await base.turn();
+  assert.deepEqual((await base.read()).entryOrder, before.entryOrder);
+
+  async function restore(resources) {
+    await page.evaluate(({ key, before, resources }) => localStorage.setItem(key, JSON.stringify({ ...before, resources })),
+      { key: saveKey, before, resources });
+    await page.reload();
+    return openRecovery();
+  }
+  const noGold = await restore({ ...before.resources, gold: 4, candy: 1 });
+  assert.equal(await base.button(/충전권 구매/, noGold).count(), 0);
+  await noGold.getByText("행동력이 부족합니다. 충전권 구매에 자금 5가 필요합니다.", { exact: true }).waitFor();
+  await base.close(noGold);
+  const noItems = await restore({ ...before.resources, [item]: 0 });
+  assert.equal(await base.button(/충전권 구매/, noItems).count(), 0);
+  assert.ok(await base.button(actionName, noItems).isDisabled());
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth === innerWidth));
+  await page.close();
+}
+
 try {
   browser = await chromium.launch({ channel: "chrome" });
+  await verifyRecoveryCharge(true);
+  await verifyRecoveryCharge(false);
+  console.log("Recovery charge Chrome passed: zero candy, manual treatment of two imminent departures, no duplicate purchase, reload");
+  await verifyRepeatedOrders(true);
+  await verifyRepeatedOrders(false);
+  await verifyRepeatedOrders(true, true);
+  await verifyRepeatedOrders(false, true);
+  console.log("Base repeat Chrome passed: one charge, one turn, production once, departure warning restored before a separate turn");
+  await verifyRepeatedInventoryActions(true);
+  await verifyRepeatedInventoryActions(false);
+  await verifyRepeatedInventoryActions(true, true);
+  await verifyRepeatedInventoryActions(false, true);
+  console.log("Inventory repeat Chrome passed: one candy, recovery and craft per input, separate use still works and restores");
+  await verifyDuplicateWorkers(true);
+  await verifyDuplicateWorkers(false);
+  console.log("Duplicate worker Chrome passed: named construction, recall, tool, research, clearing, and reload");
+  await verifyRosterSearch(true);
+  await verifyRosterSearch(false);
+  console.log("PC search Chrome passed: 25 members, name and dual type, same-species recovery and candy, and entry with a restored save");
+  await verifyEntryPointerBurst(true);
+  await verifyEntryPointerBurst(false);
+  console.log("Entry pointer Chrome passed: registration, reorder, removal, full party and reload");
+  await verifyDuplicateDeparture(true);
+  await verifyDuplicateDeparture(false);
+  console.log("Duplicate departure Chrome passed: named warning, targeted recovery, turn log and reload");
   const page = await openProfile();
   const fresh = baseControls(page, false);
   for (let round = 1; round <= 3; round++) {
-    await page.getByRole("heading", { name: `스타팅 선택 ${round}/3` }).waitFor();
+    await page.getByRole("heading", { name: `동료 영입 ${round - 1}/3` }).waitFor();
     await fresh.use(page.locator("[data-draft-target]").first());
   }
   await fresh.use(fresh.button("본거지로 이동"));
@@ -403,14 +896,36 @@ try {
   assert.equal((await legacy.read()).resources.tool, 3);
 
   await mobile.setViewportSize({ width: 320, height: 640 });
+  const toolReady = legacy.button("자원").getByText("제작 1개", { exact: true });
+  await toolReady.waitFor({ timeout: 3000 });
   dialog = await legacy.tools();
   assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth));
+  await dialog.getByText("보유 부품 3개 · 도구 1개 제작 가능 · 다음 턴 부품 +1", { exact: true }).waitFor({ timeout: 3000 });
   const coin = dialog.locator("li", { hasText: "부적금화" });
   await legacy.use(legacy.button("제작 3", coin));
   await coin.getByText(/보관 1/).waitFor();
   assert.equal((await legacy.read()).resources.tool, 0);
   assert.ok(await legacy.button("제작 3", coin).isDisabled());
+  await dialog.getByText("보유 부품 0개 · 제작까지 부품 3개 부족 · 다음 턴 부품 +1", { exact: true }).waitFor();
   await legacy.close(dialog);
+  await toolReady.waitFor({ state: "hidden" });
+  await legacy.turn();
+  assert.equal((await legacy.read()).resources.tool, 1);
+  dialog = await legacy.tools();
+  const updatedParts = await dialog.locator(".base-held-items [aria-live]").textContent();
+  const nextParts = updatedParts.match(/^보유 부품 1개 · 제작까지 부품 2개 부족 · 다음 턴 부품 \+(\d+)$/);
+  assert.ok(nextParts, updatedParts);
+  await legacy.close(dialog);
+  await legacy.turn();
+  assert.equal((await legacy.read()).resources.tool, 1 + Number(nextParts[1]));
+  for (let turn = 0; (await legacy.read()).resources.tool < 3; turn++) {
+    assert.ok(turn < 4, "The staffed workshop should refill the crafting badge");
+    await legacy.turn();
+  }
+  await toolReady.waitFor();
+  assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth), 320);
+  await mobile.reload();
+  await toolReady.waitFor();
 
   await mobile.evaluate(async key => {
     const records = await fetch("/data/pokemon.json").then(response => response.json());
@@ -521,10 +1036,10 @@ try {
   console.log("Departure Chrome smoke passed: migrated warning, recovery, departure, reusable Focus Sash, empty save and recruitment");
 
   const recruited = await legacy.read();
-  const candySave = { ...recruited, energy: 5, resources: { ...recruited.resources, candy: 5 },
+  const candySave = { ...recruited, energy: 5, resources: { ...recruited.resources, gold: 10, candy: 5 },
     roster: [{ ...recruited.roster[0], level: 2, exp: 35, heldItem: "lucky_egg" }] };
-  async function openCandySave() {
-    await mobile.evaluate(({ saveKey, snapshot }) => localStorage.setItem(saveKey, JSON.stringify(snapshot)), { saveKey, snapshot: candySave });
+  async function openCandySave(snapshot = candySave) {
+    await mobile.evaluate(({ saveKey, snapshot }) => localStorage.setItem(saveKey, JSON.stringify(snapshot)), { saveKey, snapshot });
     await mobile.reload();
     return legacy.open("포켓몬 1", /보유 포켓몬/);
   }
@@ -540,12 +1055,16 @@ try {
 
   dialog = await openCandySave();
   const initialCandy = await legacy.read();
+  await dialog.getByText("행복의알 장착 중 · 사탕 1개당 경험치 +40", { exact: true }).waitFor({ timeout: 3000 });
   await chooseAmount(dialog, 5);
   await dialog.getByText("행동력 5 · 사용 후 Lv.5 · 경험치 55/100", { exact: true }).waitFor();
   await legacy.close(dialog);
   assert.deepEqual(await legacy.read(), initialCandy);
   dialog = await legacy.open("포켓몬 1", /보유 포켓몬/);
-  for (let count = 0; count < 5; count++) await legacy.use(legacy.button("사탕 먹이기", dialog));
+  for (let count = 0; count < 5; count++) {
+    if (count > 0) await mobile.waitForTimeout(360);
+    await legacy.use(legacy.button("사탕 먹이기", dialog));
+  }
   await legacy.close(dialog);
   const singleApplications = await legacy.read();
 
@@ -554,6 +1073,7 @@ try {
   await legacy.use(legacy.button("사탕 5개 먹이기", dialog));
   await dialog.getByRole("heading", { name: /Lv\.5$/ }).waitFor();
   assert.equal(await dialog.getByText("사탕 여러 개 먹이기", { exact: true }).count(), 0);
+  assert.equal(await legacy.button(/^충전권 구매/, dialog).count(), 0);
   await legacy.close(dialog);
   assert.deepEqual(await legacy.read(), singleApplications);
   await mobile.reload();
@@ -572,6 +1092,32 @@ try {
   assert.deepEqual(await quantity.getByRole("option").allTextContents(), ["선택", "2개", "3개"]);
   assert.ok(await legacy.button("선택한 사탕 먹이기", dialog).isDisabled());
   assert.ok(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth));
+  await legacy.close(dialog);
+  dialog = await openCandySave({ ...candySave, energy: 0, resources: { ...candySave.resources, gold: 4 } });
+  await dialog.getByText("행동력이 부족합니다. 다음 턴에 회복하세요.", { exact: true }).waitFor();
+  assert.equal(await legacy.button(/^충전권 구매/, dialog).count(), 0);
+  assert.ok(await legacy.button("사탕 먹이기", dialog).isDisabled());
+  await legacy.close(dialog);
+
+  dialog = await openCandySave({ ...candySave, roster: [{ ...candySave.roster[0], heldItem: undefined }] });
+  assert.equal(await dialog.getByText(/행복의알 장착 중/).count(), 0);
+  await chooseAmount(dialog, 5);
+  await dialog.getByText("행동력 5 · 사용 후 Lv.4 · 경험치 35/80", { exact: true }).waitFor();
+  await legacy.close(dialog);
+
+  dialog = await openCandySave({ ...candySave, energy: 2 });
+  const batchSummary = dialog.getByText("사탕 여러 개 먹이기", { exact: true });
+  await legacy.use(batchSummary);
+  await legacy.use(legacy.button("사탕 2개 먹이기", dialog));
+  await batchSummary.waitFor({ state: "hidden" });
+  await legacy.use(legacy.button(/^충전권 구매/, dialog));
+  await legacy.use(batchSummary);
+  assert.equal(await dialog.getByRole("combobox", { name: "사탕 수량" }).inputValue(), "2", "A new batch starts with its usable amount after charging");
+  await legacy.use(legacy.button("사탕 2개 먹이기", dialog));
+  const refilled = await legacy.read();
+  assert.equal(refilled.energy, 0);
+  assert.equal(refilled.resources.candy, 1);
+  assert.equal(refilled.resources.gold, 5);
   await legacy.close(dialog);
   console.log("Candy Chrome smoke passed: five single taps match one five-item batch, live estimate, cancel, double-activation guard and reload");
 

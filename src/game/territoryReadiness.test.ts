@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildCombatant, createBattle, resolveBattleTurn, TACKLE } from "../domain/battle";
+import { buildCombatant, calculateDamage, createBattle, resolveBattleTurn, TACKLE } from "../domain/battle";
 import type { GameDataBundle, PokemonRecord, RosterMember } from "../domain/types";
 import { createInitialState, gameReducer, restoreGameState } from "./gameReducer";
 import { huntCandidates } from "./gameHelpers";
-import { prepareTerritoryBattle } from "./territoryBattle";
-import { counterHuntPool, firstBattleBrief, nextWeaknessMove, territoryPreparation, territoryTactics, uncoveredTerritoryTypes } from "./territoryReadiness";
+import { prepareTerritoryBattle, territoryEnemyLevel } from "./territoryBattle";
+import { counterHuntPool, firstBattleBrief, nextLevelScoutedAttack, nextStrongerScoutedMove, nextWeaknessMove, reserveAttackForecast, territoryPreparation, territoryTactics, uncoveredTerritoryTypes } from "./territoryReadiness";
 import { nextResearchIncrease } from "../domain/production";
 
 const species = (pokemonRowid: number, nameKr: string, type1Rowid: number, type2Rowid?: number): PokemonRecord => ({
@@ -94,6 +94,33 @@ describe("starting region counter preparation", () => {
     }
   });
 
+  it("uses only confirmed Ghost intel defenders for lineup estimates and preparation", () => {
+    const state = frontier();
+    const id = "nw-02";
+    state.territories[id] = { ...state.territories[id], owner: "trainer", trainerId: "rival", active: true, scouted: true };
+    expect(territoryTactics(state, benchmark, id).map(group => group.key)).toContain("5-8");
+    expect(uncoveredTerritoryTypes(state, benchmark, id).map(group => group.key)).toContain("5-8");
+    const report = { sourceId: "nw-01", trainerId: "rival", pokemonIds: [261, 158], reversed: true as const };
+    state.frontier.intel[id] = { ...report, memberId: "scout" };
+    expect(territoryTactics(state, benchmark, id).map(group => group.key)).toContain("5-8");
+    state.frontier.intel[id] = report;
+    const rng = vi.spyOn(Math, "random").mockReturnValue(0);
+    try {
+      expect(territoryTactics(state, benchmark, id).map(group => group.key).sort()).toEqual(["11", "17"]);
+      expect(uncoveredTerritoryTypes(state, benchmark, id)).toEqual([]);
+      expect(nextStrongerScoutedMove(state, benchmark, id, state.roster[0], target)).toBeNull();
+      expect(rng).not.toHaveBeenCalled();
+      expect(prepareTerritoryBattle(state, benchmark, id)?.enemyTeam.map(enemy => enemy.pokemonId)).toEqual([261, 158]);
+    } finally {
+      rng.mockRestore();
+    }
+    state.frontier.intel[id] = { ...report, pokemonIds: [261, 999] };
+    expect(territoryTactics(state, benchmark, id).map(group => group.key)).toContain("5-8");
+    state.frontier.intel[id] = report;
+    state.territories[id].scouted = false;
+    expect(territoryTactics(state, benchmark, id)).toEqual([]);
+  });
+
   it("suggests a benched member first and only recommends affordable candy levels", () => {
     const state = frontier();
     state.roster[0] = member("a", totodile, 5, 80);
@@ -134,7 +161,7 @@ describe("starting region counter preparation", () => {
 
   it("flags insufficient opening damage across all effective PP without counting immune moves", () => {
     const state = frontier();
-    state.roster = [member("a", poochyena), member("b", frillish)];
+    state.roster = [member("a", poochyena), member("b", frillish), member("c", totodile, 6), member("d", poochyena)];
     state.entryOrder = ["a", "b"];
     const scarce = { ...benchmark, moves: benchmark.moves.map(move => move.moveRowid === 55
       ? { ...move, details: { ...move.details, pp: 1 } } : move) };
@@ -142,16 +169,67 @@ describe("starting region counter preparation", () => {
     const risky = analysis(scarce);
     expect(risky?.ppShortfall).toBe(true);
     expect(risky?.attacks).toMatchObject([{ member: { id: "a" }, effectivePp: 0 }, { member: { id: "b" }, effectivePp: 1 }]);
+    expect(reserveAttackForecast(state, scarce, "south", target)).toMatchObject([
+      { member: { id: "c" }, effectivePp: 1, best: { move: { id: 55 }, multiplier: 2 } },
+    ]);
     expect(analysis(benchmark)?.ppShortfall).toBe(false);
     state.entryOrder = ["a"];
     expect(analysis(scarce)?.ppShortfall).toBe(false);
     expect(uncoveredTerritoryTypes(state, scarce, "south").map(group => group.key)).toContain("5-8");
+    state.territories.south.scouted = false;
+    expect(reserveAttackForecast(state, scarce, "south", target)).toEqual([]);
+  });
+
+  it("compares actual attack output across scouted candidates instead of picking the highest type multiplier", () => {
+    const state = frontier();
+    state.roster = [member("a", totodile, 8)];
+    const hardGhost = { ...ghost, pokemonRowid: 999, def: 90 };
+    const data: GameDataBundle = {
+      ...benchmark,
+      pokemon: [...benchmark.pokemon, hardGhost],
+      types: [...benchmark.types, { typeRowid: 17, nameKr: "악" }],
+      moves: [
+        ...benchmark.moves.map(move => move.moveRowid === 55 ? { ...move, details: { ...move.details, power: 10 } } : move),
+        { moveRowid: 44, nameKr: "물기", typeRowid: 17, details: { power: 100, pp: 25, accuracy: 100, damageClass: 2 } },
+      ],
+      battle: { ...benchmark.battle, moves: { ...benchmark.battle.moves, "44": {} },
+        learnsets: { ...benchmark.battle.learnsets, "158": [[44, 7], [55, 6], [33, 1]] } },
+    };
+    const ally = buildCombatant(state.roster[0], data, "ally");
+    const bite = ally.moves.find(move => move.id === 44)!;
+    const enemyLevel = territoryEnemyLevel(state, 1, "south");
+    const damage = [ghost, hardGhost].flatMap(pokemon => [enemyLevel, enemyLevel + 1].map(level =>
+      calculateDamage(ally, buildCombatant({ pokemon, level }, data, "foe"), bite, data)));
+    const group = territoryTactics(state, data, "south").find(group => group.key === "5-8");
+    expect(group?.attacks[0]).toMatchObject({ best: { move: { id: 44 }, multiplier: 1, minDamage: Math.min(...damage),
+      maxDamage: Math.max(...damage) }, effectivePp: 50 });
+    const inaccurate = { ...data, moves: data.moves.map(move => move.moveRowid === 44
+      ? { ...move, details: { ...move.details, accuracy: 20 } } : move) };
+    expect(territoryTactics(state, inaccurate, "south").find(group => group.key === "5-8")?.attacks[0].best?.move.id).toBe(55);
+    const learner = member("a", totodile, 6, 100);
+    const next = nextStrongerScoutedMove(state, data, "south", learner, target);
+    expect(next).toMatchObject({ level: 7, candy: 1, attack: { move: { id: 44 }, multiplier: 1 }, current: { move: { id: 55 } } });
+    expect(nextStrongerScoutedMove(state, inaccurate, "south", learner, target)).toBeNull();
+    expect(nextStrongerScoutedMove(state, data, "south", learner, [18])).toBeNull();
+    state.territories.south.scouted = false;
+    expect(nextStrongerScoutedMove(state, data, "south", learner, target)).toBeNull();
   });
 
   it("finds the first research level that increases output with the current held item", () => {
     const worker = { ...member("a", species(337, "루나톤", 14)), aptitude: 61, jobId: "research" as const };
     expect(nextResearchIncrease(worker)).toEqual({ level: 9, candy: 36, current: 1, potential: 2 });
     expect(nextResearchIncrease({ ...worker, heldItem: "choice_band" })).toEqual({ level: 6, candy: 15, current: 1, potential: 2 });
+  });
+
+  it("previews a better hit with the same equipped move at the next level", () => {
+    const state = frontier();
+    const learner = { ...member("a", totodile, 6), heldItem: "lucky_egg" as const };
+    const forecast = nextLevelScoutedAttack(state, benchmark, "south", learner, target);
+    expect(forecast).toMatchObject({ level: 7, candy: 3, current: { move: { id: 55 } }, attack: { move: { id: 55 } } });
+    expect(forecast!.attack.maxDamage).toBeGreaterThan(forecast!.current.maxDamage);
+    expect(nextLevelScoutedAttack(state, benchmark, "south", member("a", poochyena), target)).toBeNull();
+    state.territories.south.scouted = false;
+    expect(nextLevelScoutedAttack(state, benchmark, "south", learner, target)).toBeNull();
   });
 
   it("selects one marked candidate using actual level-one attacks and excludes rare candidates", () => {

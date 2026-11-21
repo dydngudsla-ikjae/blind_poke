@@ -30,20 +30,40 @@ try {
   await page.reload({ waitUntil: "networkidle" });
 
   const firstStarter = page.locator("[data-draft-target]").first();
+  const starterScope = page.getByRole("group", { name: "숲 공터" });
+  const starterJournal = page.locator(".starter-journal");
+  await starterScope.getByRole("heading", { name: "첫 동료를 찾아서" }).waitFor();
+  assert.equal(await starterScope.getByRole("button").count(), 3);
+  assert.equal(await starterScope.locator(".draft-aim, .draft-lock, .scanner-contact, .hunt-optics, .field-optic-bezel").count(), 0);
+  assert.deepEqual(await starterScope.locator(".starter-trace-tag").allTextContents(), ["고사리 그늘", "이끼 길목", "나무뿌리 곁"]);
+  await starterJournal.getByRole("heading", { name: "공터에서 들리는 세 기척" }).waitFor();
+  assert.equal(await starterJournal.locator(".starter-clues").count(), 0);
+  assert.equal(await starterJournal.getByRole("heading", { name: "동료 영입 0/3" }).count(), 1);
   await firstStarter.focus();
-  await page.getByRole("heading", { name: await firstStarter.getAttribute("aria-label"), exact: true }).waitFor();
-  await page.keyboard.press("Enter");
-  await page.getByRole("heading", { name: "스타팅 선택 2/3" }).waitFor();
+  const firstNotes = starterJournal.getByRole("heading", { name: await firstStarter.getAttribute("aria-label"), exact: true });
+  await firstNotes.waitFor();
+  await firstStarter.getByText("동료로 맞이하기").waitFor();
+  assert.equal(await starterJournal.locator(".starter-type-clue dt").textContent(), "타입 단서");
+  assert.ok(await starterJournal.locator(".starter-type-clue dd").textContent());
+  await page.keyboard.down("Enter");
+  await page.getByRole("heading", { name: "동료 영입 1/3" }).waitFor();
   if (!await firstStarter.evaluate(button => document.activeElement === button)) {
     throw new Error("스타팅을 키보드로 선택한 후 다음 후보에 초점이 없습니다.");
   }
+  await page.keyboard.down("Enter");
+  await page.keyboard.up("Enter");
+  const starterSave = () => page.evaluate(() => JSON.parse(localStorage.getItem("blindpoke-save-v1")));
+  assert.equal((await starterSave()).roster.length, 1, "Enter를 누르고 있어도 다음 동료가 영입되면 안 됩니다.");
+  const recruited = (await starterSave()).roster[0].pokemon.nameKr;
+  assert.equal(await starterScope.locator(".starter-arrival span").textContent(), `${recruited} 영입`);
+  await starterJournal.getByRole("img", { name: recruited, exact: true }).waitFor();
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "스타팅 선택 2/3" }).waitFor();
-  await firstStarter.focus();
-  await page.keyboard.press("Enter");
-  await page.getByRole("heading", { name: "스타팅 선택 3/3" }).waitFor();
+  await page.getByRole("heading", { name: "동료 영입 1/3" }).waitFor();
+  await firstStarter.dblclick();
+  assert.equal((await starterSave()).roster.length, 2, "마우스 더블클릭은 한 단계의 영입으로 처리해야 합니다.");
+  await page.getByRole("heading", { name: "동료 영입 2/3" }).waitFor();
   await firstStarter.click();
-  const reveal = page.getByRole("group", { name: "트레이너 신분증 뷰파인더" });
+  const reveal = page.getByRole("group", { name: "트레이너 신분증", exact: true });
   await reveal.getByRole("img", { name: "레드 트레이너" }).evaluate(img => img.decode());
   await page.reload({ waitUntil: "networkidle" });
   await reveal.getByRole("heading", { name: "레드", exact: true }).waitFor();
@@ -89,7 +109,7 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   await page.locator("[data-plot-construction]").waitFor({ state: "visible" });
   for (let turn = 0; turn < 3; turn++) {
-    await page.locator("#nextTurn").click();
+    await page.locator("#nextTurn").press("Enter");
     await page.waitForFunction(expected => JSON.parse(localStorage.getItem("blindpoke-save-v1")).turnCount === expected, turn+1);
   }
 
@@ -109,11 +129,17 @@ try {
     throw new Error("탐험 화면에서 Tab으로 첫 개체를 조준할 수 없습니다.");
   }
   await readout.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
-  const detectedType = await readout.locator(".draft-detected-type dd").textContent();
+  const measured = await readout.locator(".draft-measurements dd").allTextContents();
+  const [detectedType] = measured;
   if (!detectedType || detectedType === "—") throw new Error("탐험 중 감지 타입이 표시되지 않았습니다.");
   await page.keyboard.press("Enter");
   const analysis = page.getByRole("complementary", { name: "개체 분석" });
-  await analysis.locator(".identify-console-header", { hasText: `감지 타입 ${detectedType}` }).waitFor();
+  await analysis.waitFor();
+  const fieldRecord = analysis.getByRole("group", { name: "야외 관측 기록" });
+  assert.equal(await fieldRecord.count(), 1, "확대한 개체의 야외 관측 기록이 식별 화면으로 이어져야 합니다.");
+  await fieldRecord.getByText(detectedType, { exact: true }).waitFor();
+  assert.deepEqual(await fieldRecord.locator("dd").allTextContents(), measured);
+  assert.equal(await analysis.getByRole("button", { name: /직접 관찰하기/ }).count(), 0);
   await analysis.getByText(/단서 1회 −8%p · 오답 −20%p · 최저 \d+%/).waitFor();
   const lens = page.getByRole("group", { name: "확대 렌즈" });
   await lens.getByText("미확인 개체 1").waitFor();
@@ -133,25 +159,26 @@ try {
   const guess = page.getByRole("textbox", { name: "포켓몬 이름" });
   const beforeWrong = Number(await analysis.locator("meter").getAttribute("value"));
   await guess.fill("오답검증");
-  await guess.press("Enter");
+  await page.keyboard.down("Enter");
+  await page.keyboard.down("Enter");
+  await page.keyboard.up("Enter");
   await analysis.getByText("오답 1", { exact: true }).waitFor();
   assert.equal(Number(await analysis.locator("meter").getAttribute("value")), beforeWrong - 20);
   const consultation = analysis.getByRole("button", { name: /박사와 상담하기/ });
   await consultation.getByText("다음 단서 · 능력치", { exact: true }).waitFor({ timeout: 4000 });
-  await consultation.press("Enter");
   const journal = analysis.locator(".identify-record");
+  await consultation.focus();
+  await page.keyboard.down("Enter");
   await journal.getByText(/두드러진 능력치/).waitFor();
+  await page.keyboard.down("Enter");
+  await page.keyboard.up("Enter");
+  assert.equal(await journal.getByRole("listitem").count(), 2, "Holding Enter must not request another clue");
   await journal.locator("summary").press("Enter");
-  const observeSize = analysis.getByRole("button", { name: /직접 관찰하기/ });
-  await observeSize.evaluate(button => { button.click(); button.click(); });
-  await journal.getByText(/신체 정보: 키/).waitFor();
-  assert.ok(await observeSize.isDisabled());
-  assert.equal(await journal.getByText(/신체 정보: 키/).count(), 1);
   await consultation.getByText("다음 단서 · 기술", { exact: true }).waitFor();
   await consultation.press("Enter");
   await journal.getByText(/배울 수 있는 기술/).waitFor();
   await consultation.getByText("다음 단서 · 특성", { exact: true }).waitFor();
-  assert.equal(await journal.getByRole("listitem").count(), 4);
+  assert.equal(await journal.getByRole("listitem").count(), 3);
   await guess.fill(pokemonName);
   await guess.press("Enter");
   await analysis.getByRole("heading", { name: "포획 성공" }).waitFor();
@@ -213,7 +240,7 @@ try {
       }
     }
     if (!foundGround) throw new Error("땅 타입 탐색에서 일치하는 개체가 나오지 않았습니다.");
-    await analysis.locator(".identify-console-header", { hasText: "감지 타입 땅" }).waitFor();
+    await analysis.getByRole("group", { name: "야외 관측 기록" }).getByText("땅", { exact: true }).waitFor();
     await page.getByRole("button", { name: /본인확인서 대조/ }).click();
     await lens.locator('[data-mode="silhouette"]').waitFor();
     const groundArt = await targetArt.getAttribute("src");
@@ -250,7 +277,7 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: "1번 부지 치료소 관리" }).waitFor();
   await expandBase();
-  for (let turn = 0; turn < 3; turn++) await page.locator("#nextTurn").click();
+  for (let turn = 0; turn < 3; turn++) await page.locator("#nextTurn").press("Enter");
   await page.getByRole("button", { name: "2번 부지 밭 관리" }).click();
   const farm = page.getByRole("dialog", { name: "밭 · 2번 부지" });
   await farm.getByRole("button", { name: "이상해꽃", exact: true }).click();
@@ -381,21 +408,21 @@ try {
   assert.equal(await page.evaluate(() => localStorage.getItem("blindpoke-map-v1")), beforeMap);
   await reset.press("Enter");
   await confirmation.getByRole("button", { name: "기록 지우고 시작" }).press("Enter");
-  await page.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
+  await page.getByRole("heading", { name: "동료 영입 0/3" }).waitFor();
   assert.deepEqual(await savedGame(), { v: 4, newGame: true });
   assert.deepEqual(await page.evaluate(() => [
     localStorage.getItem("blindpoke-map-v1"),
     localStorage.getItem("blindpoke-test-preference"),
   ]), [null, "keep"]);
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
+  await page.getByRole("heading", { name: "동료 영입 0/3" }).waitFor();
 
   await page.route("**/data/pokemon.json", route => route.fulfill({ json: {} }));
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "데이터 로드 실패" }).waitFor();
   await page.unroute("**/data/pokemon.json");
   await page.getByRole("button", { name: "다시 시도" }).click();
-  await page.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
+  await page.getByRole("heading", { name: "동료 영입 0/3" }).waitFor();
   await page.evaluate(() => localStorage.setItem("blindpoke-save-v1", "{"));
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "저장 기록 손상" }).waitFor();
@@ -403,7 +430,7 @@ try {
   assert.equal(await page.evaluate(() => localStorage.getItem("blindpoke-save-v1")), "{");
   await page.getByRole("button", { name: "새 게임" }).click();
   await page.getByRole("button", { name: "기록 지우고 시작" }).click();
-  await page.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
+  await page.getByRole("heading", { name: "동료 영입 0/3" }).waitFor();
 
   async function verifyTouchJourney(viewport) {
     const touch = await browser.newPage({ viewport, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
@@ -413,19 +440,34 @@ try {
     });
     await touch.goto(url);
     const touchStarters = touch.locator("[data-draft-target]");
+    const scope = touch.getByRole("group", { name: "숲 공터" });
+    await scope.getByRole("heading", { name: "첫 동료를 찾아서" }).waitFor();
+    assert.equal(await scope.locator(".field-optic-rim, .draft-atmosphere").count(), 0);
+    const journal = touch.locator(".starter-journal");
+    const noteBox = await journal.boundingBox();
+    for (const candidate of await touchStarters.all()) {
+      const bounds = await candidate.boundingBox();
+      assert.ok(bounds.width >= 44 && bounds.height >= 44);
+      assert.ok(bounds.y + bounds.height <= noteBox.y, "모바일에서 종이 기록이 기척을 가리면 안 됩니다.");
+    }
+    assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
     for (let round = 1; round <= 3; round++) {
-      const currentRound = touch.getByRole("heading", { name: `스타팅 선택 ${round}/3` });
+      const currentRound = touch.getByRole("heading", { name: `동료 영입 ${round - 1}/3` });
       await currentRound.waitFor();
       await touchStarters.first().tap();
-      await touch.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
+      await journal.getByRole("heading", { name: "고사리 그늘" }).waitFor();
+      await touchStarters.first().getByText("동료로 맞이하기").waitFor();
+      await journal.getByText("같은 자리를 다시 눌러 영입").waitFor();
       if (round === 1) {
         await touchStarters.nth(1).tap();
-        await touch.getByRole("heading", { name: "미확인 개체 2" }).waitFor();
+        await journal.getByRole("heading", { name: "이끼 길목" }).waitFor();
+        assert.equal(await touchStarters.first().getByText("동료로 맞이하기").count(), 0);
+        await touchStarters.nth(1).getByText("동료로 맞이하기").waitFor();
         await touchStarters.first().tap();
-        await touch.getByRole("heading", { name: "미확인 개체 1" }).waitFor();
+        await journal.getByRole("heading", { name: "고사리 그늘" }).waitFor();
       }
       assert.equal(await currentRound.count(), 1);
-      const type = await touch.locator(".draft-detected-type dd").textContent();
+      const type = await journal.locator(".starter-type-clue dd").textContent();
       assert.ok(type && type !== "—");
       await touchStarters.first().tap();
     }
@@ -455,7 +497,8 @@ try {
     await touchReading.getByRole("heading", { name: "미확인 개체 2" }).waitFor();
     await touchReading.getByText("같은 흔적을 다시 눌러 식별", { exact: true }).waitFor();
     assert.equal(await touch.getByRole("heading", { name: "야생 탐험" }).count(), 1);
-    const touchType = await touchReading.locator(".draft-detected-type dd").textContent();
+    const touchMeasurements = await touchReading.locator(".draft-measurements dd").allTextContents();
+    const [touchType] = touchMeasurements;
     await touchReading.getByText("야외 관측표").waitFor();
     assert.equal(await touch.getByRole("group", { name: "관측 장비", exact: true }).count(), 0);
     assert.equal(await touch.locator(".hunt-optical-trace").count(), 3);
@@ -463,7 +506,9 @@ try {
     assert.equal(await touch.locator(".draft-signal-art, .hunt-optics-shader").count(), 0);
     assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
     await touchTarget.tap();
-    await touch.locator(".identify-console-header", { hasText: `감지 타입 ${touchType}` }).waitFor();
+    const mobileFieldRecord = touch.getByRole("group", { name: "야외 관측 기록" });
+    await mobileFieldRecord.getByText(touchType, { exact: true }).waitFor();
+    assert.deepEqual(await mobileFieldRecord.locator("dd").allTextContents(), touchMeasurements);
     const mobileMeter = touch.locator(".identify-chance meter");
     const beforeClue = Number(await mobileMeter.getAttribute("value"));
     const compare = touch.getByRole("button", { name: /본인확인서 대조/ });
@@ -480,10 +525,35 @@ try {
       return pokemon.find(entry => entry.pokemonRowid === id).nameKr;
     }, mobileId);
     const mobileGuess = touch.getByRole("textbox", { name: "포켓몬 이름" });
+    const mobileSubmit = touch.getByRole("button", { name: "식별", exact: true });
+    if (viewport.width === 390) {
+      const chance = () => mobileMeter.evaluate(element => element.value);
+      const repeatTap = async (control, settled) => {
+        await control.scrollIntoViewIfNeeded();
+        const { x, y, width, height } = await control.boundingBox();
+        const point = [x + width / 2, y + height / 2];
+        await touch.touchscreen.tap(...point);
+        await settled();
+        assert.ok(await control.evaluate((button, [clientX, clientY]) =>
+          document.elementFromPoint(clientX, clientY)?.closest("button") === button, point));
+        await touch.touchscreen.tap(...point);
+        await touch.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      };
+      const mobileConsultation = touch.getByRole("button", { name: /박사와 상담하기/ });
+      const beforeConsultation = await chance();
+      await repeatTap(mobileConsultation, () => mobileConsultation.getByText("다음 단서 · 기술", { exact: true }).waitFor());
+      const consultationResult = { clues: await touch.locator(".identify-record li").count(), chance: await chance() };
+      await mobileGuess.fill("오답 연속 입력 검증");
+      const beforeWrong = await chance();
+      const wrongs = touch.locator(".identify-record-header [role=status] b");
+      await repeatTap(mobileSubmit, () => touch.getByText("오답 1", { exact: true }).waitFor());
+      assert.deepEqual({ consultation: consultationResult, wrongs: Number(await wrongs.textContent()), chance: await chance() },
+        { consultation: { clues: 2, chance: beforeConsultation - 8 }, wrongs: 1, chance: beforeWrong - 20 },
+        "One tap sequence should charge for one clue or one wrong answer");
+    }
     await mobileGuess.tap();
     await touch.setViewportSize({ ...viewport, height: 360 });
     await mobileGuess.fill(mobileName);
-    const mobileSubmit = touch.getByRole("button", { name: "식별", exact: true });
     await touch.waitForFunction(() => {
       const box = document.querySelector(".identify-submit").getBoundingClientRect();
       const viewport = window.visualViewport;
@@ -493,7 +563,8 @@ try {
     await mobileGuess.evaluate(input => input.form.requestSubmit());
     assert.equal(await mobileGuess.count(), 1, "IME 조합 중에는 제출하지 않습니다.");
     await mobileGuess.dispatchEvent("compositionend", { data: mobileName });
-    await mobileSubmit.evaluate(element => { element.click(); element.click(); });
+    if (viewport.width === 390) await mobileSubmit.tap();
+    else await mobileSubmit.evaluate(element => { element.click(); element.click(); });
     await touch.setViewportSize(viewport);
     await touch.getByRole("heading", { name: "포획 성공", exact: true }).waitFor();
     const dex = touch.getByRole("group", { name: "도감 기록" });
@@ -683,20 +754,35 @@ try {
       await touch.locator("#nextTurn").tap();
       const beforeGiveup = await mobileSave();
       await enterAnalysis();
+      const keepHunting = touch.getByRole("button", { name: /^탐험 계속/ });
+      assert.equal(await keepHunting.count(), 0);
       await touch.getByRole("button", { name: "식별 포기", exact: true }).tap();
       await touch.getByRole("heading", { name: "식별 포기", exact: true }).waitFor();
       assert.equal(await preparePlacement.count(), 0);
       assert.equal(await dex.count(), 0);
       assert.equal(await touch.locator(".identify-target-art").count(), 0);
-      await leave();
       const afterGiveup = await mobileSave();
       assert.equal(afterGiveup.energy, beforeGiveup.energy - 2);
       assert.deepEqual(afterGiveup.roster, beforeGiveup.roster);
+      assert.ok((await keepHunting.boundingBox())?.height >= 44);
+      await keepHunting.tap();
+      await touch.getByRole("heading", { name: "야생 탐험", exact: true }).waitFor();
+      await touch.getByRole("heading", { name: "관측 대기", exact: true }).waitFor();
+      assert.deepEqual(await mobileSave(), { ...afterGiveup, energy: afterGiveup.energy - 2 });
+      const nextCandidate = touch.locator(".hunt-target").first();
+      await nextCandidate.tap();
+      await nextCandidate.tap();
+      await touch.getByRole("heading", { name: "개체 식별" }).waitFor();
+      assert.equal(await mobileGuess.inputValue(), "");
+      await touch.getByRole("button", { name: "식별 포기", exact: true }).tap();
+      assert.ok(await keepHunting.isDisabled());
+      assert.equal(await touch.evaluate(() => document.documentElement.scrollWidth), viewport.width);
+      await leave();
     }
     await touch.getByRole("button", { name: "설정", exact: true }).tap();
     await touch.getByRole("button", { name: "데이터 초기화" }).tap();
     await touch.getByRole("button", { name: "기록 지우고 시작" }).tap();
-    await touch.getByRole("heading", { name: "스타팅 선택 1/3" }).waitFor();
+    await touch.getByRole("heading", { name: "동료 영입 0/3" }).waitFor();
     await touch.close();
   }
   await verifyTouchJourney({ width: 320, height: 640 });

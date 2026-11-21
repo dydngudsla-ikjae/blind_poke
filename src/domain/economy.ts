@@ -14,18 +14,18 @@ export function isHeldItemId(id: string): id is HeldItemId {
 
 export function feedMember(m:RosterMember){return {...m,favor:Math.min(m.favCeil,m.favor+15),departurePending:undefined};}
 export const levelExperienceCost = (level: number) => level * 20;
-const candyExperience = (member: RosterMember) => member.heldItem === "lucky_egg" ? 40 : 20;
+export const experiencePerCandy = (member: RosterMember) => member.heldItem === "lucky_egg" ? 40 : 20;
 
 export function candyCostToLevel(member: RosterMember, targetLevel: number) {
   const levels = Math.max(0, Math.ceil(targetLevel - member.level));
   if (!levels) return 0;
   const required = levels * levelExperienceCost(member.level + (levels - 1) / 2);
-  return Math.max(1, Math.ceil((required - member.exp) / candyExperience(member)));
+  return Math.max(1, Math.ceil((required - member.exp) / experiencePerCandy(member)));
 }
 
 export function candyMember(member: RosterMember, count = 1) {
   let { level, exp, favCeil } = member;
-  exp += candyExperience(member) * count;
+  exp += experiencePerCandy(member) * count;
   while (exp >= levelExperienceCost(level)) {
     exp -= levelExperienceCost(level);
     level++;

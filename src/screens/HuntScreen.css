@@ -33,64 +33,6 @@
 .hunt-return:focus-visible { outline: 2px solid var(--field-mint); outline-offset: 2px; }
 .hunt-return span { color: var(--field-mint); font: 600 17px/1 var(--field-mono); }
 
-@property --hunt-optic-open {
-  syntax: "<number>";
-  initial-value: 1;
-  inherits: true;
-}
-
-.hunt-optics {
-  --optics-diameter: clamp(260px, min(67svh, 59vw), 590px);
-  --optics-opening: calc(var(--optics-diameter) * var(--hunt-optic-open));
-  --optics-seat-y: calc(var(--optics-y) + (1 - var(--hunt-optic-open)) * 26%);
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.hunt-optics-glass {
-  position: absolute;
-  inset: 0;
-  clip-path: circle(calc(var(--optics-opening) / 2) at var(--optics-x) var(--optics-seat-y));
-  background: radial-gradient(ellipse at var(--optics-x) var(--optics-seat-y), transparent 6%, #cda7671c 45%, #1b170e3d 85%);
-}
-
-.hunt-optics-housing {
-  position: absolute;
-  top: var(--optics-seat-y);
-  left: var(--optics-x);
-  width: var(--optics-opening);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-}
-
-.hunt-optics-focus-mark {
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: clamp(56px, 10%, 94px);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border: 1px solid #fff0b6c2;
-  border-radius: 50%;
-  filter: drop-shadow(0 1px 1px #423218);
-}
-.hunt-optics-focus-mark::before, .hunt-optics-focus-mark::after {
-  content: "";
-  position: absolute;
-  inset-block-start: 50%;
-  width: 6px;
-  height: 1px;
-  background: #fff0b6;
-}
-.hunt-optics-focus-mark::before {
-  right: 100%;
-  margin-right: calc(7px * (1 - var(--optics-focus)));
-}
-.hunt-optics-focus-mark::after {
-  left: 100%;
-  margin-left: calc(7px * (1 - var(--optics-focus)));
-}
-
 .hunt-optical-trace { width: clamp(28px, 3.6vw, 49px); }
 .hunt-target[data-locked="true"] .hunt-optical-trace { border-color: transparent; box-shadow: none; }
 .hunt-target[data-counter="true"] .hunt-optical-trace { outline: 1px dashed #ffdc8d; outline-offset: 3px; }
@@ -126,14 +68,9 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .hunt-optics { animation: hunt-raise-optics 470ms cubic-bezier(.2,.75,.19,1) both; }
   .hunt-readout {
     animation: hunt-field-note-in 340ms 95ms cubic-bezier(.2,.7,.18,1) both;
   }
-}
-@keyframes hunt-raise-optics {
-  from { --hunt-optic-open: .55; opacity: .3; }
-  to { --hunt-optic-open: 1; opacity: 1; }
 }
 @keyframes hunt-field-note-in {
   from { transform: translateY(10px) rotate(2deg); opacity: 0; }
@@ -142,7 +79,6 @@
 
 @media (max-width: 680px) {
   .hunt-controls { gap: 5px 10px; }
-  .hunt-optics { --optics-diameter: clamp(235px, 78vw, 400px); }
   .hunt-station .hunt-view { min-height: clamp(430px, calc(100svh - 61px), 780px); }
   .hunt-readout {
     inset: auto 12px 11px;

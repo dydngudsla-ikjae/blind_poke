@@ -14,6 +14,7 @@ const hooks = registerHooks({ resolve(specifier, context, nextResolve) {
 const { pickMoveset } = await import("../src/domain/battle.ts").finally(() => hooks.deregister());
 const battleData = { pokemon, types, moves, battle, abilities: [], trainers: [] };
 const species = new Map(pokemon.map(mon => [mon.nameKr, mon]));
+const speciesById = new Map(pokemon.map(mon => [mon.pokemonRowid, mon]));
 const typeChart = new Map(types.map(type => [type.typeRowid, type.relation?.relationMap]));
 const catalog = new Map(moves.map(move => [move.moveRowid, move]));
 const typeIds = mon => [...new Set([mon.type1Rowid, mon.type2Rowid])].filter(id => id != null);
@@ -250,7 +251,7 @@ export async function playCampaignBattle(page, limit = 240, trace = false, tacti
   throw new Error(`Battle exceeded ${limit} commands: ${JSON.stringify(result)}`);
 }
 
-export async function playBattle(page, { limit = 220, manualSwitch = false, recordMoves = false, activate = button => button.click() } = {}) {
+export async function playBattle(page, { limit = 220, manualSwitch = false, recordMoves = false, activate = button => button.press("Enter") } = {}) {
   const enemy = page.locator('.duel-vitals[data-side="enemy"]');
   const player = page.locator('.duel-vitals[data-side="player"]');
   const result = page.locator(".duel-outcome");
@@ -296,7 +297,9 @@ export async function playBattle(page, { limit = 220, manualSwitch = false, reco
     })));
     const name = await player.locator("h2").textContent();
     const level = Number((await player.locator("b").textContent()).replace("Lv.", ""));
-    const ratings = legal.map(({ id }) => damageScore(id, species.get(name), defender, level, enemyLevel));
+    const attacker = speciesById.get(Number(await player.getAttribute("data-species-id")));
+    assert.ok(attacker, `Missing species data for ${name}`);
+    const ratings = legal.map(({ id }) => damageScore(id, attacker, defender, level, enemyLevel));
     const best = Math.max(...ratings);
 
     const switchButton = page.getByRole("button", { name: "교체", exact: true });
